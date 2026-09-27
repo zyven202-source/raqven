@@ -906,6 +906,7 @@ export type Database = {
       }
       is_shop_member: { Args: { _shop_id: string }; Returns: boolean }
       is_shop_owner: { Args: { _shop_id: string }; Returns: boolean }
+      storage_shop_id: { Args: { _name: string }; Returns: string }
     }
     Enums: {
       member_status: "active" | "suspended" | "removed"
