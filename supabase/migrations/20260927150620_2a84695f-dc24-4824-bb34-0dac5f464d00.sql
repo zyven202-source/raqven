@@ -1,0 +1,1 @@
+ALTER FUNCTION public.storage_shop_id(TEXT) SET search_path = public;
