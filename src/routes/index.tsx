@@ -46,7 +46,7 @@ const capabilities = [
   {
     icon: Users,
     title: "Staff with limits",
-    body: "Owners, managers and cashiers — each with their own access code and permissions.",
+    body: "Owners and employees — each staff member gets their own till access code.",
   },
   {
     icon: BarChart3,
@@ -67,12 +67,10 @@ function Landing() {
         <Logo />
         <div className="flex items-center gap-2">
           <Button asChild variant="ghost" size="sm">
-            <Link to="/auth">Sign in</Link>
+            <Link to="/auth/login">Sign in</Link>
           </Button>
           <Button asChild size="sm">
-            <Link to="/auth" search={{ mode: "signup" }}>
-              Get started
-            </Link>
+            <Link to="/auth/signup">Get started</Link>
           </Button>
         </div>
       </header>
@@ -92,17 +90,15 @@ function Landing() {
               Every sale. Every stock. Every number.
             </h1>
             <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              RAVQEN is the daily record book for your shop — sales, stock, debtors,
-              expenses and staff, kept accurate in one place instead of five notebooks.
+              RAVQEN is the daily record book for your shop — sales, stock, debtors, expenses and
+              staff, kept accurate in one place instead of five notebooks.
             </p>
             <div className="mt-8 flex flex-col gap-3 sm:flex-row">
               <Button asChild size="lg">
-                <Link to="/auth" search={{ mode: "signup" }}>
-                  Create your shop
-                </Link>
+                <Link to="/auth/signup">Create your shop</Link>
               </Button>
               <Button asChild size="lg" variant="outline">
-                <Link to="/auth">I already have an account</Link>
+                <Link to="/auth/login">I already have an account</Link>
               </Button>
             </div>
           </motion.div>
@@ -119,9 +115,7 @@ function Landing() {
               { label: "Money owed", value: "Debtor by debtor" },
             ].map((stat) => (
               <div key={stat.label} className="px-6 py-7">
-                <p className="text-xs uppercase tracking-widest text-champagne/70">
-                  {stat.label}
-                </p>
+                <p className="text-xs uppercase tracking-widest text-champagne/70">{stat.label}</p>
                 <p className="mt-2 font-display text-xl text-background">{stat.value}</p>
               </div>
             ))}

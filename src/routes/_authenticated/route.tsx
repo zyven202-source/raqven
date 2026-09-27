@@ -1,13 +1,30 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { Outlet, createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect } from "react";
 
-import { supabase } from "@/integrations/supabase/client";
+import { LoadingState } from "@/components/app/AppChrome";
+import { useSession } from "@/hooks/useSession";
 
 export const Route = createFileRoute("/_authenticated")({
   ssr: false,
-  beforeLoad: async () => {
-    const { data, error } = await supabase.auth.getUser();
-    if (error || !data.user) throw redirect({ to: "/auth" });
-    return { user: data.user };
-  },
-  component: () => <Outlet />,
+  component: AuthenticatedGate,
 });
+
+/**
+ * Pathless layout guarding every signed-in page. The database enforces what
+ * this gate can only check: whether a session exists at all.
+ */
+function AuthenticatedGate() {
+  const { session, loading } = useSession();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!loading && !session) {
+      void navigate({ to: "/auth/login", replace: true });
+    }
+  }, [loading, session, navigate]);
+
+  if (loading) return <LoadingState label="Checking your session…" />;
+  if (!session) return <LoadingState label="Redirecting to sign in…" />;
+
+  return <Outlet />;
+}
