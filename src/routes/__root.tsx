@@ -81,8 +81,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "RAVQEN — Every sale. Every stock. Every number." },
       {
         name: "description",
-        content:
-          "RAVQEN is the sales, stock and cash record system for Kenyan small businesses.",
+        content: "RAVQEN is the sales, stock and cash record system for Kenyan small businesses.",
       },
       { name: "author", content: "RAVQEN" },
       { property: "og:title", content: "RAVQEN" },

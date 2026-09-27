@@ -12,9 +12,7 @@ export function Logo({ className, tone = "ink", showTagline = false }: LogoProps
       <span
         className={cn(
           "grid size-9 shrink-0 place-items-center rounded-xl font-display text-lg font-semibold",
-          tone === "ink"
-            ? "gradient-ink text-champagne"
-            : "bg-champagne text-ink-deep",
+          tone === "ink" ? "gradient-ink text-champagne" : "bg-champagne text-ink-deep",
         )}
         aria-hidden
       >

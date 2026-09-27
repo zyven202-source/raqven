@@ -29,6 +29,7 @@ export async function getShop(shopId: string): Promise<Shop | null> {
 export interface CreateShopInput {
   name: string;
   businessType?: string | null;
+  location?: string | null;
   phone?: string | null;
   city?: string | null;
   currency?: string;
@@ -50,8 +51,8 @@ export async function createShop(input: CreateShopInput): Promise<Shop> {
       name: input.name.trim(),
       slug,
       business_type: input.businessType ?? null,
+      location: input.location ?? input.city ?? null,
       phone: input.phone ?? null,
-      city: input.city ?? null,
       currency: input.currency ?? "KES",
     })
     .select()
