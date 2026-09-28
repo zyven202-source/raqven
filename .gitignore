@@ -16,6 +16,9 @@ dist-ssr
 .nitro
 *.local
 
+# Staging copy of the static build that hosting writes during a deploy
+isolate
+
 # Wrangler / Cloudflare
 .wrangler/
 .dev.vars
