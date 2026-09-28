@@ -187,6 +187,7 @@ Enums: `shop_role` (`owner`, `employee`), `member_status`, `movement_type`,
 ```bash
 bun install        # or npm install
 bun run dev        # starts the app
+bun run build      # produces the deployable static site in dist/
 bun run routes:generate   # regenerate src/routeTree.gen.ts after route changes
 bun tsc -b --noEmit       # typecheck
 ```
@@ -194,6 +195,22 @@ bun tsc -b --noEmit       # typecheck
 Schema changes are made by **adding a new migration file** in
 `supabase/migrations/`, never by editing tables by hand. Migration filenames are
 timestamp-prefixed and applied in order with `supabase db push`.
+
+### Build output
+
+The app is deployed as a **static single-page app**. `bun run build` prerenders
+the app shell to `dist/index.html` alongside `dist/assets/`, so any static host
+can serve it, and deep links such as `/dashboard` or `/app/pos` are resolved by
+the client router. There is no Node server at runtime: every query goes straight
+from the browser to Supabase over the publishable key, and row level security is
+what actually protects the data.
+
+For that reason the Vite config sets `nitro: false` (no server bundle is emitted;
+`dist/server` is removed after the build) and turns on TanStack Start's
+`spa` mode with the shell written to `dist/index.html`. The build only reads the
+`VITE_SUPABASE_*` variables, so those must be set in the environment that runs
+the build — a stale Supabase project URL would otherwise be baked into the
+shipped bundle.
 
 ---
 

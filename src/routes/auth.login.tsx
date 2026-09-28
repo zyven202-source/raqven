@@ -5,6 +5,8 @@ import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useSession } from "@/hooks/useSession";
+import { useStorageAvailable } from "@/hooks/useStorageAvailable";
+import { STORAGE_BLOCKED_MESSAGE } from "@/lib/storage";
 import { signInWithEmail } from "@/services/auth.service";
 import { AuthCard, AuthSwitchLink, SubmitButton } from "./-auth-parts";
 
@@ -25,6 +27,7 @@ function LoginPage() {
   const navigate = Route.useNavigate();
   const { session, loading } = useSession();
 
+  const storageAvailable = useStorageAvailable();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -40,11 +43,18 @@ function LoginPage() {
     event.preventDefault();
     setBusy(true);
     try {
-      await signInWithEmail(email, password);
+      const { hasSession } = await signInWithEmail(email, password);
+      if (!hasSession) {
+        // Credentials were accepted but the browser dropped the session: say so
+        // instead of navigating to a page that will bounce straight back.
+        throw new Error(STORAGE_BLOCKED_MESSAGE);
+      }
       await navigate({ to: "/dashboard", replace: true });
     } catch (error) {
       setBusy(false);
-      toast.error(error instanceof Error ? error.message : "Could not sign in.");
+      toast.error(error instanceof Error ? error.message : "Could not sign in.", {
+        duration: 8000,
+      });
     }
   }
 
@@ -85,6 +95,11 @@ function LoginPage() {
           </Link>
         </div>
         <SubmitButton busy={busy} label="Sign in" />
+        {storageAvailable === false ? (
+          <p className="text-center text-xs text-destructive">
+            Storage is blocked in this browser, so signing in will not stick.
+          </p>
+        ) : null}
       </form>
       <AuthSwitchLink leading="New to RAVQEN?" to="/auth/signup" linkLabel="Create one" />
     </AuthCard>
