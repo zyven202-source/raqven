@@ -390,6 +390,8 @@ export type Database = {
           id: string
           image_url: string | null
           is_active: boolean
+          /** Generated: quantity <= low_stock_threshold. Read-only. */
+          is_low_stock: boolean
           low_stock_threshold: number
           name: string
           quantity: number
@@ -903,6 +905,27 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_employee_access_code: {
+        Args: { p_code: string; p_label: string; p_shop_id: string }
+        Returns: Json
+      }
+      create_refund: {
+        Args: { p_items: Json; p_reason?: string; p_sale_id: string }
+        Returns: Json
+      }
+      create_sale: {
+        Args: {
+          p_amount_tendered?: number
+          p_debtor_name?: string
+          p_debtor_phone?: string
+          p_discount_amount?: number
+          p_items: Json
+          p_note?: string
+          p_payment_method: Database["public"]["Enums"]["payment_method"]
+          p_shop_id: string
+        }
+        Returns: Json
+      }
       has_shop_role: {
         Args: {
           _roles: Database["public"]["Enums"]["shop_role"][]
@@ -912,6 +935,41 @@ export type Database = {
       }
       is_shop_member: { Args: { _shop_id: string }; Returns: boolean }
       is_shop_owner: { Args: { _shop_id: string }; Returns: boolean }
+      next_receipt_number: { Args: { p_shop_id: string }; Returns: string }
+      record_debtor_payment: {
+        Args: {
+          p_amount: number
+          p_debtor_id: string
+          p_method?: Database["public"]["Enums"]["payment_method"]
+          p_note?: string
+          p_reference?: string
+        }
+        Returns: Json
+      }
+      record_stock_movement: {
+        Args: {
+          p_movement_type: Database["public"]["Enums"]["movement_type"]
+          p_notes?: string
+          p_new_quantity?: number
+          p_product_id: string
+          p_quantity?: number
+          p_unit_cost?: number
+        }
+        Returns: Database["public"]["Tables"]["products"]["Row"]
+      }
+      shop_member_directory: {
+        Args: { p_shop_id: string }
+        Returns: {
+          display_name: string
+          role: Database["public"]["Enums"]["shop_role"]
+          status: Database["public"]["Enums"]["member_status"]
+          user_id: string
+        }[]
+      }
+      shop_report: {
+        Args: { p_from: string; p_shop_id: string; p_to: string }
+        Returns: Json
+      }
       storage_shop_id: { Args: { _name: string }; Returns: string }
     }
     Enums: {

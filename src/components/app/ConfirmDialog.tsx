@@ -15,17 +15,24 @@ import {
 
 /**
  * Confirmation dialog for destructive or consequential actions.
- * Wraps AlertDialog so trigger styling and focus handling stay consistent.
+ *
+ * Supports both shapes: pass a `trigger` for the common "wrap a button" case,
+ * or drive it with `open`/`onOpenChange` when the prompt is raised from a menu
+ * item or an async result.
  */
 export function ConfirmDialog({
   trigger,
+  open,
+  onOpenChange,
   title,
   description,
   confirmLabel = "Confirm",
   onConfirm,
   pending = false,
 }: {
-  trigger: React.ReactNode;
+  trigger?: React.ReactNode | undefined;
+  open?: boolean | undefined;
+  onOpenChange?: ((open: boolean) => void) | undefined;
   title: string;
   description: string;
   confirmLabel?: string;
@@ -33,8 +40,11 @@ export function ConfirmDialog({
   pending?: boolean;
 }) {
   return (
-    <AlertDialog>
-      <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger>
+    <AlertDialog
+      {...(open === undefined ? {} : { open })}
+      {...(onOpenChange ? { onOpenChange } : {})}
+    >
+      {trigger ? <AlertDialogTrigger asChild>{trigger}</AlertDialogTrigger> : null}
       <AlertDialogContent className="sm:max-w-sm">
         <AlertDialogHeader>
           <AlertDialogTitle>{title}</AlertDialogTitle>
