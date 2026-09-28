@@ -32,9 +32,19 @@ export async function signUpWithEmail(params: {
   return { hasSession: Boolean(data.session) };
 }
 
-export async function signInWithEmail(email: string, password: string) {
-  const { error } = await supabase.auth.signInWithPassword({ email, password });
+/**
+ * Signs in with email + password.
+ * Returns whether a session actually landed, so a caller can tell the user when
+ * a browser silently refuses to keep the session instead of navigating into a
+ * dead end.
+ */
+export async function signInWithEmail(
+  email: string,
+  password: string,
+): Promise<{ hasSession: boolean }> {
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
+  return { hasSession: Boolean(data.session) };
 }
 
 /** Sends the recovery email. Supabase redirects the user to /auth/reset-password. */

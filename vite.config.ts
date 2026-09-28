@@ -11,5 +11,19 @@ export default defineConfig({
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this
     server: { entry: "server" },
+    // Client-side SPA: prerender the app shell so the static host can serve it
+    // for every route, including deep links such as /dashboard and /app/pos.
+    spa: { enabled: true, prerender: { outputPath: "/index" } },
+  },
+  // Freebuff hosting publishes this project as a static Vite site: it runs the
+  // build, then copies `dist/*` to the deploy artifact. So the client build must
+  // land directly in `dist/` (index.html + assets) and no nitro server bundle is
+  // emitted. All data access already happens in the browser against Supabase, so
+  // nothing depends on a Node server at runtime.
+  nitro: false,
+  vite: {
+    environments: {
+      client: { build: { outDir: "dist" } },
+    },
   },
 });
