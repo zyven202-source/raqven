@@ -79,7 +79,7 @@ function DashboardPage() {
             <div className="mt-8 space-y-3">
               {shops.map((shop) => (
                 <div key={shop.id} className="relative">
-                  <ShopCard shop={shop} />
+                  <ShopCard shop={shop} role={shop.role} />
                   <Link
                     to="/app"
                     search={{ shop: shop.id }}

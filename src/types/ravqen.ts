@@ -31,6 +31,14 @@ export type EmployeeAccessCode = Tables["employee_access_codes"]["Row"];
 export type Category = Tables["categories"]["Row"];
 export type Product = Tables["products"]["Row"];
 export type ProductInsert = Tables["products"]["Insert"];
+/**
+ * Patch shapes for `.update(...)`.
+ *
+ * Services build their update object field by field (so a patch only touches
+ * what the caller actually sent) but must still be typed against the schema —
+ * that is what stops a renamed column from silently reaching production.
+ */
+export type ProductUpdate = Tables["products"]["Update"];
 export type InventoryMovement = Tables["inventory_movements"]["Row"];
 
 export type Sale = Tables["sales"]["Row"];
@@ -38,12 +46,16 @@ export type SaleItem = Tables["sale_items"]["Row"];
 export type Payment = Tables["payments"]["Row"];
 
 export type Debtor = Tables["debtors"]["Row"];
+export type DebtorUpdate = Tables["debtors"]["Update"];
 export type DebtorPayment = Tables["debtor_payments"]["Row"];
 
 export type Expense = Tables["expenses"]["Row"];
+export type ExpenseUpdate = Tables["expenses"]["Update"];
 export type Refund = Tables["refunds"]["Row"];
 export type RefundItem = Tables["refund_items"]["Row"];
 export type ReceiptSettings = Tables["receipt_settings"]["Row"];
+export type ReceiptSettingsUpdate = Tables["receipt_settings"]["Update"];
+export type ShopMemberUpdate = Tables["shop_members"]["Update"];
 
 /** A shop together with the signed-in user's role in it. */
 export interface ShopWithRole extends Shop {

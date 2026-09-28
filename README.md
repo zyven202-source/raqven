@@ -3,10 +3,18 @@
 **Every sale. Every stock. Every number.**
 
 RAVQEN is a sales, stock and cash record system built for Kenyan small businesses.
-This repository contains **Section 1: the foundation** — brand and design system,
-Supabase backend, database schema, security policies, authentication, the shop
-workspace shell and honest placeholders for the feature modules (POS, inventory,
-debtors, reporting) that build on it.
+
+**Phase 1 — the foundation:** brand and design system, Supabase backend, database
+schema, security policies, authentication and the shop workspace shell.
+
+**Phase 2 — the business engine:** the till, the stock ledger, debtors, expenses,
+refunds and receipts, all reading and writing real Supabase rows. The multi-row
+financial operations run as PostgreSQL functions so they are atomic, and every
+permission is enforced by the database rather than by the interface.
+
+Nothing in this application fakes a result. A button either performs the real
+operation or reports honestly why it could not; when a feature is not built, the
+screen says so instead of showing invented data.
 
 ---
 
@@ -18,7 +26,8 @@ src/
     brand/          RAVQEN brand primitives (Logo)
     ui/             shadcn/ui primitives, themed via design tokens
     app/            App-shell components (states, dialogs, module pages)
-  hooks/            React hooks (useSession, useShops, useActiveShop)
+  hooks/            React hooks — every query key carries the shop id, so
+                    switching shops cannot serve the previous shop's rows
   integrations/
     supabase/       generated Supabase clients + types (do not hand-edit)
   lib/              pure helpers (format, utils)
@@ -34,8 +43,16 @@ src/
       dashboard.tsx                 shop list + shop creation
       onboarding.tsx                first-shop setup
       app.tsx                       workspace shell (bottom nav, shop switcher)
-      app.pos.tsx                   POS module
-      app.inventory.tsx …           remaining modules (honest placeholders)
+      app.pos.tsx                   till: search, scan, cart, payment, receipt
+      app.inventory.tsx             product catalogue and stock actions
+      app.stock.tsx                 stock movement ledger
+      app.restock.tsx               restocking
+      app.transactions.tsx          ledger, sale detail and refunds
+      app.debtors.tsx               credit accounts and repayments
+      app.expenses.tsx              spending
+      app.reports.tsx               owner-only figures
+      app.employees.tsx             owner-only team and access codes
+      app.settings.tsx              owner-only shop, refund and receipt settings
   services/         data access layer — the ONLY place Supabase queries live
   types/            domain types (portable aliases over generated DB types)
   styles.css        design system: brand tokens, fonts, utilities
@@ -138,8 +155,27 @@ bucket creation via SQL. No dashboard clicks are required.
 - Employees get operational access (products, stock, sales, payments, debtors,
   expenses). Only owners can manage team members, access codes, shop settings,
   receipt settings, approve refunds, or delete files in storage.
-- Refund creation is gated by `shops.accepts_refunds` **inside the RLS policy**
-  — the switch is enforced by the database, not just hidden in the UI.
+- Refund creation is gated by `shops.accepts_refunds` **inside the RLS policy and
+  inside the refund function** — the switch is enforced by the database, not just
+  hidden in the UI.
+- Multi-row operations are PostgreSQL functions, so they cannot half-happen:
+  - `create_sale(...)` — `SECURITY INVOKER`. Locks each product row, validates
+    stock, prices the lines, allocates the receipt number, writes `sales`,
+    `sale_items`, `payments`, `inventory_movements` and the debtor balance in one
+    transaction. RLS applies to every row it writes.
+  - `record_debtor_payment(...)`, `create_refund(...)`, `record_stock_movement(...)`,
+    `next_receipt_number(...)`, `create_employee_access_code(...)` — `SECURITY
+    DEFINER`, because they must touch rows clients are deliberately not granted
+    (`sales`, `receipt_counters`). Each one re-checks membership or ownership
+    itself and takes the acting user from `auth.uid()`, never from an argument.
+  - `shop_report(...)` — `SECURITY DEFINER` with an owner check inside, so
+    sensitive owner figures are refused by the database for employees.
+  - `shop_member_directory(...)` — returns only the people in a shop the caller
+    already belongs to, which is what lets the ledger name who did what.
+- `receipt_counters` has RLS on with **no policies and no grants**: receipt
+  numbers are gap-free and race-free but unreachable from the client.
+- `products.quantity` has a `CHECK (quantity >= 0)`, and `is_low_stock` is a
+  generated column, so neither can drift from the stock ledger.
 - Financial history is append-only from the API: `sales`, `payments`,
   `debtor_payments`, `inventory_movements`, `refunds`, `refund_items` have no
   UPDATE/DELETE grants to `authenticated`. Corrections happen via future RPCs.
@@ -176,6 +212,7 @@ Every shop-owned table carries `shop_id` and is indexed on it.
 | `refunds` | Refund requests and approvals | status enum, gated by `accepts_refunds` |
 | `refund_items` | Refunded lines, restock flag | `quantity > 0` |
 | `receipt_settings` | Per-shop receipt layout | unique `shop_id`, paper width 58/80 mm |
+| `receipt_counters` | Next receipt number per shop | no client access at all; used only by `next_receipt_number` |
 
 Enums: `shop_role` (`owner`, `employee`), `member_status`, `movement_type`,
 `sale_status`, `payment_method`, `refund_status`.
@@ -191,6 +228,39 @@ bun run build      # produces the deployable static site in dist/
 bun run routes:generate   # regenerate src/routeTree.gen.ts after route changes
 bun tsc -b --noEmit       # typecheck
 ```
+
+### Verifying against real data
+
+```bash
+bun scripts/verify-auth-flow.mjs        # sign-up, profile trigger, login, RLS
+bun scripts/verify-business-engine.mjs  # the whole trading flow, end to end
+bun scripts/verify-ui-acceptance.mjs    # the same flow, driven through the real UI
+```
+
+The business-engine script creates two throwaway shops and walks the real
+acceptance path through the public API — opening stock, a cash sale, a credit
+sale, a partial repayment, a refund, then proves shop A can neither read nor
+write shop B's data and that an employee is refused owner-only operations. It
+cleans up after itself and exits non-zero on any failure.
+
+The UI acceptance script proves the *screens* are wired to that engine rather
+than merely rendering: it drives the deployed app in Chromium (Pixel-class
+viewport, touch enabled) through sign-up → shop setup → product → cash sale →
+receipt → credit sale → debtor → partial repayment → expense → refund, checking
+the stock, ledger and balances that appear on screen, then repeats the read
+half in a second shop to confirm nothing leaks across. It needs Playwright's
+Chromium; it is deliberately **not** a dependency of the app, so install it
+separately rather than adding it to `package.json`:
+
+```bash
+bun add --cwd /tmp/pwtest playwright   # or: npx playwright install chromium
+CHROMIUM_PATH=~/.cache/ms-playwright/chromium-*/chrome-linux64/chrome \
+  bun scripts/verify-ui-acceptance.mjs https://ravqen.freebuff.app
+```
+
+Keeping Playwright out of `package.json` matters: the hosting builder runs a
+clean `bun install`, and Playwright resolving its browser binaries there is
+what pushed earlier deploys past their build deadline.
 
 Schema changes are made by **adding a new migration file** in
 `supabase/migrations/`, never by editing tables by hand. Migration filenames are
