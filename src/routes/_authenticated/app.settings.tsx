@@ -1,14 +1,15 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, ShieldCheck, Store } from "lucide-react";
+import { Loader2, LogOut } from "lucide-react";
+import { useNavigate } from "@tanstack/react-router";
 import { toast } from "sonner";
 
-import { LoadingState, PageContainer, PageHeader } from "@/components/app/AppChrome";
+import { ErrorState, LoadingState, PageContainer, PageHeader } from "@/components/app/AppChrome";
+import { Field, ToggleRow } from "@/components/app/fields";
 import { OwnerOnly } from "@/components/app/OwnerOnly";
 import { StorageImage } from "@/components/app/StorageImage";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -16,7 +17,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
 import { useActiveShop } from "@/hooks/useActiveShop";
 import {
   useReceiptSettings,
@@ -25,19 +25,28 @@ import {
   useUpdateReceiptSettings,
   useUpdateShop,
 } from "@/hooks/useShopAdmin";
+import { useQueryClient } from "@tanstack/react-query";
+import { signOut } from "@/services/auth.service";
 import { uploadImage } from "@/services/storage.service";
 import { BUSINESS_TYPES } from "@/services/shops.service";
 import { STORAGE_BUCKETS } from "@/types/ravqen";
 
 export const Route = createFileRoute("/_authenticated/app/settings")({
-  head: () => ({ meta: [{ title: "Shop settings — RAVQEN" }] }),
+  head: () => ({ meta: [{ title: "Settings — RAVQEN" }] }),
   component: () => (
-    <OwnerOnly title="Shop settings">
+    <OwnerOnly title="Settings">
       <SettingsPage />
     </OwnerOnly>
   ),
 });
 
+/**
+ * Shop settings, in the shopkeeper's language.
+ *
+ * Every control here writes to Supabase and takes effect immediately or on
+ * save — none of them describe how the product stores anything. A setting the
+ * user cannot act on is a setting that should not be on their screen.
+ */
 function SettingsPage() {
   const { activeShop } = useActiveShop();
   const shopId = activeShop?.id ?? "";
@@ -47,6 +56,8 @@ function SettingsPage() {
   const updateShop = useUpdateShop(shopId);
   const updateReceipt = useUpdateReceiptSettings(shopId);
   const setRefunds = useSetRefunds(shopId);
+  const queryClient = useQueryClient();
+  const navigate = useNavigate();
 
   const [name, setName] = useState("");
   const [businessType, setBusinessType] = useState("general");
@@ -60,6 +71,25 @@ function SettingsPage() {
   const [showLogo, setShowLogo] = useState(true);
   const [receiptPrefix, setReceiptPrefix] = useState("RV");
   const [paperWidth, setPaperWidth] = useState("58");
+
+  /**
+   * The navigation sends people straight to one section of this screen
+   * (Receipt settings, Refund settings). The router's own hash handling runs
+   * before these queries resolve, so the anchor is not in the document yet and
+   * nothing would scroll. Retry briefly once the form is actually on screen.
+   */
+  useEffect(() => {
+    const hash = window.location.hash.slice(1);
+    if (!hash) return;
+    if (shopQuery.isLoading) return;
+
+    let attempt = 0;
+    const timer = window.setInterval(() => {
+      document.getElementById(hash)?.scrollIntoView({ block: "start" });
+      if (++attempt >= 10) window.clearInterval(timer);
+    }, 120);
+    return () => window.clearInterval(timer);
+  }, [shopQuery.isLoading]);
 
   useEffect(() => {
     const shop = shopQuery.data;
@@ -81,17 +111,21 @@ function SettingsPage() {
     setPaperWidth(String(settings.paper_width_mm));
   }, [receiptQuery.data]);
 
-  if (shopQuery.isPending) return <LoadingState label="Loading your shop…" />;
-  if (!shopQuery.data) {
+  if (shopQuery.isLoading) return <LoadingState label="Loading your shop…" />;
+
+  if (shopQuery.isError) {
     return (
       <PageContainer>
-        <PageHeader title="Shop settings" />
-        <p className="mt-6 text-sm text-muted-foreground">This shop could not be loaded.</p>
+        <PageHeader title="Settings" />
+        <div className="mt-4">
+          <ErrorState message={shopQuery.error.message} onRetry={() => void shopQuery.refetch()} />
+        </div>
       </PageContainer>
     );
   }
 
   const shop = shopQuery.data;
+  if (!shop) return null;
 
   async function handleLogo(file: File | null) {
     if (!file) return;
@@ -100,7 +134,7 @@ function SettingsPage() {
       const path = await uploadImage(STORAGE_BUCKETS.shopLogos, shopId, file);
       setLogoPath(path);
       await updateShop.mutateAsync({ logo_url: path });
-      toast.success("Logo uploaded");
+      toast.success("Logo saved");
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "The logo could not be uploaded.");
     } finally {
@@ -130,10 +164,10 @@ function SettingsPage() {
   async function toggleRefunds(next: boolean) {
     try {
       await setRefunds.mutateAsync(next);
-      toast.success(next ? "Refunds are now accepted" : "Refunds are now refused", {
+      toast.success(next ? "Refunds switched on" : "Refunds switched off", {
         description: next
-          ? "Staff can refund a sale and the stock is restored."
-          : "The database will refuse refund operations for this shop.",
+          ? "Staff can take goods back and the stock goes back on the shelf."
+          : "Refunds are now refused at the counter for everyone.",
       });
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not change the refund setting.");
@@ -156,33 +190,37 @@ function SettingsPage() {
     }
   }
 
+  async function handleSignOut() {
+    try {
+      await signOut();
+      queryClient.clear();
+      await navigate({ to: "/auth/login", replace: true });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not sign out.");
+    }
+  }
+
   return (
     <PageContainer>
-      <PageHeader
-        title="Shop settings"
-        subtitle="Owner-controlled. Staff cannot reach this screen."
-      />
+      <PageHeader title="Settings" />
 
-      <form onSubmit={saveShop} className="surface-panel mt-5 space-y-4 p-4">
-        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-          <Store className="size-4" /> Shop details
-        </h2>
+      {/* ------------------------------------------------------------ shop */}
+      <form onSubmit={saveShop} id="shop" className="scroll-mt-20 space-y-4">
+        <Section title="Your shop" />
 
-        <div className="space-y-1.5">
-          <Label htmlFor="settings-name">Shop name</Label>
+        <Field label="Shop name" htmlFor="settings-name">
           <Input
             id="settings-name"
             value={name}
             onChange={(event) => setName(event.target.value)}
-            className="h-11"
+            className="h-12"
             autoComplete="organization"
           />
-        </div>
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="settings-type">Business type</Label>
+        <Field label="What kind of shop" htmlFor="settings-type">
           <Select value={businessType} onValueChange={setBusinessType}>
-            <SelectTrigger id="settings-type" className="h-11">
+            <SelectTrigger id="settings-type" className="h-12">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -193,127 +231,129 @@ function SettingsPage() {
               ))}
             </SelectContent>
           </Select>
+        </Field>
+
+        <div className="grid grid-cols-2 gap-3">
+          <Field label="Location" htmlFor="settings-location">
+            <Input
+              id="settings-location"
+              value={location}
+              onChange={(event) => setLocation(event.target.value)}
+              placeholder="Gikomba"
+              className="h-12"
+              autoComplete="off"
+            />
+          </Field>
+          <Field label="Phone" htmlFor="settings-phone">
+            <Input
+              id="settings-phone"
+              value={phone}
+              onChange={(event) => setPhone(event.target.value)}
+              inputMode="tel"
+              placeholder="0712 345 678"
+              className="h-12"
+              autoComplete="tel"
+            />
+          </Field>
         </div>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="settings-location">Location</Label>
-          <Input
-            id="settings-location"
-            value={location}
-            onChange={(event) => setLocation(event.target.value)}
-            placeholder="e.g. Gikomba, Nairobi"
-            className="h-11"
-            autoComplete="off"
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="settings-phone">M-Pesa / business phone</Label>
-          <Input
-            id="settings-phone"
-            value={phone}
-            onChange={(event) => setPhone(event.target.value)}
-            inputMode="tel"
-            placeholder="0712 345 678"
-            className="h-11"
-            autoComplete="tel"
-          />
-        </div>
-
-        <div className="space-y-1.5">
-          <Label htmlFor="settings-logo">Shop logo</Label>
+        <Field
+          label="Shop logo"
+          hint="Printed on your receipts if you turn that on below."
+          htmlFor="settings-logo"
+        >
           <div className="flex items-center gap-3">
             <StorageImage
               bucket={STORAGE_BUCKETS.shopLogos}
               path={logoPath}
-              alt={`${shop.name} logo`}
-              className="size-14"
+              alt={`${name.trim() || "Shop"} logo`}
+              className="size-12 shrink-0 rounded-lg"
             />
             <Input
               id="settings-logo"
               type="file"
               accept="image/*"
-              className="h-11"
+              className="h-12"
               onChange={(event) => void handleLogo(event.target.files?.[0] ?? null)}
             />
           </div>
           {uploading ? <p className="text-xs text-muted-foreground">Uploading…</p> : null}
-        </div>
+        </Field>
 
-        <Button type="submit" className="h-11 w-full" disabled={updateShop.isPending}>
-          {updateShop.isPending ? <Loader2 className="animate-spin" /> : null} Save shop details
+        <Button type="submit" className="h-12 w-full" disabled={updateShop.isPending}>
+          {updateShop.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+          Save shop details
         </Button>
       </form>
 
-      <div className="surface-panel mt-4 space-y-3 p-4">
-        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-          <ShieldCheck className="size-4" /> Refunds
-        </h2>
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium">Accept refunds</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Enforced in the database: while this is off, refund operations are refused for
-              everyone, not just hidden in the app.
-            </p>
-          </div>
-          <Switch
+      {/* --------------------------------------------------------- refunds */}
+      <section id="refunds" className="mt-8 scroll-mt-20 border-t border-border pt-5">
+        <Section title="Refunds" />
+        <div className="glass-2 rounded-xl backdrop-blur-md backdrop-saturate-150 px-4">
+          <ToggleRow
+            title="Accept refunds"
+            description="When this is on, staff can take goods back and the stock returns to the shelf. When it is off, nobody can — not even the owner — until it is switched back on."
             checked={shop.accepts_refunds}
             onCheckedChange={(next) => void toggleRefunds(next)}
             disabled={setRefunds.isPending}
-            aria-label="Accept refunds"
           />
         </div>
-        <p className="text-xs text-muted-foreground">
-          Currently {shop.accepts_refunds ? "accepting" : "refusing"} refunds.
-        </p>
-      </div>
+      </section>
 
-      <form onSubmit={saveReceipt} className="surface-panel mt-4 space-y-4 p-4">
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-          Receipts
-        </h2>
+      {/* -------------------------------------------------------- receipts */}
+      <form
+        onSubmit={saveReceipt}
+        id="receipts"
+        className="mt-8 scroll-mt-20 space-y-4 border-t border-border pt-5"
+      >
+        <Section title="Receipts" />
 
-        <div className="space-y-1.5">
-          <Label htmlFor="settings-header">Header line (optional)</Label>
+        <div className="glass-2 rounded-xl backdrop-blur-md backdrop-saturate-150 px-4">
+          <ToggleRow
+            title="Show the logo on receipts"
+            description="Needs a logo above."
+            checked={showLogo}
+            onCheckedChange={setShowLogo}
+            disabled={!logoPath}
+          />
+        </div>
+
+        <Field label="Line under the shop name" hint="Optional." htmlFor="settings-header">
           <Input
             id="settings-header"
             value={headerText}
             onChange={(event) => setHeaderText(event.target.value)}
-            placeholder="e.g. Quality goods, fair prices"
-            className="h-11"
+            placeholder="Quality goods, fair prices"
+            className="h-12"
             autoComplete="off"
           />
-        </div>
+        </Field>
 
-        <div className="space-y-1.5">
-          <Label htmlFor="settings-footer">Footer line</Label>
+        <Field label="Line at the bottom" hint="Shown after the total." htmlFor="settings-footer">
           <Input
             id="settings-footer"
             value={footerText}
             onChange={(event) => setFooterText(event.target.value)}
             placeholder="Asante kwa biashara!"
-            className="h-11"
+            className="h-12"
             autoComplete="off"
           />
-        </div>
+        </Field>
 
         <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1.5">
-            <Label htmlFor="settings-prefix">Receipt prefix</Label>
+          <Field label="Receipt numbers start with" htmlFor="settings-prefix">
             <Input
               id="settings-prefix"
               value={receiptPrefix}
               onChange={(event) => setReceiptPrefix(event.target.value.toUpperCase())}
               maxLength={6}
-              className="h-11 font-mono"
+              className="tnum h-12"
               autoComplete="off"
             />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="settings-width">Paper width</Label>
+          </Field>
+          <Field label="Paper size" htmlFor="settings-width">
             <Select value={paperWidth} onValueChange={setPaperWidth}>
-              <SelectTrigger id="settings-width" className="h-11">
+              <SelectTrigger id="settings-width" className="h-12">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -321,33 +361,31 @@ function SettingsPage() {
                 <SelectItem value="80">80 mm</SelectItem>
               </SelectContent>
             </Select>
-          </div>
+          </Field>
         </div>
 
-        <div className="flex items-center justify-between gap-4">
-          <div>
-            <p className="text-sm font-medium">Show the logo on receipts</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">
-              Requires a logo to be uploaded above.
-            </p>
-          </div>
-          <Switch
-            checked={showLogo}
-            onCheckedChange={setShowLogo}
-            aria-label="Show logo on receipts"
-          />
-        </div>
-
-        <Button type="submit" className="h-11 w-full" disabled={updateReceipt.isPending}>
-          {updateReceipt.isPending ? <Loader2 className="animate-spin" /> : null} Save receipt
-          settings
+        <Button type="submit" className="h-12 w-full" disabled={updateReceipt.isPending}>
+          {updateReceipt.isPending ? <Loader2 className="size-4 animate-spin" /> : null}
+          Save receipt settings
         </Button>
       </form>
 
-      <p className="mt-4 text-xs text-muted-foreground">
-        Receipt numbers come from a per-shop counter in the database, so two tills selling at the
-        same moment can never print the same number.
-      </p>
+      {/* --------------------------------------------------------- account */}
+      <section className="mt-8 border-t border-border pt-5">
+        <Section title="Your account" />
+        <Button
+          variant="outline"
+          className="h-12 w-full text-negative"
+          onClick={() => void handleSignOut()}
+        >
+          <LogOut className="size-4" /> Sign out
+        </Button>
+      </section>
     </PageContainer>
   );
+}
+
+/** A small section heading that does not shout. */
+function Section({ title }: { title: string }) {
+  return <h2 className="eyebrow mb-3">{title}</h2>;
 }

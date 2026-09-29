@@ -1,13 +1,11 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
 import { Loader2 } from "lucide-react";
-import { toast } from "sonner";
 
+import { Field, PasswordField } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { updatePassword, verifyRecoveryToken } from "@/services/auth.service";
-import { AuthCard, SubmitButton } from "./-auth-parts";
+import { AuthHeading, AuthSwitchLink, SubmitButton } from "./-auth-parts";
 
 export const Route = createFileRoute("/auth/reset-password")({
   validateSearch: (search: Record<string, unknown>) => ({
@@ -35,8 +33,7 @@ function readTokenFromHash(): string | null {
   if (typeof window === "undefined") return null;
   const hash = window.location.hash.replace(/^#/, "");
   if (!hash) return null;
-  const params = new URLSearchParams(hash);
-  return params.get("token_hash");
+  return new URLSearchParams(hash).get("token_hash");
 }
 
 function ResetPasswordPage() {
@@ -51,6 +48,7 @@ function ResetPasswordPage() {
   );
   const [password, setPassword] = useState("");
   const [confirm, setConfirm] = useState("");
+  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
@@ -64,7 +62,10 @@ function ResetPasswordPage() {
         if (!active) return;
         setPhase({
           kind: "invalid",
-          message: error instanceof Error ? error.message : "This link is invalid or has expired.",
+          message:
+            error instanceof Error
+              ? error.message
+              : "This link is invalid or has expired. Ask for a new one.",
         });
       });
     return () => {
@@ -74,128 +75,106 @@ function ResetPasswordPage() {
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
-    if (password.length < 8) {
-      toast.error("Password must be at least 8 characters.");
-      return;
-    }
-    if (password !== confirm) {
-      toast.error("The two passwords do not match.");
-      return;
-    }
+
+    const next: Record<string, string | undefined> = {};
+    if (password.length < 8) next["password"] = "Use at least 8 characters.";
+    if (password !== confirm) next["confirm"] = "The two passwords do not match.";
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
+
     setBusy(true);
     try {
       await updatePassword(password);
       setPhase({ kind: "done" });
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not update the password.");
+      setErrors({
+        ["form"]: error instanceof Error ? error.message : "Could not update the password.",
+      });
     } finally {
       setBusy(false);
     }
   }
 
-  async function handleGoSignIn() {
-    // The recovery session authenticates the user; sign in properly so the
-    // session starts clean.
-    await navigate({ to: "/auth/login" });
-  }
-
   if (phase.kind === "verifying") {
     return (
-      <AuthCard title="Checking your link" subtitle="One moment…">
-        <div className="mt-8 flex justify-center pb-4">
-          <Loader2 className="size-6 animate-spin text-ink-soft" />
+      <>
+        <AuthHeading title="Checking your link" subtitle="One moment…" />
+        <div className="flex justify-center py-10">
+          <Loader2 className="size-6 animate-spin text-muted-foreground" />
         </div>
-      </AuthCard>
+      </>
     );
   }
 
   if (phase.kind === "invalid") {
     return (
-      <AuthCard title="Link problem" subtitle={phase.message}>
-        <div className="mt-6">
-          <Button asChild variant="outline" className="h-11 w-full">
-            <Link to="/auth/forgot-password">Request a new link</Link>
+      <>
+        <AuthHeading title="That link did not work" subtitle={phase.message} />
+        <div className="mt-7 space-y-2">
+          <Button asChild className="h-12 w-full">
+            <Link to="/auth/forgot-password">Send me a new link</Link>
           </Button>
-          <div className="mt-4">
-            <AuthSwitchLinkOrSignIn onSignIn={handleGoSignIn} />
-          </div>
+          <Button asChild variant="ghost" className="h-11 w-full">
+            <Link to="/auth/login">Use my current password</Link>
+          </Button>
         </div>
-      </AuthCard>
+      </>
     );
   }
 
   if (phase.kind === "done") {
     return (
-      <AuthCard
-        title="Password updated"
-        subtitle="Your new password is active. Sign in to continue."
-      >
-        <div className="mt-6">
-          <Button className="h-11 w-full" onClick={() => void navigate({ to: "/auth/login" })}>
-            Sign in
-          </Button>
-        </div>
-      </AuthCard>
+      <>
+        <AuthHeading
+          title="Password updated"
+          subtitle="Your new password is active. Sign in to continue."
+        />
+        <Button className="mt-7 h-12 w-full" onClick={() => void navigate({ to: "/auth/login" })}>
+          Sign in
+        </Button>
+      </>
     );
   }
 
   return (
-    <AuthCard
-      title="Set a new password"
-      subtitle="Choose a password you have not used here before."
-    >
-      <form onSubmit={handleSubmit} className="mt-6 space-y-4">
-        <div className="space-y-1.5">
-          <Label htmlFor="reset-password">New password</Label>
-          <Input
-            id="reset-password"
-            type="password"
-            className="h-11"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={8}
-            autoComplete="new-password"
-          />
-        </div>
-        <div className="space-y-1.5">
-          <Label htmlFor="reset-confirm">Repeat new password</Label>
-          <Input
-            id="reset-confirm"
-            type="password"
-            className="h-11"
-            value={confirm}
-            onChange={(e) => setConfirm(e.target.value)}
-            required
-            minLength={8}
-            autoComplete="new-password"
-          />
-        </div>
-        <SubmitButton busy={busy} label="Save new password" />
-        <p className="text-center text-xs text-muted-foreground">
-          Or{" "}
-          <Link to="/auth/login" className="underline underline-offset-4">
-            use your current password
-          </Link>{" "}
-          if you remembered it.
-        </p>
-      </form>
-    </AuthCard>
-  );
-}
+    <>
+      <AuthHeading
+        title="Set a new password"
+        subtitle="Choose something you have not used here before."
+      />
+      <form onSubmit={handleSubmit} className="mt-7 space-y-4" noValidate>
+        <PasswordField
+          id="reset-password"
+          label="New password"
+          value={password}
+          error={errors["password"]}
+          onChange={(value) => {
+            setPassword(value);
+            setErrors((c) => ({ ...c, password: undefined, form: undefined }));
+          }}
+          autoComplete="new-password"
+        />
+        <PasswordField
+          id="reset-confirm"
+          label="Repeat new password"
+          value={confirm}
+          error={errors["confirm"]}
+          onChange={(value) => {
+            setConfirm(value);
+            setErrors((c) => ({ ...c, confirm: undefined, form: undefined }));
+          }}
+          autoComplete="new-password"
+        />
 
-function AuthSwitchLinkOrSignIn({ onSignIn }: { onSignIn: () => void }) {
-  return (
-    <p className="text-center text-sm text-muted-foreground">
-      Or{" "}
-      <button
-        type="button"
-        onClick={onSignIn}
-        className="font-medium text-ink-soft underline-offset-4 hover:underline"
-      >
-        sign in with your current password
-      </button>
-      .
-    </p>
+        {errors["form"] ? (
+          <p className="rounded-lg border border-negative/30 bg-negative-soft/60 px-3.5 py-2.5 text-sm text-negative">
+            {errors["form"]}
+          </p>
+        ) : null}
+
+        <SubmitButton busy={busy} label="Save new password" busyLabel="Saving…" />
+      </form>
+      <AuthSwitchLink leading="Remembered it?" to="/auth/login" linkLabel="Sign in" />
+    </>
   );
 }

@@ -6,7 +6,11 @@ const Card = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDivElemen
   ({ className, ...props }, ref) => (
     <div
       ref={ref}
-      className={cn("rounded-xl border bg-card text-card-foreground shadow", className)}
+      // Level 1: a card is a primary surface — the thing you read as a unit.
+      className={cn(
+        "glass-1 rounded-xl text-card-foreground backdrop-blur-2xl backdrop-saturate-150",
+        className,
+      )}
       {...props}
     />
   ),

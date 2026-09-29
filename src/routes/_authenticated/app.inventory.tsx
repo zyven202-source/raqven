@@ -1,13 +1,14 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
 import {
-  ArrowDownUp,
-  Boxes,
+  Archive,
   MoreVertical,
   PackagePlus,
   Pencil,
   Plus,
+  ScanLine,
   Search,
+  SlidersHorizontal,
   Trash2,
   TriangleAlert,
 } from "lucide-react";
@@ -24,6 +25,8 @@ import { ConfirmDialog } from "@/components/app/ConfirmDialog";
 import { ProductFormDialog } from "@/components/app/ProductFormDialog";
 import { StockMoveSheet, type StockMoveMode } from "@/components/app/StockMoveSheet";
 import { StorageImage } from "@/components/app/StorageImage";
+import { BarcodeScannerSheet } from "@/components/pos/BarcodeScannerSheet";
+import { StatusBadge, stockStatus, stockStatusLabel } from "@/components/app/primitives";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -48,7 +51,6 @@ import {
   useUpdateProduct,
 } from "@/hooks/useProducts";
 import { formatMoney } from "@/lib/format";
-import { cn } from "@/lib/utils";
 import { STORAGE_BUCKETS, type Product } from "@/types/ravqen";
 
 export const Route = createFileRoute("/_authenticated/app/inventory")({
@@ -56,6 +58,14 @@ export const Route = createFileRoute("/_authenticated/app/inventory")({
   component: InventoryPage,
 });
 
+/**
+ * The stock catalogue.
+ *
+ * Each row is built for recognition rather than browsing: what it is, how many
+ * are on the shelf, what it sells for, what it cost, and whether it needs
+ * reordering. Status comes from the product's own quantity and low-stock
+ * threshold, both read from the database — nothing here is estimated.
+ */
 function InventoryPage() {
   const { activeShop } = useActiveShop();
   const shopId = activeShop?.id ?? "";
@@ -71,6 +81,8 @@ function InventoryPage() {
     null,
   );
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [newBarcode, setNewBarcode] = useState<string | null>(null);
 
   const debouncedSearch = useDebouncedValue(search, 250);
   const productsQuery = useProducts({
@@ -86,12 +98,13 @@ function InventoryPage() {
   const deleteProduct = useDeleteProduct(shopId);
 
   const products = productsQuery.data ?? [];
+  const filtered = Boolean(debouncedSearch || categoryId || lowStockOnly || includeArchived);
 
   async function handleArchiveToggle(product: Product) {
     const nextActive = !product.is_active;
     try {
       await updateProduct.mutateAsync({ id: product.id, patch: { isActive: nextActive } });
-      toast.success(nextActive ? `${product.name} restored` : `${product.name} archived`, {
+      toast.success(nextActive ? `${product.name} is back on sale` : `${product.name} archived`, {
         description: nextActive
           ? "It is available at the till again."
           : "It keeps its history but no longer appears at the till.",
@@ -118,39 +131,54 @@ function InventoryPage() {
     <PageContainer>
       <PageHeader
         title="Stock"
-        subtitle={`${products.length} product${products.length === 1 ? "" : "s"} shown`}
         action={
           <Button
-            className="h-11"
+            className="h-10"
             onClick={() => {
               setEditing(null);
+              setNewBarcode(null);
               setFormOpen(true);
             }}
           >
-            <Plus /> Add
+            <Plus className="size-4" /> Add
           </Button>
         }
       />
 
-      <div className="mt-4 space-y-2">
-        <div className="relative">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
-          <Input
-            value={search}
-            onChange={(event) => setSearch(event.target.value)}
-            placeholder="Search name or barcode"
-            className="h-12 pl-9"
-            autoComplete="off"
-            enterKeyHint="search"
-          />
+      {/* ------------------------------------------------------------ search */}
+      <div className="sticky top-14 z-20 -mx-4 space-y-2 bg-background/95 px-4 pb-2.5 pt-1 backdrop-blur-md sm:-mx-5 sm:px-5">
+        <div className="flex gap-2">
+          <div className="relative flex-1">
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            />
+            <Input
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              placeholder="Search name or barcode"
+              aria-label="Search products"
+              className="h-12 pl-9"
+              autoComplete="off"
+              enterKeyHint="search"
+            />
+          </div>
+          <Button
+            type="button"
+            className="size-12 shrink-0"
+            onClick={() => setScannerOpen(true)}
+            aria-label="Scan a barcode to add a product"
+          >
+            <ScanLine className="size-5" />
+          </Button>
         </div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex gap-2">
           <Select
             value={categoryId || "all"}
             onValueChange={(value) => setCategoryId(value === "all" ? "" : value)}
           >
-            <SelectTrigger className="h-10 w-auto min-w-[9rem] flex-1">
+            <SelectTrigger className="h-10 min-w-0 flex-1" aria-label="Filter by category">
               <SelectValue placeholder="All categories" />
             </SelectTrigger>
             <SelectContent>
@@ -166,33 +194,30 @@ function InventoryPage() {
           <Button
             type="button"
             variant={lowStockOnly ? "default" : "outline"}
-            className="h-10"
+            className="h-10 shrink-0"
+            aria-pressed={lowStockOnly}
             onClick={() => setLowStockOnly((value) => !value)}
           >
-            <TriangleAlert /> Low stock
+            <TriangleAlert className="size-4" /> Low
           </Button>
 
           <Button
             type="button"
             variant={includeArchived ? "default" : "outline"}
-            className="h-10"
+            size="icon"
+            className="size-10 shrink-0"
+            aria-label="Show archived products"
+            aria-pressed={includeArchived}
             onClick={() => setIncludeArchived((value) => !value)}
           >
-            <Boxes /> Archived
+            <Archive className="size-4" />
           </Button>
         </div>
-
-        <Link
-          to="/app/stock"
-          search={{ shop: undefined }}
-          className="inline-flex items-center gap-1.5 text-sm text-ink-soft underline-offset-4 hover:underline"
-        >
-          <ArrowDownUp className="size-4" /> View the stock movement ledger
-        </Link>
       </div>
 
-      <div className="mt-4">
-        {productsQuery.isPending ? (
+      {/* ---------------------------------------------------------- products */}
+      <div className="mt-3">
+        {productsQuery.isLoading ? (
           <LoadingState label="Loading your stock…" />
         ) : productsQuery.isError ? (
           <ErrorState
@@ -201,118 +226,194 @@ function InventoryPage() {
           />
         ) : products.length === 0 ? (
           <EmptyState
-            title={
-              debouncedSearch || lowStockOnly ? "Nothing matches those filters" : "No products yet"
-            }
+            title={filtered ? "Nothing matches" : "No products yet"}
             description={
-              debouncedSearch || lowStockOnly
+              filtered
                 ? "Clear the filters to see the rest of your catalogue."
                 : "Add your first product to start selling and tracking stock."
             }
             action={
-              <Button
-                onClick={() => {
-                  setEditing(null);
-                  setFormOpen(true);
-                }}
-              >
-                <Plus /> Add a product
-              </Button>
+              filtered ? (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    setSearch("");
+                    setCategoryId("");
+                    setLowStockOnly(false);
+                    setIncludeArchived(false);
+                  }}
+                >
+                  <SlidersHorizontal className="size-4" /> Clear filters
+                </Button>
+              ) : (
+                <Button
+                  onClick={() => {
+                    setEditing(null);
+                    setNewBarcode(null);
+                    setFormOpen(true);
+                  }}
+                >
+                  <Plus className="size-4" /> Add a product
+                </Button>
+              )
             }
           />
         ) : (
-          <ul className="space-y-2.5">
-            {products.map((product) => (
-              <li key={product.id} className="surface-panel flex items-center gap-3 p-3">
-                <StorageImage
-                  bucket={STORAGE_BUCKETS.productImages}
-                  path={product.image_url}
-                  alt={product.name}
-                  className="size-12 shrink-0"
-                />
+          <>
+            <p className="mb-2 text-xs text-muted-foreground">
+              {products.length} product{products.length === 1 ? "" : "s"}
+            </p>
+            <ul className="list-divided">
+              {products.map((product) => {
+                const quantity = Number(product.quantity);
+                const threshold = Number(product.low_stock_threshold);
+                const tone = stockStatus(quantity, threshold);
 
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{product.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {formatMoney(product.selling_price, currency)} sell ·{" "}
-                    {formatMoney(product.buying_price, currency)} buy
-                  </p>
-                  <p
-                    className={cn(
-                      "mt-0.5 text-xs font-medium",
-                      product.is_low_stock ? "text-destructive" : "text-muted-foreground",
-                    )}
-                  >
-                    {Number(product.quantity)} {product.unit} in stock
-                    {product.is_low_stock ? " · low" : ""}
-                    {product.is_active ? "" : " · archived"}
-                  </p>
-                </div>
+                return (
+                  <li key={product.id} className="flex items-start gap-3 py-3">
+                    <StorageImage
+                      bucket={STORAGE_BUCKETS.productImages}
+                      path={product.image_url}
+                      alt={`${product.name} — product photo`}
+                      className="size-12 shrink-0 rounded-md"
+                    />
 
-                <Button
-                  size="icon"
-                  variant="outline"
-                  className="size-10 shrink-0"
-                  aria-label={`Add stock for ${product.name}`}
-                  onClick={() => setStockTarget({ product, mode: "in" })}
-                >
-                  <PackagePlus />
-                </Button>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-x-2 gap-y-1">
+                        <p className="truncate text-sm font-medium">{product.name}</p>
+                        {!product.is_active ? <StatusBadge>Archived</StatusBadge> : null}
+                      </div>
 
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      className="size-10 shrink-0"
-                      aria-label="More actions"
-                    >
-                      <MoreVertical />
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuItem onSelect={() => setStockTarget({ product, mode: "in" })}>
-                      <PackagePlus /> Add stock
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => setStockTarget({ product, mode: "count" })}>
-                      <Boxes /> Record a count
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => setStockTarget({ product, mode: "damage" })}>
-                      <TriangleAlert /> Record loss
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onSelect={() => {
-                        setEditing(product);
-                        setFormOpen(true);
-                      }}
-                    >
-                      <Pencil /> Edit product
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onSelect={() => void handleArchiveToggle(product)}>
-                      <Boxes /> {product.is_active ? "Archive" : "Restore"}
-                    </DropdownMenuItem>
-                    <DropdownMenuItem
-                      className="text-destructive"
-                      onSelect={() => setDeleteTarget(product)}
-                    >
-                      <Trash2 /> Delete
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-              </li>
-            ))}
-          </ul>
+                      {/* The two numbers a shopkeeper checks first, side by side. */}
+                      <p className="tnum mt-1 text-sm">
+                        <span className="font-semibold">{quantity}</span>
+                        <span className="text-muted-foreground"> {product.unit} in stock</span>
+                        <span className="mx-1.5 text-muted-foreground">·</span>
+                        <span className="font-medium">
+                          sells {formatMoney(product.selling_price, currency)}
+                        </span>
+                      </p>
+                      <p className="tnum mt-0.5 text-xs text-muted-foreground">
+                        cost {formatMoney(product.buying_price, currency)}
+                        {product.barcode ? ` · ${product.barcode}` : ""}
+                      </p>
+
+                      <div className="mt-2 flex flex-wrap items-center gap-2">
+                        <StatusBadge tone={tone}>
+                          {stockStatusLabel(quantity, threshold)}
+                        </StatusBadge>
+                        <Button
+                          size="sm"
+                          className="h-8"
+                          onClick={() => setStockTarget({ product, mode: "in" })}
+                        >
+                          <PackagePlus className="size-3.5" /> Restock
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          className="h-8"
+                          onClick={() => {
+                            setEditing(product);
+                            setNewBarcode(null);
+                            setFormOpen(true);
+                          }}
+                        >
+                          <Pencil className="size-3.5" /> Edit
+                        </Button>
+                      </div>
+                    </div>
+
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button
+                          size="icon"
+                          variant="ghost"
+                          className="size-9 shrink-0"
+                          aria-label={`More actions for ${product.name}`}
+                        >
+                          <MoreVertical className="size-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuItem onSelect={() => setStockTarget({ product, mode: "in" })}>
+                          <PackagePlus /> Add stock
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onSelect={() => setStockTarget({ product, mode: "count" })}
+                        >
+                          <SlidersHorizontal /> Record a count
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onSelect={() => setStockTarget({ product, mode: "damage" })}
+                        >
+                          <TriangleAlert /> Record loss
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          onSelect={() => {
+                            setEditing(product);
+                            setNewBarcode(null);
+                            setFormOpen(true);
+                          }}
+                        >
+                          <Pencil /> Edit product
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onSelect={() => void handleArchiveToggle(product)}>
+                          <Archive /> {product.is_active ? "Archive" : "Restore"}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem
+                          className="text-destructive focus:text-destructive"
+                          onSelect={() => setDeleteTarget(product)}
+                        >
+                          <Trash2 /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </li>
+                );
+              })}
+            </ul>
+
+            <Link
+              to="/app/stock"
+              search={{ shop: undefined }}
+              className="mt-4 inline-flex items-center gap-1.5 text-sm font-medium text-ink"
+            >
+              See every stock movement
+            </Link>
+          </>
         )}
       </div>
+
+      <BarcodeScannerSheet
+        open={scannerOpen}
+        onOpenChange={setScannerOpen}
+        onDetected={(code) => {
+          setScannerOpen(false);
+          setEditing(null);
+          setNewBarcode(code);
+          setFormOpen(true);
+        }}
+        onManualSubmit={(code) => {
+          setScannerOpen(false);
+          setEditing(null);
+          setNewBarcode(code);
+          setFormOpen(true);
+        }}
+      />
 
       <ProductFormDialog
         shopId={shopId}
         open={formOpen}
         onOpenChange={(open) => {
           setFormOpen(open);
-          if (!open) setEditing(null);
+          if (!open) {
+            setEditing(null);
+            setNewBarcode(null);
+          }
         }}
         product={editing}
+        initialBarcode={newBarcode}
       />
 
       <StockMoveSheet

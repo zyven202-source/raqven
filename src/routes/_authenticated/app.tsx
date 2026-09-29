@@ -1,38 +1,16 @@
 import { Link, Outlet, createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import {
-  ArrowLeft,
-  BarChart3,
-  HandCoins,
-  LayoutGrid,
-  LogOut,
-  MoreHorizontal,
-  PackagePlus,
-  Plus,
-  ReceiptText,
-  Settings,
-  Store,
-  Users,
-  Wallet,
-  Boxes,
-} from "lucide-react";
-import { useEffect } from "react";
+import { Check, ChevronDown, Store } from "lucide-react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
 import { CreateShopDialog } from "@/components/app/CreateShopDialog";
+import { FloatingNav } from "@/components/app/FloatingNav";
+import { JoinShopSheet } from "@/components/app/JoinShopSheet";
 import { LoadingState } from "@/components/app/AppChrome";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
-import { cn } from "@/lib/utils";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { ActiveShopProvider, useActiveShop } from "@/hooks/useActiveShop";
 import { signOut } from "@/services/auth.service";
 import type { ShopWithRole } from "@/types/ravqen";
@@ -44,46 +22,18 @@ export const Route = createFileRoute("/_authenticated/app")({
   component: AppLayout,
 });
 
-type AppModulePath =
-  | "/app/pos"
-  | "/app/inventory"
-  | "/app/transactions"
-  | "/app/restock"
-  | "/app/debtors"
-  | "/app/expenses"
-  | "/app/reports"
-  | "/app/employees"
-  | "/app/settings";
-
-type NavEntry = { to: AppModulePath; label: string; icon: typeof LayoutGrid };
-
-const NAV_PRIMARY: NavEntry[] = [
-  { to: "/app/pos", label: "POS", icon: LayoutGrid },
-  { to: "/app/inventory", label: "Stock", icon: Boxes },
-  { to: "/app/transactions", label: "Sales", icon: ReceiptText },
-];
-
-const NAV_MORE: NavEntry[] = [
-  { to: "/app/restock", label: "Restock", icon: PackagePlus },
-  { to: "/app/debtors", label: "Debtors", icon: HandCoins },
-  { to: "/app/expenses", label: "Expenses", icon: Wallet },
-  { to: "/app/reports", label: "Reports", icon: BarChart3 },
-  { to: "/app/employees", label: "Employees", icon: Users },
-  { to: "/app/settings", label: "Settings", icon: Settings },
-];
-
 function AppLayout() {
   const queryClient = useQueryClient();
   const navigate = useNavigate();
 
   return (
     <ActiveShopProvider>
-      <AppChrome queryClient={queryClient} navigate={navigate} />
+      <AppShell queryClient={queryClient} navigate={navigate} />
     </ActiveShopProvider>
   );
 }
 
-function AppChrome({
+function AppShell({
   queryClient,
   navigate,
 }: {
@@ -110,162 +60,134 @@ function AppChrome({
     }
   }
 
-  if (loading) return <LoadingState label="Opening your shops…" />;
+  if (loading)
+    return <LoadingState label="Opening your shop…" onRetry={() => window.location.reload()} />;
 
   if (hasNoShops || !activeShop) {
-    return (
-      <div className="min-h-screen bg-background">
-        <header className="mx-auto flex w-full max-w-3xl items-center justify-between px-5 py-4">
-          <Logo />
-        </header>
-        <main className="mx-auto w-full max-w-3xl px-5 pb-16 text-center">
-          <h1 className="text-2xl">No shop yet</h1>
-          <p className="mx-auto mt-2 max-w-sm text-sm text-muted-foreground">
-            Create your shop to start recording sales, stock and daily numbers.
-          </p>
-          <div className="mt-6 flex justify-center">
-            <CreateShopDialog>
-              <Button size="lg">
-                <Plus /> Create your shop
-              </Button>
-            </CreateShopDialog>
-          </div>
-          <p className="mt-4 text-xs text-muted-foreground">
-            Joined as staff? Ask the owner to add you — your shop appears here automatically.
-          </p>
-        </main>
-      </div>
-    );
+    return <NoShopState />;
   }
 
   return (
     <div className="min-h-screen bg-background">
-      <header className="sticky top-0 z-30 border-b border-border bg-background/95 backdrop-blur-sm">
-        <div className="mx-auto flex h-14 w-full max-w-3xl items-center gap-1 px-4 sm:px-6">
-          <Link
-            to="/dashboard"
-            aria-label="Back to shop list"
-            className="grid size-9 shrink-0 place-items-center rounded-lg text-muted-foreground transition-colors hover:bg-secondary"
-          >
-            <ArrowLeft className="size-5" />
-          </Link>
-          <div className="min-w-0 flex-1 pl-1">
-            <p className="truncate text-sm font-semibold leading-tight">{activeShop.name}</p>
-            <p className="text-xs text-muted-foreground">
-              {role === "owner" ? "Owner" : "Employee"} view
-            </p>
-          </div>
-          {shops.length > 1 ? (
-            <ShopSwitcher
-              shops={shops}
-              currentId={activeShop.id}
-              onSelect={(id) => void navigate({ to: "/app", search: { shop: id } })}
-            />
-          ) : null}
-          <Button
-            variant="ghost"
-            size="icon"
-            onClick={() => void handleSignOut()}
-            aria-label="Sign out"
-          >
-            <LogOut />
-          </Button>
-        </div>
+      <header className="glass-header sticky top-0 z-30 backdrop-blur-2xl backdrop-saturate-150">
+        <ShopBar
+          shop={activeShop}
+          shops={shops}
+          role={role}
+          onSwitch={(id) => void navigate({ to: "/app", search: { shop: id } })}
+        />
       </header>
 
       <Outlet />
 
-      {/* Mobile bottom navigation — thumb-reachable, three primary destinations. */}
-      <nav
-        aria-label="Primary"
-        className="fixed inset-x-0 bottom-0 z-30 border-t border-border bg-background pb-[env(safe-area-inset-bottom)]"
-      >
-        <div className="mx-auto grid max-w-3xl grid-cols-4">
-          {NAV_PRIMARY.map((item) => (
-            <NavItem key={item.to} {...item} />
-          ))}
-          <MoreSheet items={NAV_MORE} />
-        </div>
-      </nav>
+      <FloatingNav isOwner={role === "owner"} onSignOut={() => void handleSignOut()} />
     </div>
   );
 }
 
-function NavItem({ to, label, icon: Icon }: NavEntry) {
-  return (
-    <Link
-      to={to}
-      search={{ shop: undefined }}
-      className="flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground transition-colors data-[status=active]:text-ink"
-    >
-      <Icon className="size-5" />
-      {label}
-    </Link>
-  );
-}
-
-function MoreSheet({ items }: { items: NavEntry[] }) {
-  return (
-    <Sheet>
-      <SheetTrigger asChild>
-        <button
-          type="button"
-          className="flex h-16 flex-col items-center justify-center gap-1 text-[11px] font-medium text-muted-foreground"
-        >
-          <MoreHorizontal className="size-5" />
-          More
-        </button>
-      </SheetTrigger>
-      <SheetContent side="bottom" className="px-4 pb-8 pt-4">
-        <p className="px-2 pb-2 text-xs uppercase tracking-widest text-muted-foreground">More</p>
-        <div className="grid grid-cols-2 gap-2">
-          {items.map((item) => (
-            <Link
-              key={item.to}
-              to={item.to}
-              search={{ shop: undefined }}
-              className="flex items-center gap-3 rounded-xl border border-border px-4 py-3.5 text-sm font-medium"
-            >
-              <item.icon className="size-5 text-ink-soft" />
-              {item.label}
-            </Link>
-          ))}
-        </div>
-      </SheetContent>
-    </Sheet>
-  );
-}
-
-function ShopSwitcher({
+/** The one line that says which shop every number on screen belongs to. */
+function ShopBar({
+  shop,
   shops,
-  currentId,
-  onSelect,
+  role,
+  onSwitch,
 }: {
+  shop: ShopWithRole;
   shops: ShopWithRole[];
-  currentId: string;
-  onSelect: (id: string) => void;
+  role: "owner" | "employee" | null;
+  onSwitch: (id: string) => void;
 }) {
+  const [open, setOpen] = useState(false);
+
   return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Switch shop">
-          <Store />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-64">
-        <DropdownMenuLabel>Switch shop</DropdownMenuLabel>
-        <DropdownMenuSeparator />
-        {shops.map((shop) => (
-          <DropdownMenuItem
-            key={shop.id}
-            onClick={() => onSelect(shop.id)}
-            className={cn(shop.id === currentId && "bg-secondary")}
-          >
-            <span className="min-w-0 flex-1 truncate">{shop.name}</span>
-            <span className="text-xs text-muted-foreground">{shop.role}</span>
-          </DropdownMenuItem>
-        ))}
-      </DropdownMenuContent>
-    </DropdownMenu>
+    <div className="mx-auto flex h-14 w-full max-w-2xl items-center gap-1 px-2 sm:px-3">
+      <Link
+        to="/dashboard"
+        className="grid size-10 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors active:bg-sunken"
+        aria-label="All shops"
+      >
+        <Logo compact />
+      </Link>
+
+      <button
+        type="button"
+        onClick={() => setOpen(true)}
+        className="flex min-w-0 flex-1 items-center gap-1.5 rounded-md px-2 py-1.5 text-left transition-colors active:bg-sunken"
+        aria-label="Switch shop"
+      >
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-semibold leading-tight">{shop.name}</span>
+          <span className="block text-[11px] leading-tight text-muted-foreground">
+            {role === "owner" ? "Owner" : "Staff"}
+          </span>
+        </span>
+        <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
+      </button>
+
+      <Sheet open={open} onOpenChange={setOpen}>
+        <SheetContent side="bottom" className="px-0 pb-8 pt-3">
+          <p className="px-4 pb-2 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+            Your shops
+          </p>
+          <ul className="list-divided">
+            {shops.map((entry) => (
+              <li key={entry.id}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    onSwitch(entry.id);
+                    setOpen(false);
+                  }}
+                  className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-sunken"
+                >
+                  <Store className="size-4 shrink-0 text-muted-foreground" />
+                  <span className="min-w-0 flex-1">
+                    <span className="block truncate text-sm font-medium">{entry.name}</span>
+                    <span className="block text-xs text-muted-foreground">
+                      {entry.role === "owner" ? "You own this shop" : "You work here"}
+                    </span>
+                  </span>
+                  {entry.id === shop.id ? (
+                    <Check className="size-4 shrink-0 text-positive" aria-hidden />
+                  ) : null}
+                </button>
+              </li>
+            ))}
+          </ul>
+        </SheetContent>
+      </Sheet>
+    </div>
+  );
+}
+
+/**
+ * Shown when the signed-in user belongs to no shop. It offers both real ways
+ * out — create a shop, or join one with a code — and never a dead end.
+ */
+function NoShopState() {
+  return (
+    <div className="flex min-h-screen flex-col bg-background">
+      <header className="px-5 py-4">
+        <Logo showTagline />
+      </header>
+      <main className="flex flex-1 flex-col justify-center px-5 pb-16">
+        <h1 className="text-2xl">You are not in a shop yet</h1>
+        <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
+          If you own a shop, create it here. If your employer gave you an access code, use that
+          instead — it will connect you to the right shop.
+        </p>
+
+        <div className="mt-7 space-y-3">
+          <CreateShopDialog>
+            <Button className="h-12 w-full text-base">Create a shop</Button>
+          </CreateShopDialog>
+          <JoinShopSheet>
+            <Button variant="outline" className="h-12 w-full text-base">
+              I have an access code
+            </Button>
+          </JoinShopSheet>
+        </div>
+      </main>
+    </div>
   );
 }

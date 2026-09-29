@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { KeyRound, Plus, Users } from "lucide-react";
+import { Check, Copy, KeyRound, Loader2, RefreshCw, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -10,330 +10,354 @@ import {
   PageContainer,
   PageHeader,
 } from "@/components/app/AppChrome";
+import { ToggleRow } from "@/components/app/fields";
 import { OwnerOnly } from "@/components/app/OwnerOnly";
+import { StatusBadge, SectionLabel } from "@/components/app/primitives";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 import {
   useAccessCodes,
-  useAddMember,
   useCreateAccessCode,
   useDeactivateAccessCode,
+  useRegenerateAccessCode,
+  useSetEmployeeJoining,
   useShopMembers,
+  useShopSettings,
   useUpdateMember,
 } from "@/hooks/useShopAdmin";
 import { useActiveShop } from "@/hooks/useActiveShop";
 import { useSession } from "@/hooks/useSession";
 import { formatDateTime } from "@/lib/format";
-import { suggestAccessCode } from "@/services/shops.service";
+import { isAccessCodeTakenElsewhere, suggestAccessCode } from "@/services/shops.service";
 
 export const Route = createFileRoute("/_authenticated/app/employees")({
-  head: () => ({ meta: [{ title: "Employees — RAVQEN" }] }),
+  head: () => ({ meta: [{ title: "Staff access — RAVQEN" }] }),
   component: () => (
-    <OwnerOnly title="Employees">
+    <OwnerOnly title="Staff access">
       <EmployeesPage />
     </OwnerOnly>
   ),
 });
 
+/**
+ * Staff access.
+ *
+ * The owner never handles an account id. They run one access code; any staff
+ * member who signs up and enters it joins this shop as an employee. Individual
+ * staff are then suspended or restored by name.
+ */
 function EmployeesPage() {
   const { activeShop } = useActiveShop();
   const shopId = activeShop?.id ?? "";
   const { user } = useSession();
 
+  const shopQuery = useShopSettings(shopId);
   const membersQuery = useShopMembers(shopId);
   const codesQuery = useAccessCodes(shopId);
+  const setJoining = useSetEmployeeJoining(shopId);
   const updateMember = useUpdateMember(shopId);
-  const createCode = useCreateAccessCode(shopId);
+  const createCodeMutation = useCreateAccessCode(shopId);
+  const regenerateCodeMutation = useRegenerateAccessCode(shopId);
   const deactivateCode = useDeactivateAccessCode(shopId);
 
-  const [label, setLabel] = useState("Till one");
-  const [code, setCode] = useState(() => suggestAccessCode());
-  const [justCreated, setJustCreated] = useState<string | null>(null);
+  const [newCode, setNewCode] = useState<string | null>(null);
+  const [busy, setBusy] = useState<"create" | "regenerate" | null>(null);
 
-  async function changeRole(memberId: string, role: "owner" | "employee") {
-    try {
-      await updateMember.mutateAsync({ memberId, patch: { role } });
-      toast.success(`Role changed to ${role}`);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not change the role.");
-    }
+  const activeCode = (codesQuery.data ?? []).find((entry) => entry.is_active) ?? null;
+  const joiningOpen = shopQuery.data?.employee_joining_enabled ?? true;
+
+  /** The plaintext exists only in this session — the database keeps a digest. */
+  function reveal(code: string) {
+    setNewCode(code);
+    void navigator.clipboard?.writeText(code).then(
+      () => toast.success("Copied", { description: code }),
+      () => toast.success("Access code", { description: code }),
+    );
   }
 
-  async function changeStatus(memberId: string, status: "active" | "suspended") {
-    try {
-      await updateMember.mutateAsync({ memberId, patch: { status } });
-      toast.success(status === "suspended" ? "Access suspended" : "Access restored");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not update access.");
+  /**
+   * Suggests a code that no other shop is already using.
+   *
+   * A code shared by two shops cannot be redeemed — the database refuses rather
+   * than risk enrolling a staff member into the wrong shop — so a collision
+   * would leave the owner holding a dead code. Six digits from eight digits is
+   * a large space, so a retry settles it in practice.
+   */
+  async function suggestFreeCode(): Promise<string> {
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const code = suggestAccessCode();
+      if (!(await isAccessCodeTakenElsewhere(code))) return code;
     }
+    return suggestAccessCode();
   }
 
-  async function mintCode(event: React.FormEvent) {
-    event.preventDefault();
-    if (code.trim().length < 4) {
-      toast.error("An access code needs at least 4 characters.");
-      return;
-    }
+  async function createCode() {
+    setBusy("create");
     try {
-      await createCode.mutateAsync({ label, code: code.trim() });
-      setJustCreated(code.trim());
-      toast.success("Access code created", {
-        description: "Copy it now — only a digest is stored, so it cannot be shown again.",
-      });
-      setCode(suggestAccessCode());
+      const code = await suggestFreeCode();
+      await createCodeMutation.mutateAsync(code);
+      reveal(code);
     } catch (error) {
       toast.error(error instanceof Error ? error.message : "Could not create the code.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function regenerateCode() {
+    setBusy("regenerate");
+    try {
+      const code = await suggestFreeCode();
+      await regenerateCodeMutation.mutateAsync(code);
+      reveal(code);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not change the code.");
+    } finally {
+      setBusy(null);
+    }
+  }
+
+  async function retireCode(codeId: string) {
+    try {
+      await deactivateCode.mutateAsync(codeId);
+      toast.success("Code turned off", {
+        description: "Staff who already joined keep their access.",
+      });
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not turn the code off.");
+    }
+  }
+
+  async function toggleJoining(next: boolean) {
+    try {
+      await setJoining.mutateAsync(next);
+      toast.success(next ? "Staff can now join with the code" : "New staff can no longer join");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not change that.");
+    }
+  }
+
+  async function setStatus(memberId: string, status: "active" | "suspended") {
+    try {
+      await updateMember.mutateAsync({ memberId, patch: { status } });
+      toast.success(status === "suspended" ? "Access paused" : "Access restored");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not update that person.");
+    }
+  }
+
+  async function setRole(memberId: string, role: "owner" | "employee") {
+    try {
+      await updateMember.mutateAsync({ memberId, patch: { role } });
+      toast.success(role === "owner" ? "Made an owner" : "Changed to staff");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not change that role.");
     }
   }
 
   return (
     <PageContainer>
-      <PageHeader title="Employees" subtitle="Who can work in this shop, and as what." />
+      <PageHeader
+        title="Staff access"
+        subtitle="One code brings your staff in. Nobody needs a technical account id."
+      />
 
-      <div className="mt-5">
-        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-          <Users className="size-4" /> Team
-        </h2>
+      {/* ---------------------------------------------------------- access code */}
+      <section className="mb-8">
+        <SectionLabel>Access code</SectionLabel>
 
-        {membersQuery.isPending ? (
-          <LoadingState label="Loading the team…" />
+        {newCode ? (
+          <div className="rounded-xl border border-positive/40 bg-positive-soft/50 p-4">
+            <p className="text-xs font-semibold uppercase tracking-wider text-positive">
+              New code — show it now
+            </p>
+            <p className="tnum mt-1.5 text-3xl font-semibold tracking-[0.3em]">{newCode}</p>
+            <p className="mt-2 text-xs text-muted-foreground">
+              Give this to your staff. It works until you change it, and you will not be able to
+              read it back later.
+            </p>
+            <Button
+              variant="outline"
+              className="mt-3 h-10"
+              onClick={() => {
+                void navigator.clipboard?.writeText(newCode);
+                toast.success("Copied");
+              }}
+            >
+              <Copy className="size-4" /> Copy
+            </Button>
+            <Button variant="ghost" className="mt-2 ml-2 h-10" onClick={() => setNewCode(null)}>
+              Done
+            </Button>
+          </div>
+        ) : (
+          <div className="glass-1 rounded-xl backdrop-blur-2xl backdrop-saturate-150 p-4">
+            {codesQuery.isLoading ? (
+              <p className="text-sm text-muted-foreground">Checking the code…</p>
+            ) : activeCode ? (
+              <>
+                <div className="flex items-center justify-between gap-3">
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium">A code is active</p>
+                    <p className="mt-0.5 text-xs text-muted-foreground">
+                      {activeCode.last_used_at
+                        ? `Last used ${formatDateTime(activeCode.last_used_at)}`
+                        : "Not used yet — share it with your staff."}
+                    </p>
+                  </div>
+                  <StatusBadge tone="positive">Active</StatusBadge>
+                </div>
+                <div className="mt-4 flex flex-wrap gap-2">
+                  <Button variant="outline" className="h-10" onClick={() => void regenerateCode()}>
+                    {busy === "regenerate" ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <RefreshCw className="size-4" />
+                    )}
+                    Change code
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    className="h-10"
+                    onClick={() => void retireCode(activeCode.id)}
+                  >
+                    <X className="size-4" /> Turn off
+                  </Button>
+                </div>
+              </>
+            ) : (
+              <>
+                <p className="text-sm font-medium">No code yet</p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  Create a code, then your staff enter it when they sign up.
+                </p>
+                <Button
+                  className="mt-3 h-10"
+                  onClick={() => void createCode()}
+                  disabled={busy === "create"}
+                >
+                  {busy === "create" ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <KeyRound className="size-4" />
+                  )}
+                  Create a code
+                </Button>
+              </>
+            )}
+          </div>
+        )}
+
+        <div className="list-divided mt-3">
+          <ToggleRow
+            title="Allow staff to join with the code"
+            description="Turn this off when you have all the staff you need. Staff who already joined keep their access."
+            checked={joiningOpen}
+            disabled={setJoining.isPending || shopQuery.isLoading}
+            onCheckedChange={(next) => void toggleJoining(next)}
+          />
+        </div>
+      </section>
+
+      {/* ------------------------------------------------------------- the team */}
+      <section>
+        <SectionLabel>Who works here</SectionLabel>
+
+        {membersQuery.isLoading ? (
+          <LoadingState label="Loading your team…" />
         ) : membersQuery.isError ? (
           <ErrorState
             message={membersQuery.error.message}
             onRetry={() => void membersQuery.refetch()}
           />
-        ) : (
-          <ul className="mt-3 space-y-2.5">
-            {(membersQuery.data ?? []).map((member) => (
-              <li key={member.id} className="surface-panel space-y-3 p-3.5">
-                <div className="flex items-start justify-between gap-3">
-                  <div className="min-w-0">
-                    <p className="truncate text-sm font-medium">
-                      {member.display_name || "Team member"}
-                      {member.user_id === user?.id ? " (you)" : ""}
-                    </p>
-                    <p className="text-xs text-muted-foreground">
-                      Joined {formatDateTime(member.created_at)}
-                    </p>
-                  </div>
-                  <span className="shrink-0 rounded-full bg-secondary px-2.5 py-1 text-xs font-medium capitalize">
-                    {member.role}
-                  </span>
-                </div>
-
-                {member.user_id !== user?.id ? (
-                  <div className="flex flex-wrap gap-2">
-                    <Button
-                      variant="outline"
-                      className="h-9"
-                      disabled={updateMember.isPending}
-                      onClick={() =>
-                        void changeRole(member.id, member.role === "owner" ? "employee" : "owner")
-                      }
-                    >
-                      Make {member.role === "owner" ? "employee" : "owner"}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="h-9"
-                      disabled={updateMember.isPending}
-                      onClick={() =>
-                        void changeStatus(
-                          member.id,
-                          member.status === "active" ? "suspended" : "active",
-                        )
-                      }
-                    >
-                      {member.status === "active" ? "Suspend access" : "Restore access"}
-                    </Button>
-                  </div>
-                ) : null}
-
-                {member.status !== "active" ? (
-                  <p className="text-xs text-destructive">Status: {member.status}</p>
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        )}
-
-        <p className="mt-3 text-xs text-muted-foreground">
-          Adding a person requires their account to exist first — they sign up in RAVQEN, then you
-          add them here by their user id.
-        </p>
-      </div>
-
-      <div className="mt-8">
-        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-          <KeyRound className="size-4" /> Access codes
-        </h2>
-        <p className="mt-2 text-xs text-muted-foreground">
-          The plaintext is shown once and never stored — the database keeps a SHA-256 digest only.
-        </p>
-
-        {justCreated ? (
-          <div className="surface-panel mt-3 border-primary/40 p-4">
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">New code</p>
-            <p className="mt-1 font-mono text-2xl font-semibold tracking-widest">{justCreated}</p>
-            <Button
-              variant="outline"
-              className="mt-3 h-10"
-              onClick={() => {
-                void navigator.clipboard?.writeText(justCreated);
-                toast.success("Copied");
-              }}
-            >
-              Copy code
-            </Button>
-          </div>
-        ) : null}
-
-        <form onSubmit={mintCode} className="surface-panel mt-3 space-y-3 p-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="code-label">Label</Label>
-            <Input
-              id="code-label"
-              value={label}
-              onChange={(event) => setLabel(event.target.value)}
-              className="h-11"
-              autoComplete="off"
-            />
-          </div>
-          <div className="space-y-1.5">
-            <Label htmlFor="code-value">Code</Label>
-            <Input
-              id="code-value"
-              value={code}
-              onChange={(event) => setCode(event.target.value)}
-              inputMode="numeric"
-              className="h-11 font-mono tracking-widest"
-              autoComplete="off"
-            />
-          </div>
-          <Button type="submit" className="h-11 w-full" disabled={createCode.isPending}>
-            <Plus /> {createCode.isPending ? "Creating…" : "Create access code"}
-          </Button>
-        </form>
-
-        {codesQuery.isPending ? (
-          <LoadingState label="Loading codes…" />
-        ) : (codesQuery.data ?? []).length === 0 ? (
+        ) : (membersQuery.data ?? []).length === 0 ? (
           <EmptyState
-            title="No access codes yet"
-            description="Create one to give staff a till code."
+            title="No one here yet"
+            description="You are the owner. Share the access code above and your staff will appear here when they join."
           />
         ) : (
-          <ul className="mt-3 space-y-2">
-            {(codesQuery.data ?? []).map((entry) => (
-              <li key={entry.id} className="surface-panel flex items-center gap-3 p-3.5">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">{entry.label}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {entry.is_active ? "Active" : "Retired"}
-                    {entry.expires_at ? ` · expires ${formatDateTime(entry.expires_at)}` : ""}
-                    {entry.last_used_at ? ` · last used ${formatDateTime(entry.last_used_at)}` : ""}
-                  </p>
-                </div>
-                {entry.is_active ? (
-                  <Button
-                    variant="outline"
-                    className="h-9 shrink-0"
-                    disabled={deactivateCode.isPending}
-                    onClick={() => void deactivateCode.mutateAsync(entry.id)}
-                  >
-                    Retire
-                  </Button>
-                ) : null}
-              </li>
-            ))}
+          <ul className="list-divided">
+            {(membersQuery.data ?? []).map((member) => {
+              const isMe = member.user_id === user?.id;
+              const name = member.display_name || (isMe ? "You" : "Team member");
+              const active = member.status === "active";
+
+              return (
+                <li key={member.id} className="py-3">
+                  <div className="flex items-start gap-3">
+                    <span
+                      className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-full bg-sunken text-xs font-semibold uppercase text-muted-foreground"
+                      aria-hidden
+                    >
+                      {name.slice(0, 2)}
+                    </span>
+                    <div className="min-w-0 flex-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="truncate text-sm font-medium">
+                          {name}
+                          {isMe ? " (you)" : ""}
+                        </p>
+                        <StatusBadge tone={member.role === "owner" ? "info" : "neutral"}>
+                          {member.role === "owner" ? "Owner" : "Staff"}
+                        </StatusBadge>
+                        {!active ? <StatusBadge tone="negative">Paused</StatusBadge> : null}
+                      </div>
+                      <p className="mt-0.5 text-xs text-muted-foreground">
+                        Joined {formatDateTime(member.created_at)}
+                      </p>
+
+                      {!isMe ? (
+                        <div className="mt-2 flex flex-wrap gap-2">
+                          <Button
+                            variant="outline"
+                            className="h-9 text-xs"
+                            disabled={updateMember.isPending}
+                            onClick={() =>
+                              void setStatus(
+                                member.id,
+                                member.status === "active" ? "suspended" : "active",
+                              )
+                            }
+                          >
+                            {member.status === "active" ? (
+                              <>
+                                <X className="size-3.5" /> Pause
+                              </>
+                            ) : (
+                              <>
+                                <Check className="size-3.5" /> Restore
+                              </>
+                            )}
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            className="h-9 text-xs"
+                            disabled={updateMember.isPending}
+                            onClick={() =>
+                              void setRole(
+                                member.id,
+                                member.role === "owner" ? "employee" : "owner",
+                              )
+                            }
+                          >
+                            <UserPlus className="size-3.5" />
+                            {member.role === "owner" ? "Make staff" : "Make owner"}
+                          </Button>
+                        </div>
+                      ) : null}
+                    </div>
+                  </div>
+                </li>
+              );
+            })}
           </ul>
         )}
-      </div>
 
-      <div className="mt-8">
-        <h2 className="text-sm font-semibold uppercase tracking-widest text-muted-foreground">
-          Add a staff member
-        </h2>
-        <AddMemberForm shopId={shopId} />
-      </div>
+        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
+          To bring someone in, send them the access code. They sign up in RAVQEN, choose &ldquo;I
+          have an access code&rdquo;, and they land straight in this shop.
+        </p>
+      </section>
     </PageContainer>
-  );
-}
-
-/**
- * Staff are added by user id: their account must exist first. `shop_members`
- * only exposes rows to the owner, so this cannot be used to browse users.
- */
-function AddMemberForm({ shopId }: { shopId: string }) {
-  const addMember = useAddMember(shopId);
-  const [userId, setUserId] = useState("");
-  const [displayName, setDisplayName] = useState("");
-  const [role, setRole] = useState<"owner" | "employee">("employee");
-
-  async function submit(event: React.FormEvent) {
-    event.preventDefault();
-    const id = userId.trim();
-    if (!/^[0-9a-f-]{36}$/i.test(id)) {
-      toast.error("Paste the staff member's user id (a UUID).");
-      return;
-    }
-    try {
-      await addMember.mutateAsync({ userId: id, role, displayName: displayName.trim() || null });
-      toast.success("Staff member added");
-      setUserId("");
-      setDisplayName("");
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not add the member.");
-    }
-  }
-
-  return (
-    <form onSubmit={submit} className="surface-panel mt-3 space-y-3 p-4">
-      <div className="space-y-1.5">
-        <Label htmlFor="member-id">User id</Label>
-        <Input
-          id="member-id"
-          value={userId}
-          onChange={(event) => setUserId(event.target.value)}
-          placeholder="00000000-0000-0000-0000-000000000000"
-          className="h-11 font-mono text-xs"
-          autoComplete="off"
-        />
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="member-name">Display name</Label>
-        <Input
-          id="member-name"
-          value={displayName}
-          onChange={(event) => setDisplayName(event.target.value)}
-          placeholder="e.g. Peter"
-          className="h-11"
-          autoComplete="off"
-        />
-      </div>
-      <div className="space-y-1.5">
-        <Label htmlFor="member-role">Role</Label>
-        <Select value={role} onValueChange={(value) => setRole(value as "owner" | "employee")}>
-          <SelectTrigger id="member-role" className="h-11">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="employee">Employee</SelectItem>
-            <SelectItem value="owner">Owner</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-      <Button type="submit" className="h-11 w-full" disabled={addMember.isPending}>
-        {addMember.isPending ? "Adding…" : "Add member"}
-      </Button>
-    </form>
   );
 }

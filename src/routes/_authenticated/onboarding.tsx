@@ -1,9 +1,11 @@
-import { createFileRoute, Link } from "@tanstack/react-router";
-import { ArrowRight, ClipboardList, PackagePlus, Users } from "lucide-react";
-import { useEffect } from "react";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { useEffect, useRef } from "react";
+import { KeyRound, Store } from "lucide-react";
 
 import { CreateShopDialog } from "@/components/app/CreateShopDialog";
-import { LoadingState } from "@/components/app/AppChrome";
+import { ErrorState, LoadingState, PageContainer } from "@/components/app/AppChrome";
+import { JoinShopSheet } from "@/components/app/JoinShopSheet";
+import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/hooks/useSession";
 import { useMyShops } from "@/hooks/useShops";
@@ -13,82 +15,102 @@ export const Route = createFileRoute("/_authenticated/onboarding")({
   component: OnboardingPage,
 });
 
-const STEPS = [
-  {
-    icon: ClipboardList,
-    title: "Create your shop",
-    body: "Name, business type and location. You become the owner with full control.",
-  },
-  {
-    icon: PackagePlus,
-    title: "Add your products",
-    body: "Categories, buying and selling prices, opening stock — or import later.",
-  },
-  {
-    icon: Users,
-    title: "Bring in your staff",
-    body: "Employees get their own access codes and can sell, restock and record expenses.",
-  },
-] as const;
-
+/**
+ * The one question a new account has to answer: do you run a shop, or do you
+ * work in one? Both answers lead straight to a real operation — creating a
+ * shop, or redeeming an access code. There is no third "skip for now" that
+ * would leave the account stranded.
+ */
 function OnboardingPage() {
   const navigate = Route.useNavigate();
   const { loading: sessionLoading } = useSession();
   const shopsQuery = useMyShops();
 
-  if (sessionLoading || shopsQuery.isPending) {
-    return <LoadingState label="Loading…" />;
+  const shop = (shopsQuery.data ?? [])[0];
+
+  // The redirect only applies to someone who *arrived* already belonging to a
+  // shop. A shop created from this page must not trigger it: the confirmation
+  // step holds the staff access code, which is only ever shown once, and
+  // navigating away would destroy it before the owner could read it.
+  const hadShopOnArrival = useRef<boolean | null>(null);
+  useEffect(() => {
+    if (sessionLoading || !shopsQuery.isSuccess) return;
+    if (hadShopOnArrival.current === null) {
+      hadShopOnArrival.current = Boolean(shop);
+    }
+    if (hadShopOnArrival.current) {
+      void navigate({ to: "/dashboard", replace: true });
+    }
+  }, [sessionLoading, shopsQuery.isSuccess, shop, navigate]);
+
+  if (sessionLoading || shopsQuery.isLoading) {
+    return <LoadingState label="Checking your account…" />;
   }
 
-  const shops = shopsQuery.data ?? [];
-  const shop = shops[0] ?? null;
-
-  if (shop) {
-    return <RedirectToShop shopId={shop.id} />;
+  if (shopsQuery.isError) {
+    return (
+      <PageContainer>
+        <ErrorState message={shopsQuery.error.message} onRetry={() => void shopsQuery.refetch()} />
+      </PageContainer>
+    );
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <main className="mx-auto w-full max-w-2xl px-5 pb-16 pt-10">
-        <p className="text-xs font-medium uppercase tracking-widest text-muted-foreground">
-          Getting started
+    <div className="flex min-h-screen flex-col bg-background">
+      <header className="px-5 py-5">
+        <Logo showTagline />
+      </header>
+
+      <PageContainer className="flex-1 pb-16 pt-4">
+        <h1 className="text-[1.5rem] leading-tight">How will you use RAVQEN?</h1>
+        <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
+          This decides what you set up next. You can always add the other one later.
         </p>
-        <h1 className="mt-2 text-3xl">Three steps to your first record</h1>
 
-        <ol className="mt-8 space-y-3">
-          {STEPS.map((step, index) => (
-            <li key={step.title} className="surface-panel flex items-start gap-4 p-5">
-              <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-secondary font-display text-base font-semibold text-ink">
-                {index + 1}
-              </span>
-              <div>
-                <p className="font-medium">{step.title}</p>
-                <p className="mt-1 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
-              </div>
-              <step.icon className="ml-auto size-5 shrink-0 text-ink-soft" aria-hidden />
-            </li>
-          ))}
-        </ol>
-
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+        <div className="mt-7 space-y-3">
           <CreateShopDialog>
-            <Button size="lg" className="h-12">
-              Create your shop <ArrowRight />
-            </Button>
+            <button
+              type="button"
+              className="flex w-full items-center gap-3 rounded-xl border border-border bg-card p-4 text-left transition-colors active:bg-sunken"
+            >
+              <span className="grid size-11 shrink-0 place-items-center rounded-lg bg-ink-deep text-champagne">
+                <Store className="size-5" aria-hidden />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[0.9375rem] font-semibold">I own a shop</span>
+                <span className="mt-0.5 block text-sm text-muted-foreground">
+                  Create your shop and become its owner.
+                </span>
+              </span>
+            </button>
           </CreateShopDialog>
-          <Button asChild size="lg" variant="outline" className="h-12">
-            <Link to="/dashboard">Back to my shops</Link>
-          </Button>
+
+          <JoinShopSheet>
+            <button
+              type="button"
+              className="flex w-full items-center gap-3 rounded-xl border border-border bg-card p-4 text-left transition-colors active:bg-sunken"
+            >
+              <span className="grid size-11 shrink-0 place-items-center rounded-lg bg-sunken text-muted-foreground">
+                <KeyRound className="size-5" aria-hidden />
+              </span>
+              <span className="min-w-0 flex-1">
+                <span className="block text-[0.9375rem] font-semibold">I work in a shop</span>
+                <span className="mt-0.5 block text-sm text-muted-foreground">
+                  Enter the access code your employer gave you.
+                </span>
+              </span>
+            </button>
+          </JoinShopSheet>
         </div>
-      </main>
+
+        <Button
+          variant="ghost"
+          className="mt-6 w-full"
+          onClick={() => void navigate({ to: "/dashboard" })}
+        >
+          Skip for now
+        </Button>
+      </PageContainer>
     </div>
   );
-}
-
-function RedirectToShop({ shopId }: { shopId: string }) {
-  const navigate = Route.useNavigate();
-  useEffect(() => {
-    void navigate({ to: "/app", search: { shop: shopId }, replace: true });
-  }, [navigate, shopId]);
-  return <LoadingState label="Opening your shop…" />;
 }

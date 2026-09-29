@@ -1,19 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { ArrowDownRight, ArrowUpRight, Minus, Receipt, TriangleAlert } from "lucide-react";
+import { Receipt, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 
 import {
   EmptyState,
   ErrorState,
   LoadingState,
+  NoticeState,
   PageContainer,
   PageHeader,
 } from "@/components/app/AppChrome";
+import { Field } from "@/components/app/fields";
+import { Money } from "@/components/app/primitives";
 import { ReceiptSheet } from "@/components/app/ReceiptSheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useActiveShop } from "@/hooks/useActiveShop";
 import { useRefundedQuantities, useCreateRefund, useTransactions } from "@/hooks/useLedger";
@@ -34,14 +36,18 @@ export const Route = createFileRoute("/_authenticated/app/transactions")({
 const FILTERS: { value: TransactionKind | "all"; label: string }[] = [
   { value: "all", label: "All" },
   { value: "sale", label: "Sales" },
-  { value: "payment", label: "Payments" },
   { value: "debt_payment", label: "Debt" },
   { value: "expense", label: "Expenses" },
   { value: "refund", label: "Refunds" },
   { value: "stock_in", label: "Stock in" },
-  { value: "stock_adjustment", label: "Adjustments" },
+  { value: "stock_adjustment", label: "Counts" },
 ];
 
+/**
+ * The shop's history. One line per event, newest first, each one openable for
+ * the full detail. Financial records are never deleted from here — a mistake is
+ * corrected by a counter-entry the owner can see.
+ */
 function TransactionsPage() {
   const { activeShop } = useActiveShop();
   const shopId = activeShop?.id ?? "";
@@ -62,25 +68,20 @@ function TransactionsPage() {
     <PageContainer>
       <PageHeader
         title="Sales & transactions"
-        subtitle="One line per event, newest first. Nothing here is deleted."
+        subtitle="Everything that has moved, newest first."
       />
 
-      {activeShop?.accepts_refunds ? (
-        <p className="mt-2 text-xs text-muted-foreground">
-          This shop accepts refunds — open a sale to refund it.
-        </p>
-      ) : null}
-
-      <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
+      <div className="-mx-4 mb-3 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:-mx-5 sm:px-5">
         {FILTERS.map((option) => (
           <button
             key={option.value}
             type="button"
             onClick={() => setFilter(option.value)}
+            aria-pressed={filter === option.value}
             className={cn(
-              "h-9 shrink-0 rounded-full border px-3.5 text-xs font-medium",
+              "press h-9 shrink-0 rounded-full border px-3.5 text-xs font-medium",
               filter === option.value
-                ? "border-primary bg-primary/5 text-ink"
+                ? "border-ink bg-ink text-background"
                 : "border-border text-muted-foreground",
             )}
           >
@@ -89,90 +90,102 @@ function TransactionsPage() {
         ))}
       </div>
 
-      <div className="mt-4">
-        {transactionsQuery.isPending ? (
-          <LoadingState label="Loading transactions…" />
-        ) : transactionsQuery.isError ? (
-          <ErrorState
-            message={transactionsQuery.error.message}
-            onRetry={() => void transactionsQuery.refetch()}
-          />
-        ) : rows.length === 0 ? (
-          <EmptyState
-            title="No transactions yet"
-            description="Complete a sale at the till, record an expense or add stock and it appears here."
-            action={
-              <Link to="/app/pos" search={{ shop: undefined }}>
-                <Button variant="outline">Go to the till</Button>
-              </Link>
-            }
-          />
-        ) : (
-          <ul className="space-y-2">
-            {rows.map((row) => (
-              <li key={row.id}>
-                <button
-                  type="button"
-                  onClick={() => setSelected(row)}
-                  className="surface-panel flex w-full items-start gap-3 p-3 text-left active:bg-secondary"
+      {transactionsQuery.isLoading ? (
+        <LoadingState label="Loading transactions…" />
+      ) : transactionsQuery.isError ? (
+        <ErrorState
+          message={transactionsQuery.error.message}
+          onRetry={() => void transactionsQuery.refetch()}
+        />
+      ) : rows.length === 0 ? (
+        <EmptyState
+          title={filter === "all" ? "No transactions yet" : "Nothing of that kind yet"}
+          description={
+            filter === "all"
+              ? "Completed sales, expenses and stock deliveries will appear here."
+              : "Try another filter to see the rest of your history."
+          }
+          action={
+            filter === "all" ? (
+              <Button asChild variant="outline">
+                <Link to="/app/pos" search={{ shop: undefined }}>
+                  Go to the till
+                </Link>
+              </Button>
+            ) : (
+              <Button variant="outline" onClick={() => setFilter("all")}>
+                Show everything
+              </Button>
+            )
+          }
+        />
+      ) : (
+        <ul className="list-divided">
+          {rows.map((row) => (
+            <li key={row.id}>
+              <button
+                type="button"
+                onClick={() => setSelected(row)}
+                className="flex w-full items-start gap-3 py-3 text-left active:opacity-70"
+              >
+                <span
+                  className={cn(
+                    "mt-0.5 shrink-0 text-xs font-semibold uppercase tracking-wide",
+                    row.direction === "in"
+                      ? "text-positive"
+                      : row.direction === "out"
+                        ? "text-negative"
+                        : "text-muted-foreground",
+                  )}
+                  aria-hidden
                 >
-                  <span
-                    className={cn(
-                      "mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg",
-                      row.direction === "in"
-                        ? "bg-primary/10 text-ink"
-                        : row.direction === "out"
-                          ? "bg-destructive/10 text-destructive"
-                          : "bg-secondary text-muted-foreground",
-                    )}
-                  >
-                    {row.direction === "in" ? (
-                      <ArrowUpRight className="size-4" />
-                    ) : row.direction === "out" ? (
-                      <ArrowDownRight className="size-4" />
-                    ) : (
-                      <Minus className="size-4" />
-                    )}
+                  {row.direction === "in" ? "+" : row.direction === "out" ? "−" : "•"}
+                </span>
+
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm font-medium">{row.title}</span>
+                  <span className="mt-0.5 block text-xs text-muted-foreground">
+                    {kindLabel(row.kind)}
+                    {row.subtitle ? ` · ${row.subtitle}` : ""} · {formatDateTime(row.occurredAt)}
                   </span>
+                  {row.reference ? (
+                    <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                      {row.reference}
+                      {row.userName ? ` · ${row.userName}` : ""}
+                    </span>
+                  ) : row.userName ? (
+                    <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                      {row.userName}
+                    </span>
+                  ) : null}
+                </span>
 
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate text-sm font-medium">{row.title}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {kindLabel(row.kind)} · {formatDateTime(row.occurredAt)}
-                    </p>
-                    {row.reference || row.userName ? (
-                      <p className="mt-0.5 truncate text-xs text-muted-foreground">
-                        {[row.reference, row.userName].filter(Boolean).join(" · ")}
-                      </p>
-                    ) : null}
-                  </div>
-
-                  <div className="shrink-0 text-right">
-                    <p
-                      className={cn(
-                        "text-sm font-semibold",
-                        row.direction === "out" ? "text-destructive" : "text-foreground",
-                      )}
-                    >
-                      {row.direction === "in" ? "+" : row.direction === "out" ? "-" : ""}
-                      {formatMoney(row.amount, currency)}
-                    </p>
-                    {row.quantity !== null ? (
-                      <p className="text-[11px] text-muted-foreground">
-                        {row.quantity > 0 ? "+" : ""}
-                        {row.quantity} {row.unit ?? ""}
-                      </p>
-                    ) : null}
-                    {row.status ? (
-                      <p className="text-[11px] capitalize text-muted-foreground">{row.status}</p>
-                    ) : null}
-                  </div>
-                </button>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+                <span className="shrink-0 text-right">
+                  <Money
+                    amount={row.direction === "out" ? -row.amount : row.amount}
+                    currency={currency}
+                    className={cn(
+                      "text-sm font-semibold",
+                      row.direction === "out" ? "text-negative" : "",
+                    )}
+                  />
+                  {row.quantity !== null ? (
+                    <span className="tnum block text-[11px] text-muted-foreground">
+                      {row.quantity > 0 ? "+" : ""}
+                      {row.quantity} {row.unit ?? ""}
+                    </span>
+                  ) : null}
+                  {row.status ? (
+                    <span className="block text-[11px] capitalize text-muted-foreground">
+                      {row.status}
+                    </span>
+                  ) : null}
+                </span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <TransactionDetailSheet
         row={selected}
@@ -187,7 +200,7 @@ function TransactionsPage() {
   );
 }
 
-/** Detail for a non-sale event, using exactly the fields the row carries. */
+/** Detail for any event, using exactly the fields the row carries. */
 function TransactionDetailSheet({
   row,
   onOpenChange,
@@ -218,6 +231,8 @@ function TransactionDetailSheet({
     return Math.max(sold - (refunded.data?.[saleItemId] ?? 0), 0);
   }
 
+  const totalRefund = Object.values(quantities).reduce((sum, value) => sum + value, 0);
+
   async function submitRefund() {
     if (!row || !sale) return;
     const lines = Object.entries(quantities)
@@ -225,7 +240,7 @@ function TransactionDetailSheet({
       .map(([saleItemId, quantity]) => ({ saleItemId, quantity, restock: true }));
 
     if (lines.length === 0) {
-      toast.error("Choose the quantity to refund on at least one line.");
+      toast.error("Set how many of each item you are taking back.");
       return;
     }
 
@@ -236,7 +251,7 @@ function TransactionDetailSheet({
         reason: reason || null,
       });
       toast.success(`Refund recorded · ${formatMoney(result.totalAmount, currency)}`, {
-        description: "Stock was restored and the refund appears in the ledger.",
+        description: "The goods went back on the shelf and the refund is in your history.",
       });
       setQuantities({});
       setReason("");
@@ -260,8 +275,8 @@ function TransactionDetailSheet({
           onOpenChange(open);
         }}
       >
-        <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto px-4 pb-8 pt-4">
-          <SheetHeader className="px-0 pb-3 text-left">
+        <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto px-5 pb-8 pt-5">
+          <SheetHeader className="text-left">
             <SheetTitle className="text-base">
               {row ? kindLabel(row.kind) : "Transaction"}
             </SheetTitle>
@@ -269,92 +284,115 @@ function TransactionDetailSheet({
 
           {row ? (
             <>
-              <div className="surface-panel space-y-1.5 p-4 text-sm">
-                <Row label="Amount" value={formatMoney(row.amount, currency)} strong />
-                <Row label="When" value={formatDateTime(row.occurredAt)} />
-                <Row label="Recorded by" value={row.userName ?? "—"} />
-                <Row label="Reference" value={row.reference ?? "—"} />
-                {row.subtitle ? <Row label="Note" value={row.subtitle} /> : null}
-                {row.status ? <Row label="Status" value={row.status} /> : null}
+              <div className="mt-3 flex items-baseline justify-between gap-3 border-b border-border pb-3">
+                <span className="text-sm text-muted-foreground">Amount</span>
+                <Money
+                  amount={row.direction === "out" ? -row.amount : row.amount}
+                  currency={currency}
+                  className="text-xl font-semibold"
+                />
+              </div>
+
+              <dl className="space-y-1.5 py-3 text-sm">
+                <Detail label="When" value={formatDateTime(row.occurredAt)} />
+                <Detail label="Recorded by" value={row.userName ?? "Unknown"} />
+                <Detail label="Reference" value={row.reference ?? "—"} />
+                {row.subtitle ? <Detail label="Note" value={row.subtitle} /> : null}
                 {row.quantity !== null ? (
-                  <Row
+                  <Detail
                     label="Quantity"
                     value={`${row.quantity > 0 ? "+" : ""}${row.quantity} ${row.unit ?? ""}`}
                   />
                 ) : null}
-              </div>
+                {row.status ? <Detail label="Status" value={row.status} /> : null}
+              </dl>
 
               {isSale ? (
-                detail.isPending ? (
+                detail.isLoading ? (
                   <LoadingState label="Loading the sale…" />
                 ) : detail.isError ? (
-                  <ErrorState message={detail.error.message} />
+                  <ErrorState
+                    message={detail.error.message}
+                    onRetry={() => void detail.refetch()}
+                  />
                 ) : detail.data ? (
-                  <div className="mt-4 space-y-3">
-                    <div className="surface-panel p-4">
-                      <p className="text-sm font-medium">Items</p>
+                  <>
+                    <div className="border-t border-border pt-3">
+                      <p className="text-sm font-medium">What was sold</p>
                       <ul className="mt-2 space-y-2">
                         {items.map((item) => {
-                          const remaining = refundableQuantity(item.id, Number(item.quantity));
                           const already = refunded.data?.[item.id] ?? 0;
                           return (
-                            <li key={item.id} className="text-sm">
-                              <div className="flex justify-between gap-2">
-                                <span className="min-w-0 truncate">{item.product_name}</span>
-                                <span className="shrink-0">
-                                  {formatMoney(item.subtotal, currency)}
+                            <li
+                              key={item.id}
+                              className="flex items-start justify-between gap-3 text-sm"
+                            >
+                              <span className="min-w-0">
+                                <span className="block truncate">{item.product_name}</span>
+                                <span className="tnum block text-xs text-muted-foreground">
+                                  {Number(item.quantity)} × {formatMoney(item.unit_price, currency)}
+                                  {already > 0 ? ` · ${already} refunded` : ""}
                                 </span>
-                              </div>
-                              <p className="text-xs text-muted-foreground">
-                                {Number(item.quantity)} × {formatMoney(item.unit_price, currency)}
-                                {already > 0 ? ` · ${already} refunded` : ""}
-                              </p>
+                              </span>
+                              <span className="tnum shrink-0">
+                                {formatMoney(item.subtotal, currency)}
+                              </span>
                             </li>
                           );
                         })}
                       </ul>
-                      <div className="mt-3 space-y-1 border-t border-border pt-3 text-sm">
-                        <Row label="Subtotal" value={formatMoney(sale?.subtotal ?? 0, currency)} />
+
+                      <dl className="mt-3 space-y-1 border-t border-border pt-2 text-sm">
+                        <Detail
+                          label="Subtotal"
+                          value={formatMoney(sale?.subtotal ?? 0, currency)}
+                        />
                         {Number(sale?.discount_amount ?? 0) > 0 ? (
-                          <Row
+                          <Detail
                             label="Discount"
-                            value={`-${formatMoney(sale?.discount_amount ?? 0, currency)}`}
+                            value={`− ${formatMoney(sale?.discount_amount ?? 0, currency)}`}
                           />
                         ) : null}
-                        <Row
+                        <Detail
                           label="Total"
                           value={formatMoney(sale?.total_amount ?? 0, currency)}
                           strong
                         />
-                        <Row label="Paid" value={formatMoney(sale?.amount_paid ?? 0, currency)} />
+                        <Detail
+                          label="Paid"
+                          value={formatMoney(sale?.amount_paid ?? 0, currency)}
+                        />
                         {Number(sale?.balance_due ?? 0) > 0 ? (
-                          <Row
-                            label="Balance owing"
+                          <Detail
+                            label="Still owing"
                             value={formatMoney(sale?.balance_due ?? 0, currency)}
+                            strong
                           />
                         ) : null}
-                        <Row label="Status" value={sale?.status ?? "—"} />
-                      </div>
+                        <Detail label="Status" value={sale?.status ?? "—"} />
+                      </dl>
                     </div>
 
                     <Button
                       variant="outline"
-                      className="h-12 w-full"
+                      className="mt-4 h-12 w-full"
                       onClick={() => setReceiptSaleId(row.sourceId)}
                     >
-                      <Receipt /> View receipt
+                      <Receipt className="size-4" /> View receipt
                     </Button>
 
                     {detail.data.refunds.length > 0 ? (
-                      <div className="surface-panel p-4">
+                      <div className="mt-4 border-t border-border pt-3">
                         <p className="text-sm font-medium">Refunds on this sale</p>
-                        <ul className="mt-2 space-y-1 text-sm">
+                        <ul className="mt-2 space-y-1.5 text-sm">
                           {detail.data.refunds.map((refund) => (
-                            <li key={refund.id} className="flex justify-between gap-2">
+                            <li key={refund.id} className="flex justify-between gap-3">
                               <span className="min-w-0 truncate text-muted-foreground">
                                 {refund.reason || "Refund"} · {formatDateTime(refund.created_at)}
                               </span>
-                              <span>{formatMoney(refund.total_amount, currency)}</span>
+                              <span className="tnum shrink-0">
+                                {formatMoney(refund.total_amount, currency)}
+                              </span>
                             </li>
                           ))}
                         </ul>
@@ -362,13 +400,14 @@ function TransactionDetailSheet({
                     ) : null}
 
                     {acceptsRefunds ? (
-                      <div className="surface-panel p-4">
-                        <p className="text-sm font-medium">Refund items</p>
+                      <div className="mt-4 border-t border-border pt-3">
+                        <p className="text-sm font-medium">Take goods back</p>
                         <p className="mt-0.5 text-xs text-muted-foreground">
-                          Restoring the goods puts the quantity back on the shelf and writes a
-                          refund movement.
+                          Enter how many of each you are returning. They go back on the shelf and
+                          the refund is recorded against this sale.
                         </p>
-                        <ul className="mt-3 space-y-3">
+
+                        <ul className="mt-3 space-y-2">
                           {items.map((item) => {
                             const remaining = refundableQuantity(item.id, Number(item.quantity));
                             if (remaining <= 0) return null;
@@ -377,7 +416,7 @@ function TransactionDetailSheet({
                                 <span className="min-w-0 flex-1 truncate text-sm">
                                   {item.product_name}
                                   <span className="block text-xs text-muted-foreground">
-                                    up to {remaining} refundable
+                                    up to {remaining}
                                   </span>
                                 </span>
                                 <Input
@@ -385,6 +424,7 @@ function TransactionDetailSheet({
                                   min={0}
                                   max={remaining}
                                   step="1"
+                                  aria-label={`How many ${item.product_name} to refund`}
                                   value={quantities[item.id] ?? 0}
                                   onChange={(event) => {
                                     const next = Math.max(
@@ -393,46 +433,57 @@ function TransactionDetailSheet({
                                     );
                                     setQuantities((current) => ({ ...current, [item.id]: next }));
                                   }}
-                                  className="h-11 w-20 text-center"
+                                  className="tnum h-11 w-20 text-center"
                                 />
                               </li>
                             );
                           })}
                         </ul>
-                        <div className="mt-3 space-y-1.5">
-                          <Label htmlFor="refund-reason">Reason (optional)</Label>
-                          <Input
-                            id="refund-reason"
-                            value={reason}
-                            onChange={(event) => setReason(event.target.value)}
-                            placeholder="e.g. Customer changed their mind"
-                            className="h-11"
-                            autoComplete="off"
-                          />
+
+                        <div className="mt-3">
+                          <Field
+                            label="Reason"
+                            hint="Optional, but it helps later."
+                            htmlFor="refund-reason"
+                          >
+                            <Input
+                              id="refund-reason"
+                              value={reason}
+                              onChange={(event) => setReason(event.target.value)}
+                              placeholder="e.g. Customer changed their mind"
+                              className="h-11"
+                              autoComplete="off"
+                            />
+                          </Field>
                         </div>
+
                         <Button
                           className="mt-3 h-12 w-full"
-                          variant="outline"
-                          disabled={createRefund.isPending}
+                          disabled={createRefund.isPending || totalRefund === 0}
                           onClick={() => void submitRefund()}
                         >
-                          {createRefund.isPending ? "Recording…" : "Record refund"}
+                          {createRefund.isPending
+                            ? "Recording…"
+                            : `Record refund · ${formatMoney(
+                                items.reduce(
+                                  (sum, item) =>
+                                    sum + (quantities[item.id] ?? 0) * Number(item.unit_price),
+                                  0,
+                                ),
+                                currency,
+                              )}`}
                         </Button>
                       </div>
                     ) : (
-                      <div className="surface-panel flex items-start gap-2.5 p-4">
-                        <TriangleAlert
-                          className="mt-0.5 size-4 shrink-0 text-muted-foreground"
-                          aria-hidden
+                      <div className="mt-4">
+                        <NoticeState
+                          icon={<TriangleAlert className="size-4" aria-hidden />}
+                          title="This shop does not take refunds"
+                          description="Ask the owner to turn refunds on in Settings if you need to return goods."
                         />
-                        <p className="text-xs text-muted-foreground">
-                          This shop does not accept refunds, so the refund controls are hidden and
-                          the database refuses refund operations. The owner can change that in
-                          Settings.
-                        </p>
                       </div>
                     )}
-                  </div>
+                  </>
                 ) : null
               ) : null}
             </>
@@ -451,11 +502,19 @@ function TransactionDetailSheet({
   );
 }
 
-function Row({ label, value, strong = false }: { label: string; value: string; strong?: boolean }) {
+function Detail({
+  label,
+  value,
+  strong = false,
+}: {
+  label: string;
+  value: string;
+  strong?: boolean;
+}) {
   return (
     <div className="flex justify-between gap-3">
-      <span className="text-muted-foreground">{label}</span>
-      <span className={cn("min-w-0 truncate text-right", strong && "font-semibold")}>{value}</span>
+      <dt className="text-muted-foreground">{label}</dt>
+      <dd className={cn("min-w-0 truncate text-right", strong && "font-semibold")}>{value}</dd>
     </div>
   );
 }

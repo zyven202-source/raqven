@@ -10,6 +10,14 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import { Toaster } from "@/components/ui/sonner";
+import {
+  OG_IMAGE_ALT,
+  OG_IMAGE_URL,
+  SEO_DESCRIPTION,
+  SEO_TITLE,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/seo";
 import appCss from "../styles.css?url";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
@@ -78,19 +86,32 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "RAVQEN — Every sale. Every stock. Every number." },
-      {
-        name: "description",
-        content: "RAVQEN is the sales, stock and cash record system for Kenyan small businesses.",
-      },
-      { name: "author", content: "RAVQEN" },
-      { property: "og:title", content: "RAVQEN" },
-      {
-        property: "og:description",
-        content: "Every sale. Every stock. Every number.",
-      },
+      { title: SEO_TITLE },
+      { name: "description", content: SEO_DESCRIPTION },
+      { name: "author", content: SITE_NAME },
+      /*
+        The fallback social card for every route. The home page overrides
+        these with its own set, but a shared link to `/auth/login` or `/app/pos`
+        still has to unfurl into something better than a bare URL, and an
+        `og:image` that is only declared on one route is an image that is
+        missing from every other one.
+      */
+      { property: "og:site_name", content: SITE_NAME },
+      { property: "og:title", content: SEO_TITLE },
+      { property: "og:description", content: SEO_DESCRIPTION },
       { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
+      { property: "og:url", content: `${SITE_URL}/` },
+      { property: "og:locale", content: "en_KE" },
+      { property: "og:image", content: OG_IMAGE_URL },
+      { property: "og:image:type", content: "image/png" },
+      { property: "og:image:width", content: "512" },
+      { property: "og:image:height", content: "512" },
+      { property: "og:image:alt", content: OG_IMAGE_ALT },
+      { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: SEO_TITLE },
+      { name: "twitter:description", content: SEO_DESCRIPTION },
+      { name: "twitter:image", content: OG_IMAGE_URL },
+      { name: "twitter:image:alt", content: OG_IMAGE_ALT },
     ],
     links: [
       {
@@ -103,7 +124,20 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700&display=swap",
       },
-      { rel: "icon", href: "/favicon.ico", type: "image/x-icon" },
+      // The favicon is the flat, single-ink cut of the mark: a gradient and a
+      // gloss are mud at 16px, so `generate-icons.mjs` renders these without
+      // the lighting. The larger icons carry the full material, for the home
+      // screen and for anything that asks for a real app icon.
+      //
+      // Only `rel`/`href` descriptors belong here. A `{ name, content }`
+      // descriptor — `theme-color`, `apple-mobile-web-app-title` — is written
+      // into the prerendered shell as a `<link>` but rendered by React as a
+      // `<meta>`, and the two disagreeing makes every single page load throw a
+      // hydration error. Both of those values live in `site.webmanifest`
+      // instead, which is where the platform actually reads them from.
+      { rel: "icon", href: "/favicon.ico", sizes: "16x16 32x32 48x48" },
+      { rel: "apple-touch-icon", href: "/icon-192.png" },
+      { rel: "manifest", href: "/site.webmanifest" },
     ],
   }),
   shellComponent: RootShell,

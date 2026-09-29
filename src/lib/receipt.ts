@@ -5,8 +5,29 @@
  * can only ever print what was actually stored — there is no client-side
  * recomputation of totals that could disagree with the ledger.
  */
+import { BARE_SCALE, GLYPH, markTransform, VIEW_BOX } from "@/components/brand/mark-geometry";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import type { ReceiptPayload } from "@/services/sales.service";
+
+/**
+ * RAVQEN's symbol, for the receipt header.
+ *
+ * One ink, no tile, no gradient, and small. A thermal printer has no greys to
+ * fade and no room to waste, so the mark is reduced to the only form that
+ * survives that: the same three filled paths in black on white, scaled by the
+ * same number the app uses, and inlined rather than linked so the receipt is a
+ * single self-contained file a shopkeeper can share or print from a phone with
+ * no network.
+ */
+function receiptMark(size = 26) {
+  const paths = [GLYPH.bowl, GLYPH.stem, GLYPH.leg].map((d) => `<path d="${d}"/>`).join("");
+  return (
+    `<svg class="mark" width="${size}" height="${size}" viewBox="0 0 ${VIEW_BOX} ${VIEW_BOX}" ` +
+    `fill="#000" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">` +
+    `<g transform="${markTransform(BARE_SCALE)}">${paths}</g>` +
+    `</svg>`
+  );
+}
 
 function line(label: string, value: string, width = 42) {
   const gap = Math.max(1, width - label.length - value.length);
@@ -155,11 +176,13 @@ export function receiptHtml(
   td.name { font-weight: 600; padding-top: 4px; }
   .total { font-size: 13px; font-weight: 700; }
   .logo { display: block; margin: 0 auto 6px; max-height: 48px; max-width: 70%; object-fit: contain; }
+  .mark { display: block; margin: 0 auto 4px; }
   footer { margin-top: 8px; text-align: center; }
 </style>
 </head>
 <body>
-  ${showLogo ? `<img class="logo" src="${esc(options.logoUrl)}" alt="" />` : ""}
+  ${receiptMark()}
+  ${showLogo ? `<img class="logo" src="${esc(options.logoUrl)}" alt="${esc(shop.name)} logo" />` : ""}
   <h1>${esc(shop.name)}</h1>
   ${settings?.header_text ? `<p class="centre muted">${esc(settings.header_text)}</p>` : ""}
   ${shop.location ? `<p class="centre muted">${esc(shop.location)}</p>` : ""}

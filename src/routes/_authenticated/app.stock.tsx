@@ -1,6 +1,6 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useMemo } from "react";
-import { ArrowDownRight, ArrowUpRight, SlidersHorizontal, TriangleAlert } from "lucide-react";
+import { useMemo, useState } from "react";
+import { ArrowDownRight, ArrowUpRight, SlidersHorizontal } from "lucide-react";
 
 import {
   EmptyState,
@@ -9,6 +9,8 @@ import {
   PageContainer,
   PageHeader,
 } from "@/components/app/AppChrome";
+import { SectionLabel } from "@/components/app/primitives";
+import { Button } from "@/components/ui/button";
 import { useActiveShop } from "@/hooks/useActiveShop";
 import { useMovements } from "@/hooks/useInventory";
 import { useProducts } from "@/hooks/useProducts";
@@ -17,24 +19,30 @@ import { cn } from "@/lib/utils";
 import type { MovementType } from "@/types/ravqen";
 
 export const Route = createFileRoute("/_authenticated/app/stock")({
-  head: () => ({ meta: [{ title: "Stock ledger — RAVQEN" }] }),
+  head: () => ({ meta: [{ title: "Stock movements — RAVQEN" }] }),
   component: StockLedgerPage,
 });
 
 const MOVEMENT_COPY: Record<MovementType, { label: string; tone: "in" | "out" | "flat" }> = {
   opening: { label: "Opening stock", tone: "in" },
-  stock_in: { label: "Stock in", tone: "in" },
-  sale: { label: "Sale", tone: "out" },
-  refund: { label: "Refund restock", tone: "in" },
-  adjustment: { label: "Adjustment", tone: "flat" },
-  damage: { label: "Damage", tone: "out" },
+  stock_in: { label: "Stock received", tone: "in" },
+  sale: { label: "Sold", tone: "out" },
+  refund: { label: "Returned to shelf", tone: "in" },
+  adjustment: { label: "Count adjustment", tone: "flat" },
+  damage: { label: "Lost or damaged", tone: "out" },
   transfer: { label: "Transfer", tone: "flat" },
 };
 
+/**
+ * The stock ledger: every quantity change, in order, with the reason and who
+ * recorded it. This is the screen that answers "why does my stock say that?".
+ */
 function StockLedgerPage() {
   const { activeShop } = useActiveShop();
   const shopId = activeShop?.id ?? "";
   const currency = activeShop?.currency ?? "KES";
+
+  const [filter, setFilter] = useState<"all" | "in" | "out">("all");
 
   const movementsQuery = useMovements({ shopId, limit: 150 });
   // The ledger shows a product name; products are narrow and the map keeps the
@@ -49,55 +57,84 @@ function StockLedgerPage() {
     return map;
   }, [productsQuery.data]);
 
+  const movements = (movementsQuery.data ?? []).filter((movement) => {
+    if (filter === "all") return true;
+    return MOVEMENT_COPY[movement.movement_type].tone === filter;
+  });
+
   return (
     <PageContainer>
       <PageHeader
-        title="Stock ledger"
-        subtitle="Every quantity change, with who recorded it and why."
+        title="Stock movements"
+        subtitle="Every quantity change, and why it happened."
+        action={
+          <Button variant="outline" className="h-10" asChild>
+            <Link to="/app/restock" search={{ shop: undefined }}>
+              Receive
+            </Link>
+          </Button>
+        }
       />
-      <p className="mt-2 text-sm text-muted-foreground">
-        Looking for a product?{" "}
-        <Link
-          to="/app/inventory"
-          search={{ shop: undefined }}
-          className="text-ink-soft underline-offset-4 hover:underline"
-        >
-          Open the catalogue
-        </Link>
-        .
-      </p>
 
-      <div className="mt-5">
-        {movementsQuery.isPending ? (
-          <LoadingState label="Loading the ledger…" />
-        ) : movementsQuery.isError ? (
-          <ErrorState
-            message={movementsQuery.error.message}
-            onRetry={() => void movementsQuery.refetch()}
-          />
-        ) : (movementsQuery.data ?? []).length === 0 ? (
-          <EmptyState
-            title="No stock movements yet"
-            description="Add a product with opening stock, or restock an existing one, and the ledger starts here."
-          />
-        ) : (
-          <ul className="space-y-2">
-            {(movementsQuery.data ?? []).map((movement) => {
+      <div className="mb-3 flex gap-2">
+        {(
+          [
+            { value: "all", label: "Everything" },
+            { value: "in", label: "Added" },
+            { value: "out", label: "Removed" },
+          ] as const
+        ).map((option) => (
+          <Button
+            key={option.value}
+            variant={filter === option.value ? "secondary" : "outline"}
+            className="h-9 flex-1 text-xs"
+            aria-pressed={filter === option.value}
+            onClick={() => setFilter(option.value)}
+          >
+            {option.label}
+          </Button>
+        ))}
+      </div>
+
+      {movementsQuery.isLoading ? (
+        <LoadingState label="Loading the ledger…" />
+      ) : movementsQuery.isError ? (
+        <ErrorState
+          message={movementsQuery.error.message}
+          onRetry={() => void movementsQuery.refetch()}
+        />
+      ) : movements.length === 0 ? (
+        <EmptyState
+          title={filter === "all" ? "No stock movements yet" : "Nothing in this group"}
+          description={
+            filter === "all"
+              ? "Add a product with opening stock, or receive a delivery, and the ledger starts here."
+              : "Switch back to Everything to see the rest."
+          }
+        />
+      ) : (
+        <>
+          <SectionLabel>
+            {movements.length} movement{movements.length === 1 ? "" : "s"}
+          </SectionLabel>
+          <ul className="list-divided">
+            {movements.map((movement) => {
               const copy = MOVEMENT_COPY[movement.movement_type];
               const product = productNames.get(movement.product_id);
               const quantity = Number(movement.quantity);
 
               return (
-                <li key={movement.id} className="surface-panel flex items-start gap-3 p-3">
+                <li key={movement.id} className="flex items-start gap-3 py-3">
                   <span
                     className={cn(
-                      "mt-0.5 grid size-8 shrink-0 place-items-center rounded-lg",
+                      "mt-0.5 grid size-8 shrink-0 place-items-center rounded-md",
                       copy.tone === "in"
-                        ? "bg-primary/10 text-ink"
+                        ? "bg-positive-soft text-positive"
                         : copy.tone === "out"
-                          ? "bg-destructive/10 text-destructive"
-                          : "bg-secondary text-muted-foreground",
+                          ? "bg-negative-soft text-negative"
+                          : "bg-sunken text-muted-foreground",
                     )}
+                    aria-hidden
                   >
                     {copy.tone === "in" ? (
                       <ArrowUpRight className="size-4" />
@@ -120,42 +157,35 @@ function StockLedgerPage() {
                         {movement.notes}
                       </p>
                     ) : null}
-                    {movement.reference_type === "sale" || movement.reference_type === "refund" ? (
-                      <p className="mt-0.5 text-xs text-muted-foreground">
-                        From a {movement.reference_type}
-                      </p>
-                    ) : null}
                   </div>
 
                   <div className="shrink-0 text-right">
                     <p
                       className={cn(
-                        "text-sm font-semibold",
-                        quantity > 0 ? "text-ink" : "text-destructive",
+                        "tnum text-sm font-semibold",
+                        quantity > 0 ? "text-positive" : "text-negative",
                       )}
                     >
                       {quantity > 0 ? "+" : ""}
                       {quantity} {product?.unit ?? ""}
                     </p>
                     {movement.balance_after !== null ? (
-                      <p className="text-[11px] text-muted-foreground">
+                      <p className="tnum text-[11px] text-muted-foreground">
                         now {Number(movement.balance_after)}
                       </p>
                     ) : null}
-                    <p className="text-[11px] text-muted-foreground">
-                      {formatMoney(Number(movement.unit_cost ?? 0), currency)}
-                    </p>
+                    {Number(movement.unit_cost ?? 0) > 0 ? (
+                      <p className="tnum text-[11px] text-muted-foreground">
+                        {formatMoney(Number(movement.unit_cost), currency)}
+                      </p>
+                    ) : null}
                   </div>
-
-                  {movement.movement_type === "damage" ? (
-                    <TriangleAlert className="size-4 shrink-0 text-destructive" aria-hidden />
-                  ) : null}
                 </li>
               );
             })}
           </ul>
-        )}
-      </div>
+        </>
+      )}
     </PageContainer>
   );
 }

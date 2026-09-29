@@ -10,17 +10,19 @@ import {
   ShoppingCart,
   Smartphone,
   Trash2,
-  TriangleAlert,
+  UserRound,
+  X,
 } from "lucide-react";
 import { toast } from "sonner";
 
 import { EmptyState, ErrorState, LoadingState, PageContainer } from "@/components/app/AppChrome";
+import { Field, MoneyField } from "@/components/app/fields";
+import { StatusBadge, stockStatusLabel } from "@/components/app/primitives";
 import { ProductFormDialog } from "@/components/app/ProductFormDialog";
 import { ReceiptSheet } from "@/components/app/ReceiptSheet";
 import { BarcodeScannerSheet } from "@/components/pos/BarcodeScannerSheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useActiveShop } from "@/hooks/useActiveShop";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -33,7 +35,7 @@ import { formatMoney } from "@/lib/format";
 import type { PaymentMethod, Product } from "@/types/ravqen";
 
 export const Route = createFileRoute("/_authenticated/app/pos")({
-  head: () => ({ meta: [{ title: "POS — RAVQEN" }] }),
+  head: () => ({ meta: [{ title: "Sell — RAVQEN" }] }),
   component: PosPage,
 });
 
@@ -52,9 +54,17 @@ const PAYMENT_OPTIONS: { value: PaymentMethod; label: string; icon: typeof Bankn
   { value: "cash", label: "Cash", icon: Banknote },
   { value: "mpesa", label: "M-Pesa", icon: Smartphone },
   { value: "card", label: "Card", icon: CreditCard },
-  { value: "credit", label: "Credit", icon: TriangleAlert },
+  { value: "credit", label: "Credit", icon: UserRound },
 ];
 
+/**
+ * The till.
+ *
+ * One job: find a product, put it in the basket, take the money, print a
+ * receipt. The sale itself is written by the `create_sale` database function,
+ * which does the whole thing — sale, items, payment, stock movements and any
+ * debtor — or nothing at all. This screen never writes a partial sale.
+ */
 function PosPage() {
   const { activeShop } = useActiveShop();
   const shopId = activeShop?.id ?? "";
@@ -85,6 +95,11 @@ function PosPage() {
   const itemCount = lines.reduce((sum, line) => sum + line.quantity, 0);
   const tenderedAmount = parseAmount(tendered);
   const changeDue = paymentMethod === "cash" ? Math.max(tenderedAmount - totals.total, 0) : 0;
+
+  const cashShort =
+    paymentMethod === "cash" && tendered.length > 0 && tenderedAmount < totals.total;
+  const creditMissing = paymentMethod === "credit" && debtorName.trim().length < 2;
+  const canComplete = lines.length > 0 && !cashShort && !creditMissing && !submitting;
 
   const addToCart = useCallback((product: Product, quantity = 1) => {
     setLines((current) => {
@@ -148,8 +163,8 @@ function PosPage() {
         if (!product) {
           setScannerOpen(false);
           setMissingBarcode(barcode);
-          toast.error("Product not found", {
-            description: `No product in this shop uses barcode ${barcode}.`,
+          toast.error("Barcode not recognised", {
+            description: `No product in this shop uses ${barcode}. You can add it now.`,
           });
           return;
         }
@@ -177,15 +192,6 @@ function PosPage() {
   async function completeSale() {
     if (!shopId || lines.length === 0) return;
 
-    if (paymentMethod === "credit" && !debtorName.trim()) {
-      toast.error("A credit sale needs the debtor's name.");
-      return;
-    }
-    if (paymentMethod === "cash" && tenderedAmount < totals.total) {
-      toast.error("Cash received is less than the total.");
-      return;
-    }
-
     setSubmitting(true);
     try {
       const result = await createSaleMutation.mutateAsync({
@@ -209,7 +215,7 @@ function PosPage() {
       setReceiptSaleId(result.saleId);
 
       if (result.changeDue > 0) {
-        toast.success(`Give ${formatMoney(result.changeDue, currency)} change`);
+        toast.success(`Sale recorded · give ${formatMoney(result.changeDue, currency)} change`);
       } else if (result.balanceDue > 0) {
         toast.success(`Sale recorded · ${formatMoney(result.balanceDue, currency)} on credit`);
       } else {
@@ -227,18 +233,25 @@ function PosPage() {
     }
   }
 
-  if (!activeShop) return <LoadingState label="Opening your shop…" />;
+  if (!activeShop) return <LoadingState label="Opening the till…" />;
+
+  const products = productsQuery.data ?? [];
 
   return (
-    <PageContainer className="pb-40">
-      <div className="sticky top-14 z-20 -mx-4 mb-3 bg-background/95 px-4 pb-3 pt-3 backdrop-blur-sm sm:-mx-6 sm:px-6">
+    <PageContainer className="pb-[calc(var(--glass-bar-clearance)+5.75rem)]">
+      {/* ------------------------------------------------------------ search */}
+      <div className="sticky top-14 z-20 -mx-4 mb-3 bg-background/95 px-4 pb-2.5 pt-2.5 backdrop-blur-md sm:-mx-5 sm:px-5">
         <div className="flex gap-2">
           <div className="relative flex-1">
-            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+            <Search
+              className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
+              aria-hidden
+            />
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
               placeholder="Search products"
+              aria-label="Search products"
               className="h-12 pl-9"
               autoComplete="off"
               enterKeyHint="search"
@@ -246,35 +259,39 @@ function PosPage() {
           </div>
           <Button
             type="button"
-            className="h-12 w-12 shrink-0"
+            className="size-12 shrink-0"
             onClick={() => setScannerOpen(true)}
             aria-label="Scan a barcode"
           >
-            <ScanLine />
+            <ScanLine className="size-5" />
           </Button>
         </div>
       </div>
 
-      {productsQuery.isPending ? (
+      {/* ---------------------------------------------------------- products */}
+      {productsQuery.isLoading ? (
         <LoadingState label="Loading your products…" />
       ) : productsQuery.isError ? (
         <ErrorState
           message={productsQuery.error.message}
           onRetry={() => void productsQuery.refetch()}
         />
-      ) : (productsQuery.data ?? []).length === 0 ? (
+      ) : products.length === 0 ? (
         <EmptyState
-          title={debouncedSearch ? "No product matches that search" : "No products yet"}
+          title={debouncedSearch ? "Nothing matches that search" : "No products to sell yet"}
           description={
             debouncedSearch
-              ? "Try a different word, or scan the barcode."
-              : "Add your first product from the Stock screen and it will appear here for sale."
+              ? "Try a shorter word, or scan the barcode to look it up."
+              : "Add your first product from the Stock tab and it will appear here."
           }
         />
       ) : (
-        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3">
-          {(productsQuery.data ?? []).map((product) => {
-            const out = Number(product.quantity) <= 0;
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+          {products.map((product) => {
+            const quantity = Number(product.quantity);
+            const out = quantity <= 0;
+            const inCart = lines.find((line) => line.productId === product.id)?.quantity ?? 0;
+
             return (
               <button
                 key={product.id}
@@ -282,24 +299,38 @@ function PosPage() {
                 disabled={out}
                 onClick={() => addToCart(product)}
                 className={cn(
-                  "surface-panel flex min-h-[86px] flex-col justify-between p-3 text-left transition-colors",
-                  out ? "opacity-50" : "active:bg-secondary",
+                  "press flex min-h-[4.75rem] flex-col justify-between rounded-lg border p-2.5 text-left",
+                  out
+                    ? "border-border bg-sunken opacity-60"
+                    : "border-border bg-card active:bg-sunken",
                 )}
               >
-                <span className="line-clamp-2 text-sm font-medium leading-snug">
+                <span className="line-clamp-2 text-[0.8125rem] font-medium leading-snug">
                   {product.name}
                 </span>
-                <span className="mt-2 flex items-end justify-between gap-1">
-                  <span className="font-semibold">
+                <span className="mt-1.5 flex items-end justify-between gap-1">
+                  <span className="tnum text-sm font-semibold">
                     {formatMoney(product.selling_price, currency)}
+                  </span>
+                  <span className="sr-only">
+                    {stockStatusLabel(quantity, Number(product.low_stock_threshold))}
                   </span>
                   <span
                     className={cn(
-                      "text-[11px]",
-                      product.is_low_stock ? "text-destructive" : "text-muted-foreground",
+                      "tnum text-[11px]",
+                      out
+                        ? "text-negative"
+                        : product.is_low_stock
+                          ? "text-caution"
+                          : "text-muted-foreground",
                     )}
                   >
-                    {out ? "Out" : `${Number(product.quantity)} ${product.unit}`}
+                    {out ? "Out" : `${quantity}`}
+                    {inCart > 0 ? (
+                      <span className="ml-1 rounded bg-ink px-1 py-0.5 text-[10px] font-semibold text-background">
+                        {inCart} in basket
+                      </span>
+                    ) : null}
                   </span>
                 </span>
               </button>
@@ -308,33 +339,42 @@ function PosPage() {
         </div>
       )}
 
-      {/* Till bar: always shows what is in the cart and the running total. */}
-      <div className="fixed inset-x-0 bottom-16 z-30 border-t border-border bg-background px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-6">
-        <div className="mx-auto flex max-w-3xl items-center gap-3">
+      {/* --------------------------------------------------------- till bar */}
+      {/* Sits directly above the floating navigation, using the same clearance
+          token the bar was built from, so the two can never overlap. */}
+      <div
+        className="fixed inset-x-0 z-30 border-t border-border bg-background/97 px-4 pt-2.5 pb-3 backdrop-blur-md"
+        style={{ bottom: "var(--glass-bar-clearance)" }}
+      >
+        <div className="mx-auto flex max-w-2xl items-center gap-2">
           <div className="min-w-0 flex-1">
-            <p className="text-xs text-muted-foreground">
-              {itemCount === 0 ? "No items yet" : `${itemCount} item${itemCount === 1 ? "" : "s"}`}
+            <p className="text-[11px] text-muted-foreground">
+              {itemCount === 0
+                ? "Basket is empty"
+                : `${itemCount} item${itemCount === 1 ? "" : "s"}`}
             </p>
-            <p className="text-lg font-semibold leading-tight">
+            <p className="tnum text-lg font-semibold leading-tight">
               {formatMoney(totals.total, currency)}
             </p>
           </div>
           <Button
             type="button"
             variant="outline"
-            className="h-12"
+            className="h-12 shrink-0 px-4"
             onClick={() => setCartOpen(true)}
             disabled={lines.length === 0}
+            aria-label="Open the basket"
           >
-            <ShoppingCart /> Cart
+            <ShoppingCart className="size-4" />
+            <span className="sr-only sm:not-sr-only">Basket</span>
           </Button>
           <Button
             type="button"
-            className="h-12 px-6"
+            className="h-12 flex-1 text-base"
             onClick={() => setCartOpen(true)}
             disabled={lines.length === 0}
           >
-            Charge
+            Take payment
           </Button>
         </div>
       </div>
@@ -364,35 +404,49 @@ function PosPage() {
         onNewSale={() => setSearch("")}
       />
 
+      {/* ------------------------------------------------------- the basket */}
       <Sheet open={cartOpen} onOpenChange={setCartOpen}>
-        <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto px-4 pb-8 pt-4">
-          <SheetHeader className="px-0 pb-3 text-left">
-            <SheetTitle className="text-base">Current sale</SheetTitle>
+        <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto px-0 pb-6 pt-4">
+          <SheetHeader className="px-5 pb-3 text-left">
+            <SheetTitle className="text-base">
+              Current sale
+              {itemCount > 0 ? (
+                <span className="ml-2 text-sm font-normal text-muted-foreground">
+                  {itemCount} item{itemCount === 1 ? "" : "s"}
+                </span>
+              ) : null}
+            </SheetTitle>
           </SheetHeader>
 
           {lines.length === 0 ? (
-            <p className="py-6 text-center text-sm text-muted-foreground">The cart is empty.</p>
+            <p className="px-5 py-8 text-center text-sm text-muted-foreground">
+              Nothing in the basket yet.
+            </p>
           ) : (
-            <div className="space-y-2">
+            <ul className="list-divided">
               {lines.map((line) => (
-                <div key={line.productId} className="surface-panel p-3">
-                  <div className="flex items-start justify-between gap-2">
-                    <div className="min-w-0">
+                <li key={line.productId} className="px-5 py-3">
+                  <div className="flex items-start gap-3">
+                    <div className="min-w-0 flex-1">
                       <p className="truncate text-sm font-medium">{line.name}</p>
-                      <p className="text-xs text-muted-foreground">
-                        {formatMoney(line.unitPrice, currency)} · {line.available} {line.unit} in
-                        stock
+                      <p className="tnum mt-0.5 text-xs text-muted-foreground">
+                        {formatMoney(line.unitPrice, currency)} each · {line.available} {line.unit}{" "}
+                        in stock
                       </p>
                     </div>
+                    <p className="tnum shrink-0 text-sm font-semibold">
+                      {formatMoney(line.quantity * line.unitPrice, currency)}
+                    </p>
                     <button
                       type="button"
                       onClick={() => removeLine(line.productId)}
-                      className="grid size-9 shrink-0 place-items-center rounded-lg text-muted-foreground hover:bg-secondary"
+                      className="grid size-9 shrink-0 place-items-center rounded-md text-muted-foreground transition-colors active:bg-sunken"
                       aria-label={`Remove ${line.name}`}
                     >
                       <Trash2 className="size-4" />
                     </button>
                   </div>
+
                   <div className="mt-2 flex items-center justify-between">
                     <div className="flex items-center gap-1">
                       <Button
@@ -401,74 +455,76 @@ function PosPage() {
                         size="icon"
                         className="size-10"
                         onClick={() => setLineQuantity(line.productId, line.quantity - 1)}
-                        aria-label="Decrease"
+                        aria-label={`One less ${line.name}`}
                       >
-                        <Minus />
+                        <Minus className="size-4" />
                       </Button>
-                      <span className="w-10 text-center font-semibold">{line.quantity}</span>
+                      <span className="tnum w-9 text-center text-base font-semibold">
+                        {line.quantity}
+                      </span>
                       <Button
                         type="button"
                         variant="outline"
                         size="icon"
                         className="size-10"
                         onClick={() => setLineQuantity(line.productId, line.quantity + 1)}
-                        aria-label="Increase"
+                        aria-label={`One more ${line.name}`}
                       >
-                        <Plus />
+                        <Plus className="size-4" />
                       </Button>
                     </div>
-                    <span className="font-semibold">
-                      {formatMoney(line.quantity * line.unitPrice, currency)}
-                    </span>
+                    {line.quantity >= line.available ? (
+                      <StatusBadge tone="caution">All you have</StatusBadge>
+                    ) : null}
                   </div>
-                </div>
+                </li>
               ))}
-            </div>
+            </ul>
           )}
 
-          <div className="mt-4 space-y-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="pos-discount">Discount (optional)</Label>
-              <Input
+          <div className="space-y-4 px-5 pt-4">
+            <div className="grid grid-cols-2 gap-3">
+              <MoneyField
                 id="pos-discount"
+                label="Discount"
                 value={discount}
-                onChange={(event) => setDiscount(event.target.value)}
-                inputMode="decimal"
+                onChange={setDiscount}
+                currency={currency}
                 placeholder="0"
-                className="h-11"
-                autoComplete="off"
               />
+              <div />
             </div>
 
-            <div className="surface-panel space-y-1 p-3 text-sm">
+            <dl className="space-y-1.5 text-sm">
               <div className="flex justify-between text-muted-foreground">
-                <span>Items</span>
-                <span>{formatMoney(totals.itemsTotal, currency)}</span>
+                <dt>Items</dt>
+                <dd className="tnum">{formatMoney(totals.itemsTotal, currency)}</dd>
               </div>
               {totals.discount > 0 ? (
                 <div className="flex justify-between text-muted-foreground">
-                  <span>Discount</span>
-                  <span>-{formatMoney(totals.discount, currency)}</span>
+                  <dt>Discount</dt>
+                  <dd className="tnum">− {formatMoney(totals.discount, currency)}</dd>
                 </div>
               ) : null}
-              <div className="flex justify-between text-base font-semibold">
-                <span>Total</span>
-                <span>{formatMoney(totals.total, currency)}</span>
+              <div className="flex justify-between border-t border-border pt-1.5 text-base font-semibold">
+                <dt>Total</dt>
+                <dd className="tnum">{formatMoney(totals.total, currency)}</dd>
               </div>
-            </div>
+            </dl>
 
             <div>
-              <p className="mb-2 text-sm font-medium">Payment method</p>
-              <div className="grid grid-cols-4 gap-2">
+              <p className="mb-2 text-sm font-medium">How are they paying?</p>
+              <div className="grid grid-cols-4 gap-1.5">
                 {PAYMENT_OPTIONS.map((option) => (
                   <button
                     key={option.value}
                     type="button"
                     onClick={() => setPaymentMethod(option.value)}
+                    aria-pressed={paymentMethod === option.value}
                     className={cn(
-                      "flex h-16 flex-col items-center justify-center gap-1 rounded-xl border text-[11px] font-medium",
+                      "press flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg border text-[11px] font-medium",
                       paymentMethod === option.value
-                        ? "border-primary bg-primary/5 text-ink"
+                        ? "border-ink bg-ink text-background"
                         : "border-border text-muted-foreground",
                     )}
                   >
@@ -480,33 +536,42 @@ function PosPage() {
             </div>
 
             {paymentMethod === "cash" ? (
-              <div className="space-y-1.5">
-                <Label htmlFor="pos-tendered">Cash received</Label>
-                <Input
+              <div className="space-y-2">
+                <MoneyField
                   id="pos-tendered"
+                  label="Cash received"
                   value={tendered}
-                  onChange={(event) => setTendered(event.target.value)}
-                  inputMode="decimal"
-                  placeholder="0"
-                  className="h-12 text-lg"
-                  autoComplete="off"
+                  onChange={setTendered}
+                  currency={currency}
                 />
-                <p className="text-sm">
-                  {tenderedAmount >= totals.total ? (
-                    <span className="font-medium">Change {formatMoney(changeDue, currency)}</span>
-                  ) : (
-                    <span className="text-destructive">
-                      Still {formatMoney(totals.total - tenderedAmount, currency)} short
-                    </span>
-                  )}
-                </p>
+                {tendered.length === 0 ? (
+                  <p className="text-xs text-muted-foreground">
+                    Type what the customer handed you and RAVQEN works out the change.
+                  </p>
+                ) : (
+                  <p
+                    className={cn(
+                      "tnum rounded-lg px-3 py-2 text-sm font-medium",
+                      cashShort
+                        ? "bg-negative-soft text-negative"
+                        : "bg-positive-soft text-positive",
+                    )}
+                  >
+                    {cashShort
+                      ? `Still ${formatMoney(totals.total - tenderedAmount, currency)} short`
+                      : `Change ${formatMoney(changeDue, currency)}`}
+                  </p>
+                )}
               </div>
             ) : null}
 
             {paymentMethod === "credit" ? (
               <div className="space-y-3">
-                <div className="space-y-1.5">
-                  <Label htmlFor="pos-debtor">Debtor name</Label>
+                <Field
+                  label="Customer name"
+                  htmlFor="pos-debtor"
+                  error={creditMissing ? "Required for a credit sale." : null}
+                >
                   <Input
                     id="pos-debtor"
                     value={debtorName}
@@ -515,9 +580,8 @@ function PosPage() {
                     className="h-11"
                     autoComplete="off"
                   />
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="pos-debtor-phone">Phone (optional)</Label>
+                </Field>
+                <Field label="Phone" hint="Optional" htmlFor="pos-debtor-phone">
                   <Input
                     id="pos-debtor-phone"
                     value={debtorPhone}
@@ -527,21 +591,31 @@ function PosPage() {
                     className="h-11"
                     autoComplete="off"
                   />
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  The full {formatMoney(totals.total, currency)} is recorded as owed. This sale will
-                  not be marked as paid.
+                </Field>
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  The full {formatMoney(totals.total, currency)} is recorded as owed. This sale is
+                  not marked as paid — take repayments from the Debtors screen.
                 </p>
               </div>
             ) : null}
 
             <Button
-              className="h-12 w-full text-base"
-              disabled={lines.length === 0 || submitting}
+              className="w-full text-base"
+              style={{ height: "3.25rem" }}
+              disabled={!canComplete}
               onClick={() => void completeSale()}
             >
               {submitting ? "Recording…" : `Complete sale · ${formatMoney(totals.total, currency)}`}
             </Button>
+
+            <button
+              type="button"
+              onClick={resetCart}
+              disabled={lines.length === 0}
+              className="mx-auto flex items-center gap-1.5 text-xs text-muted-foreground disabled:opacity-40"
+            >
+              <X className="size-3" /> Clear the basket
+            </button>
           </div>
         </SheetContent>
       </Sheet>

@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Plus, Wallet } from "lucide-react";
+import { Plus } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -10,9 +10,10 @@ import {
   PageContainer,
   PageHeader,
 } from "@/components/app/AppChrome";
+import { Field, MoneyField } from "@/components/app/fields";
+import { Money } from "@/components/app/primitives";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -38,6 +39,10 @@ export const Route = createFileRoute("/_authenticated/app/expenses")({
   component: ExpensesPage,
 });
 
+/**
+ * Money the shop spent. Recorded against the person who recorded it, so the
+ * day's result on the Today screen is explainable line by line.
+ */
 function ExpensesPage() {
   const { activeShop } = useActiveShop();
   const shopId = activeShop?.id ?? "";
@@ -59,50 +64,38 @@ function ExpensesPage() {
     <PageContainer>
       <PageHeader
         title="Expenses"
-        subtitle="What left the till or the account, recorded where it happened."
         action={
-          <Button className="h-11" onClick={() => setOpen(true)}>
-            <Plus /> Add
+          <Button className="h-10" onClick={() => setOpen(true)}>
+            <Plus className="size-4" /> Add
           </Button>
         }
       />
 
       {expenses.length > 0 ? (
-        <div className="surface-panel mt-4 flex items-center gap-3 p-4">
-          <span className="grid size-10 place-items-center rounded-xl bg-secondary">
-            <Wallet className="size-4 text-ink-soft" />
-          </span>
-          <div>
-            <p className="text-xs uppercase tracking-widest text-muted-foreground">
-              {category === "all" ? "Shown total" : expenseCategoryLabel(category)}
-            </p>
-            <p className="text-xl font-semibold">{formatMoney(total, currency)}</p>
-          </div>
+        <div className="glass-1 mb-4 rounded-xl p-4 backdrop-blur-2xl backdrop-saturate-150">
+          <p className="text-sm text-muted-foreground">
+            {category === "all" ? "Total shown" : expenseCategoryLabel(category)}
+          </p>
+          <p className="tnum mt-0.5 text-[1.75rem] font-semibold leading-none text-negative">
+            {formatMoney(total, currency)}
+          </p>
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            {expenses.length} {expenses.length === 1 ? "entry" : "entries"}
+          </p>
         </div>
       ) : null}
 
-      <div className="mt-4 flex gap-2 overflow-x-auto pb-1">
-        <button
-          type="button"
-          onClick={() => setCategory("all")}
-          className={cn(
-            "h-9 shrink-0 rounded-full border px-3.5 text-xs font-medium",
-            category === "all"
-              ? "border-primary bg-primary/5 text-ink"
-              : "border-border text-muted-foreground",
-          )}
-        >
-          All
-        </button>
-        {EXPENSE_CATEGORIES.map((option) => (
+      <div className="-mx-4 mb-3 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:-mx-5 sm:px-5">
+        {[{ value: "all" as const, label: "All" }, ...EXPENSE_CATEGORIES].map((option) => (
           <button
             key={option.value}
             type="button"
             onClick={() => setCategory(option.value)}
+            aria-pressed={category === option.value}
             className={cn(
-              "h-9 shrink-0 rounded-full border px-3.5 text-xs font-medium",
+              "press h-9 shrink-0 rounded-full border px-3.5 text-xs font-medium",
               category === option.value
-                ? "border-primary bg-primary/5 text-ink"
+                ? "border-ink bg-ink text-background"
                 : "border-border text-muted-foreground",
             )}
           >
@@ -111,44 +104,48 @@ function ExpensesPage() {
         ))}
       </div>
 
-      <div className="mt-4">
-        {expensesQuery.isPending ? (
-          <LoadingState label="Loading expenses…" />
-        ) : expensesQuery.isError ? (
-          <ErrorState
-            message={expensesQuery.error.message}
-            onRetry={() => void expensesQuery.refetch()}
-          />
-        ) : expenses.length === 0 ? (
-          <EmptyState
-            title="No expenses recorded"
-            description="Lunch, transport, rent, packaging — record them here and they appear in the ledger."
-            action={
-              <Button onClick={() => setOpen(true)}>
-                <Plus /> Record an expense
-              </Button>
-            }
-          />
-        ) : (
-          <ul className="space-y-2">
-            {expenses.map((expense) => (
-              <li key={expense.id} className="surface-panel flex items-start gap-3 p-3.5">
-                <div className="min-w-0 flex-1">
-                  <p className="truncate text-sm font-medium">
-                    {expense.description || expenseCategoryLabel(expense.category)}
-                  </p>
-                  <p className="text-xs text-muted-foreground">
-                    {expenseCategoryLabel(expense.category)} · {formatDateTime(expense.spent_at)}
-                  </p>
-                </div>
-                <p className="shrink-0 text-sm font-semibold text-destructive">
-                  -{formatMoney(expense.amount, currency)}
+      {expensesQuery.isLoading ? (
+        <LoadingState label="Loading expenses…" />
+      ) : expensesQuery.isError ? (
+        <ErrorState
+          message={expensesQuery.error.message}
+          onRetry={() => void expensesQuery.refetch()}
+        />
+      ) : expenses.length === 0 ? (
+        <EmptyState
+          title={category === "all" ? "No expenses recorded" : "Nothing in this category"}
+          description={
+            category === "all"
+              ? "Lunch, transport, rent, packaging — record them here and they show up in your history."
+              : "Try another category, or record a new expense here."
+          }
+          action={
+            <Button onClick={() => setOpen(true)}>
+              <Plus className="size-4" /> Record an expense
+            </Button>
+          }
+        />
+      ) : (
+        <ul className="list-divided">
+          {expenses.map((expense) => (
+            <li key={expense.id} className="flex items-start gap-3 py-3">
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium">
+                  {expense.description || expenseCategoryLabel(expense.category)}
                 </p>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {expenseCategoryLabel(expense.category)} · {formatDateTime(expense.spent_at)}
+                </p>
+              </div>
+              <Money
+                amount={-Number(expense.amount)}
+                currency={currency}
+                className="shrink-0 text-sm font-semibold text-negative"
+              />
+            </li>
+          ))}
+        </ul>
+      )}
 
       <AddExpenseSheet
         shopId={shopId}
@@ -179,14 +176,18 @@ function AddExpenseSheet({
   const [category, setCategory] = useState<ExpenseCategory>("lunch");
   const [description, setDescription] = useState("");
   const [method, setMethod] = useState<PaymentMethod>("cash");
+  const [error, setError] = useState<string | undefined>(undefined);
+
+  const value = Number(amount.replace(/[^0-9.]/g, ""));
+  const valid = Number.isFinite(value) && value > 0;
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
-    const value = Number(amount.replace(/[^0-9.]/g, ""));
-    if (!Number.isFinite(value) || value <= 0) {
-      toast.error("Enter an amount above zero.");
+    if (!valid) {
+      setError("Enter an amount above zero.");
       return;
     }
+    setError(undefined);
 
     try {
       await createExpense.mutateAsync({
@@ -196,46 +197,44 @@ function AddExpenseSheet({
         amount: value,
         method,
       });
-      toast.success(`Expense recorded · ${formatMoney(value, currency)}`);
+      toast.success("Expense recorded", {
+        description: `${formatMoney(value, currency)} · ${expenseCategoryLabel(category)}`,
+      });
       setAmount("");
       setDescription("");
       onSaved();
       onOpenChange(false);
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "The expense could not be saved.", {
-        duration: 8000,
-      });
+    } catch (caught) {
+      const message = caught instanceof Error ? caught.message : "The expense could not be saved.";
+      setError(message);
+      toast.error(message, { duration: 8000 });
     }
   }
 
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent side="bottom" className="px-4 pb-8 pt-4">
-        <SheetHeader className="px-0 pb-3 text-left">
+      <SheetContent side="bottom" className="px-5 pb-8 pt-5">
+        <SheetHeader className="text-left">
           <SheetTitle className="text-base">Record an expense</SheetTitle>
         </SheetHeader>
 
-        <form onSubmit={submit} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="expense-amount">Amount</Label>
-            <Input
-              id="expense-amount"
-              value={amount}
-              onChange={(event) => setAmount(event.target.value)}
-              inputMode="decimal"
-              placeholder="0"
-              className="h-12 text-lg"
-              autoComplete="off"
-            />
-          </div>
+        <form onSubmit={submit} className="mt-5 space-y-4">
+          <MoneyField
+            id="expense-amount"
+            label="How much?"
+            value={amount}
+            onChange={(next) => {
+              setAmount(next);
+              setError(undefined);
+            }}
+            currency={currency}
+            error={error}
+            autoFocus
+          />
 
-          <div className="space-y-1.5">
-            <Label htmlFor="expense-category">Category</Label>
-            <Select
-              value={category}
-              onValueChange={(value) => setCategory(value as ExpenseCategory)}
-            >
-              <SelectTrigger id="expense-category" className="h-11">
+          <Field label="What was it for?" htmlFor="expense-category">
+            <Select value={category} onValueChange={(next) => setCategory(next as ExpenseCategory)}>
+              <SelectTrigger id="expense-category" className="h-12">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -246,24 +245,26 @@ function AddExpenseSheet({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Field>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="expense-description">Description (optional)</Label>
+          <Field
+            label="Note"
+            hint="Optional — where it went or what it was for."
+            htmlFor="expense-description"
+          >
             <Input
               id="expense-description"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
-              placeholder="e.g. Matatu to Gikomba"
-              className="h-11"
+              placeholder="e.g. Matatu fare to Gikomba"
+              className="h-12"
               autoComplete="off"
             />
-          </div>
+          </Field>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="expense-method">Paid with</Label>
-            <Select value={method} onValueChange={(value) => setMethod(value as PaymentMethod)}>
-              <SelectTrigger id="expense-method" className="h-11">
+          <Field label="Paid with" htmlFor="expense-method">
+            <Select value={method} onValueChange={(next) => setMethod(next as PaymentMethod)}>
+              <SelectTrigger id="expense-method" className="h-12">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -274,9 +275,13 @@ function AddExpenseSheet({
                 ))}
               </SelectContent>
             </Select>
-          </div>
+          </Field>
 
-          <Button type="submit" className="h-12 w-full" disabled={createExpense.isPending}>
+          <Button
+            type="submit"
+            className="h-12 w-full"
+            disabled={createExpense.isPending || !valid}
+          >
             {createExpense.isPending ? "Saving…" : "Save expense"}
           </Button>
         </form>

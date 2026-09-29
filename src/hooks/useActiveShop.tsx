@@ -1,4 +1,5 @@
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "@tanstack/react-router";
 import {
   createContext,
   useCallback,
@@ -72,18 +73,29 @@ export function ActiveShopProvider({ children }: { children: ReactNode }) {
     [shops, selectedId],
   );
 
-  // Keep the stored id honest: if the membership disappeared, fall back.
+  // Keep the selection honest. Two cases matter: the stored id no longer
+  // matches any membership (a shop was left or removed), and the user has no
+  // stored id at all — a staff member who has just redeemed an access code, or
+  // a brand new account. Without the second case they would sit on
+  // "Select a shop to continue…" forever with a membership already in hand.
   useEffect(() => {
     if (!shopsQuery.isSuccess) return;
-    if (selectedId && !activeShop) {
-      const fallback = shops[0]?.id ?? null;
-      setSelectedId(fallback);
-      try {
-        if (fallback) window.localStorage.setItem(ACTIVE_SHOP_KEY, fallback);
-        else window.localStorage.removeItem(ACTIVE_SHOP_KEY);
-      } catch {
-        /* non-fatal */
-      }
+    if (activeShop) return;
+    if (selectedId && !shops.some((shop) => shop.id === selectedId)) {
+      // The stored shop is gone; fall back to whatever they still belong to.
+    } else if (selectedId === null && shops.length > 0) {
+      // No selection yet and memberships exist: take the first one.
+    } else {
+      return;
+    }
+
+    const fallback = shops[0]?.id ?? null;
+    setSelectedId(fallback);
+    try {
+      if (fallback) window.localStorage.setItem(ACTIVE_SHOP_KEY, fallback);
+      else window.localStorage.removeItem(ACTIVE_SHOP_KEY);
+    } catch {
+      /* non-fatal */
     }
   }, [shopsQuery.isSuccess, selectedId, activeShop, shops]);
 
@@ -122,8 +134,18 @@ export function useActiveShop(): ActiveShopContextValue {
 
 /** Guard component: blocks the subtree until a shop is selected. */
 export function RequireActiveShop({ children }: { children: ReactNode }) {
-  const { activeShop, loading } = useActiveShop();
+  const { activeShop, loading, hasNoShops } = useActiveShop();
+  const navigate = useNavigate();
+
+  // With no shop at all there is nothing to select, so "select a shop" would be
+  // a dead end. Send the person to the hub, which can actually resolve it.
+  useEffect(() => {
+    if (!loading && !activeShop && hasNoShops) {
+      void navigate({ to: "/dashboard", replace: true });
+    }
+  }, [loading, activeShop, hasNoShops, navigate]);
+
   if (loading) return <LoadingState label="Opening your shop…" />;
-  if (!activeShop) return <LoadingState label="Select a shop to continue…" />;
+  if (!activeShop) return <LoadingState label="Opening your shop…" />;
   return <>{children}</>;
 }

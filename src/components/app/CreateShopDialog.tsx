@@ -1,20 +1,20 @@
-import { useEffect, useState } from "react";
-import { KeyRound, Loader2, Plus, Store } from "lucide-react";
+import { useEffect, useState, type ReactNode } from "react";
+import { useNavigate } from "@tanstack/react-router";
+import { Check, Copy, Loader2, Store } from "lucide-react";
 import { toast } from "sonner";
 
+import { Field, ToggleRow } from "@/components/app/fields";
 import { StorageImage } from "@/components/app/StorageImage";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -22,8 +22,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Switch } from "@/components/ui/switch";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useCreateShop } from "@/hooks/useShops";
 import { updateReceiptSettings } from "@/services/receipts.service";
 import { BUSINESS_TYPES, suggestAccessCode, updateShop } from "@/services/shops.service";
@@ -31,55 +29,62 @@ import { uploadImage } from "@/services/storage.service";
 import { STORAGE_BUCKETS, type Shop } from "@/types/ravqen";
 
 /**
- * Creates a shop and configures it in the same pass.
+ * Creates a shop and configures it in one pass.
  *
- * Everything here is written to Supabase before the dialog closes: details,
- * logo, the refund policy, receipt layout and an optional staff access code.
- * Opening the shop again after a refresh shows exactly what was saved.
+ * Everything here is written to Supabase before the sheet closes: details,
+ * logo, the refund policy, receipt layout and a staff access code. Opening the
+ * shop again after a refresh shows exactly what was saved. The access code is
+ * shown once afterwards because the shop owner has to write it down.
  */
-export function CreateShopDialog({ children }: { children: React.ReactNode }) {
+export function CreateShopDialog({ children }: { children: ReactNode }) {
   const createShop = useCreateShop();
+  const navigate = useNavigate();
 
   const [open, setOpen] = useState(false);
+  const [step, setStep] = useState<"form" | "done">("form");
   const [name, setName] = useState("");
   const [businessType, setBusinessType] = useState("general");
   const [location, setLocation] = useState("");
   const [phone, setPhone] = useState("");
   const [acceptsRefunds, setAcceptsRefunds] = useState(false);
   const [showLogo, setShowLogo] = useState(true);
-  const [footerText, setFooterText] = useState("Asante kwa biashara!");
+  const [footerText, setFooterText] = useState("");
   const [receiptPrefix, setReceiptPrefix] = useState("RV");
-  const [generateCode, setGenerateCode] = useState(true);
   const [accessCode, setAccessCode] = useState(() => suggestAccessCode());
+  const [generateCode, setGenerateCode] = useState(true);
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
+  const [created, setCreated] = useState<{ shop: Shop; code: string | null } | null>(null);
 
   useEffect(() => {
     if (!open) return;
+    setStep("form");
     setName("");
     setBusinessType("general");
     setLocation("");
     setPhone("");
     setAcceptsRefunds(false);
     setShowLogo(true);
-    setFooterText("Asante kwa biashara!");
+    setFooterText("");
     setReceiptPrefix("RV");
-    setGenerateCode(true);
     setAccessCode(suggestAccessCode());
+    setGenerateCode(true);
     setLogoFile(null);
+    setErrors({});
+    setCreated(null);
   }, [open]);
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
 
-    if (name.trim().length < 2) {
-      toast.error("Give the shop a name of at least 2 characters.");
-      return;
-    }
+    const next: Record<string, string | undefined> = {};
+    if (name.trim().length < 2) next["name"] = "Give the shop a name of at least 2 characters.";
     if (phone && !/^(\+?254|0)\d{9}$/.test(phone.replace(/\s+/g, ""))) {
-      toast.error("Use a Kenyan number, e.g. 0712345678.");
-      return;
+      next["phone"] = "Use a Kenyan number, e.g. 0712345678.";
     }
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
 
     try {
       // The logo is uploaded under the shop id, so it must wait until the shop
@@ -91,11 +96,11 @@ export function CreateShopDialog({ children }: { children: React.ReactNode }) {
         phone: phone.trim() || null,
         acceptsRefunds,
         receipt: {
-          footerText,
+          footerText: footerText.trim() || null,
           showLogo: showLogo && Boolean(logoFile),
-          receiptPrefix,
+          receiptPrefix: receiptPrefix.trim() || "RV",
         },
-        employeeAccessCode: generateCode ? accessCode.trim() : null,
+        employeeAccessCode: generateCode ? accessCode : null,
       });
 
       if (logoFile) {
@@ -115,57 +120,58 @@ export function CreateShopDialog({ children }: { children: React.ReactNode }) {
         }
       }
 
-      toast.success(`${result.shop.name} is ready`, {
-        description: generateCode
-          ? `Staff access code ${accessCode.trim()} — share it with your till staff.`
-          : "You are the owner. Add staff from the Employees screen.",
-      });
-      setOpen(false);
+      setCreated({ shop: result.shop, code: generateCode ? accessCode : null });
+      setStep("done");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not create the shop.", {
-        duration: 8000,
-      });
+      const message = error instanceof Error ? error.message : "Could not create the shop.";
+      setErrors({ form: message });
+      toast.error(message, { duration: 8000 });
     }
   }
 
   const busy = createShop.isPending || uploading;
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>{children}</DialogTrigger>
-      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>Create your shop</DialogTitle>
-          <DialogDescription>
-            Everything you set here is saved to your shop and survives signing out.
-          </DialogDescription>
-        </DialogHeader>
+    <Sheet open={open} onOpenChange={setOpen}>
+      <SheetTrigger asChild>{children}</SheetTrigger>
+      <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto px-5 pb-8 pt-5">
+        {step === "done" && created ? (
+          <ShopCreated
+            shop={created.shop}
+            code={created.code}
+            onOpen={() => {
+              setOpen(false);
+              void navigate({ to: "/app", search: { shop: created.shop.id } });
+            }}
+          />
+        ) : (
+          <>
+            <SheetHeader className="text-left">
+              <SheetTitle className="text-base">Set up your shop</SheetTitle>
+              <SheetDescription className="text-sm">
+                These details print on your receipts. You can change any of them later.
+              </SheetDescription>
+            </SheetHeader>
 
-        <form onSubmit={submit}>
-          <Tabs defaultValue="details">
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="details">Shop</TabsTrigger>
-              <TabsTrigger value="policy">Refunds</TabsTrigger>
-              <TabsTrigger value="receipt">Receipt</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="details" className="mt-4 space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="shop-name">Shop name</Label>
+            <form onSubmit={submit} className="mt-5 space-y-5" noValidate>
+              <Field label="Shop name" error={errors["name"]} htmlFor="shop-name">
                 <Input
                   id="shop-name"
                   value={name}
-                  onChange={(event) => setName(event.target.value)}
+                  onChange={(event) => {
+                    setName(event.target.value);
+                    setErrors((c) => ({ ...c, name: undefined }));
+                  }}
                   placeholder="e.g. Mama Njeri Stores"
-                  className="h-11"
+                  className="h-12"
                   autoComplete="organization"
+                  autoFocus
                 />
-              </div>
+              </Field>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="shop-type">Business type</Label>
+              <Field label="What kind of shop" htmlFor="shop-type">
                 <Select value={businessType} onValueChange={setBusinessType}>
-                  <SelectTrigger id="shop-type" className="h-11">
+                  <SelectTrigger id="shop-type" className="h-12">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -176,187 +182,223 @@ export function CreateShopDialog({ children }: { children: React.ReactNode }) {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
+              </Field>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="shop-location">Location</Label>
-                <Input
-                  id="shop-location"
-                  value={location}
-                  onChange={(event) => setLocation(event.target.value)}
-                  placeholder="e.g. Gikomba, Nairobi"
-                  className="h-11"
-                  autoComplete="off"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="shop-phone">M-Pesa / business phone</Label>
-                <Input
-                  id="shop-phone"
-                  value={phone}
-                  onChange={(event) => setPhone(event.target.value)}
-                  inputMode="tel"
-                  placeholder="0712 345 678"
-                  className="h-11"
-                  autoComplete="tel"
-                />
-              </div>
-
-              <div className="space-y-1.5">
-                <Label htmlFor="shop-logo">Shop logo (optional)</Label>
-                <Input
-                  id="shop-logo"
-                  type="file"
-                  accept="image/*"
-                  className="h-11"
-                  onChange={(event) => setLogoFile(event.target.files?.[0] ?? null)}
-                />
-                <p className="text-xs text-muted-foreground">
-                  Uploaded to your private shop bucket once the shop is created.
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between gap-4 rounded-xl border border-border p-3">
-                <div>
-                  <p className="flex items-center gap-1.5 text-sm font-medium">
-                    <KeyRound className="size-3.5" /> Generate a staff access code
-                  </p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    Shown once. Only a digest is stored.
-                  </p>
-                </div>
-                <Switch
-                  checked={generateCode}
-                  onCheckedChange={setGenerateCode}
-                  aria-label="Generate a staff access code"
-                />
-              </div>
-
-              {generateCode ? (
-                <div className="space-y-1.5">
-                  <Label htmlFor="shop-code">Access code</Label>
+              <div className="grid grid-cols-2 gap-3">
+                <Field label="Location" hint="Town or area" htmlFor="shop-location">
                   <Input
-                    id="shop-code"
-                    value={accessCode}
-                    onChange={(event) => setAccessCode(event.target.value)}
-                    inputMode="numeric"
-                    className="h-11 font-mono tracking-widest"
+                    id="shop-location"
+                    value={location}
+                    onChange={(event) => setLocation(event.target.value)}
+                    placeholder="Gikomba"
+                    className="h-12"
                     autoComplete="off"
                   />
-                </div>
-              ) : null}
-            </TabsContent>
+                </Field>
+                <Field label="Phone" error={errors["phone"]} htmlFor="shop-phone">
+                  <Input
+                    id="shop-phone"
+                    value={phone}
+                    onChange={(event) => {
+                      setPhone(event.target.value);
+                      setErrors((c) => ({ ...c, phone: undefined }));
+                    }}
+                    inputMode="tel"
+                    placeholder="0712 345 678"
+                    className="h-12"
+                    autoComplete="tel"
+                  />
+                </Field>
+              </div>
 
-            <TabsContent value="policy" className="mt-4 space-y-3">
-              <div className="flex items-start justify-between gap-4 rounded-xl border border-border p-4">
-                <div>
-                  <p className="text-sm font-medium">Accept refunds</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    When this is off, the database refuses refund operations for the shop — it is a
-                    real setting, not just a hidden button.
-                  </p>
+              <Field
+                label="Shop logo"
+                hint="Optional. Shown on your receipts if you turn that on below."
+                htmlFor="shop-logo"
+              >
+                <div className="flex items-center gap-3">
+                  {logoFile ? (
+                    <span className="grid size-12 shrink-0 place-items-center overflow-hidden rounded-lg bg-sunken text-[10px] uppercase text-muted-foreground">
+                      {logoFile.name.slice(-4)}
+                    </span>
+                  ) : null}
+                  <Input
+                    id="shop-logo"
+                    type="file"
+                    accept="image/*"
+                    className="h-12"
+                    onChange={(event) => setLogoFile(event.target.files?.[0] ?? null)}
+                  />
                 </div>
-                <Switch
+              </Field>
+
+              {/* ----------------------------------------------------- policy */}
+              <div className="glass-2 rounded-xl backdrop-blur-md backdrop-saturate-150 px-4">
+                <ToggleRow
+                  title="Does your shop accept refunds?"
+                  description="When this is off, nobody at the counter can process a refund. Staff will see why instead of guessing."
                   checked={acceptsRefunds}
                   onCheckedChange={setAcceptsRefunds}
-                  aria-label="Accept refunds"
                 />
               </div>
-              <p className="text-xs text-muted-foreground">
-                You can change this at any time from Settings.
-              </p>
-            </TabsContent>
 
-            <TabsContent value="receipt" className="mt-4 space-y-4">
-              <div className="space-y-1.5">
-                <Label htmlFor="shop-footer">Receipt footer</Label>
+              {/* ---------------------------------------------------- receipts */}
+              <div className="glass-2 rounded-xl backdrop-blur-md backdrop-saturate-150 px-4">
+                <ToggleRow
+                  title="Show the logo on receipts"
+                  description="Requires a logo above."
+                  checked={showLogo}
+                  disabled={!logoFile}
+                  onCheckedChange={setShowLogo}
+                />
+              </div>
+
+              <Field
+                label="Receipt footer"
+                hint="A thank-you line printed at the bottom. Optional."
+                htmlFor="shop-footer"
+              >
                 <Input
                   id="shop-footer"
                   value={footerText}
                   onChange={(event) => setFooterText(event.target.value)}
                   placeholder="Asante kwa biashara!"
-                  className="h-11"
+                  className="h-12"
                   autoComplete="off"
                 />
-              </div>
+              </Field>
 
-              <div className="space-y-1.5">
-                <Label htmlFor="shop-prefix">Receipt prefix</Label>
+              <Field
+                label="Receipt numbers start with"
+                hint={`Your receipts will read ${(receiptPrefix || "RV").toUpperCase()}-00001, ${(receiptPrefix || "RV").toUpperCase()}-00002, and so on.`}
+                htmlFor="shop-prefix"
+              >
                 <Input
                   id="shop-prefix"
                   value={receiptPrefix}
                   onChange={(event) => setReceiptPrefix(event.target.value.toUpperCase())}
                   maxLength={6}
-                  className="h-11 font-mono"
+                  className="tnum h-12"
                   autoComplete="off"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Receipts become {receiptPrefix || "RV"}-00001, {receiptPrefix || "RV"}-00002, …
-                </p>
-              </div>
+              </Field>
 
-              <div className="flex items-center justify-between gap-4 rounded-xl border border-border p-3">
-                <div>
-                  <p className="text-sm font-medium">Show the logo on receipts</p>
-                  <p className="mt-0.5 text-xs text-muted-foreground">
-                    Applies once a logo has been uploaded.
-                  </p>
-                </div>
-                <Switch
-                  checked={showLogo}
-                  onCheckedChange={setShowLogo}
-                  aria-label="Show logo on receipts"
+              {/* ------------------------------------------------ staff access */}
+              <div className="glass-2 rounded-xl backdrop-blur-md backdrop-saturate-150 px-4">
+                <ToggleRow
+                  title="Give my staff an access code"
+                  description="They enter it once when they sign up and land straight in this shop. No account ids to copy around."
+                  checked={generateCode}
+                  onCheckedChange={setGenerateCode}
                 />
+                {generateCode ? (
+                  <div className="pb-4">
+                    <Field
+                      label="Your access code"
+                      hint="Write it down — you will not be able to read it back."
+                      htmlFor="shop-code"
+                    >
+                      <Input
+                        id="shop-code"
+                        value={accessCode}
+                        onChange={(event) => setAccessCode(event.target.value.replace(/\D/g, ""))}
+                        inputMode="numeric"
+                        className="tnum h-14 text-center text-xl font-semibold tracking-[0.35em]"
+                        autoComplete="off"
+                      />
+                    </Field>
+                  </div>
+                ) : null}
               </div>
 
-              <p className="text-xs text-muted-foreground">
-                The shop name, phone and location you entered are printed on every receipt.
-              </p>
-            </TabsContent>
-          </Tabs>
+              {errors["form"] ? (
+                <p className="rounded-lg border border-negative/30 bg-negative-soft/60 px-3.5 py-2.5 text-sm text-negative">
+                  {errors["form"]}
+                </p>
+              ) : null}
 
-          <DialogFooter className="mt-5">
-            <Button type="submit" className="h-12 w-full sm:w-auto" disabled={busy}>
-              {busy ? <Loader2 className="animate-spin" /> : <Plus />}
-              {busy ? "Creating…" : "Create shop"}
-            </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+              <Button type="submit" className="h-12 w-full text-base" disabled={busy}>
+                {busy ? <Loader2 className="size-4 animate-spin" /> : <Store className="size-4" />}
+                {busy ? "Setting up…" : "Create shop"}
+              </Button>
+            </form>
+          </>
+        )}
+      </SheetContent>
+    </Sheet>
+  );
+}
+
+/** The confirmation step: the shop exists, and here is the code, once. */
+function ShopCreated({
+  shop,
+  code,
+  onOpen,
+}: {
+  shop: Shop;
+  code: string | null;
+  onOpen: () => void;
+}) {
+  return (
+    <div className="py-2">
+      <div className="flex flex-col items-center gap-2 text-center">
+        <span className="grid size-11 place-items-center rounded-full bg-positive-soft text-positive">
+          <Check className="size-5" aria-hidden />
+        </span>
+        <div>
+          <p className="text-base font-semibold">{shop.name} is ready</p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            You are the owner. Start with your first product, then sell.
+          </p>
+        </div>
+      </div>
+
+      {code ? (
+        <div className="mt-6 rounded-xl border border-positive/40 bg-positive-soft/50 p-4 text-center">
+          <p className="text-xs font-semibold uppercase tracking-wider text-positive">
+            Staff access code
+          </p>
+          <p className="tnum mt-1.5 text-3xl font-semibold tracking-[0.3em]">{code}</p>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Write this down now. Give it to your staff — they type it when they sign up.
+          </p>
+          <Button
+            variant="outline"
+            className="mt-3 h-10"
+            onClick={() => {
+              void navigator.clipboard?.writeText(code);
+              toast.success("Copied", { description: code });
+            }}
+          >
+            <Copy className="size-4" /> Copy
+          </Button>
+        </div>
+      ) : null}
+
+      <Button className="mt-6 h-12 w-full text-base" onClick={onOpen}>
+        Open my shop
+      </Button>
+    </div>
   );
 }
 
 export function ShopCard({ shop, role }: { shop: Shop; role?: string }) {
   return (
-    <div className="surface-panel p-4">
-      <div className="flex items-center gap-3">
-        <StorageImage
-          bucket={STORAGE_BUCKETS.shopLogos}
-          path={shop.logo_url}
-          alt={`${shop.name} logo`}
-          className="size-11 shrink-0"
-        />
-        <div className="min-w-0 flex-1">
-          <p className="truncate font-medium">{shop.name}</p>
-          <p className="mt-0.5 truncate text-sm text-muted-foreground">
-            {[shop.business_type, shop.location].filter(Boolean).join(" · ") || "No details yet"}
-          </p>
-        </div>
-        <div className="shrink-0 text-right">
-          <span className="block rounded-full bg-secondary px-2.5 py-1 text-xs font-medium text-secondary-foreground">
-            {shop.currency}
-          </span>
-          {role ? (
-            <span className="mt-1 block text-[11px] capitalize text-muted-foreground">{role}</span>
-          ) : null}
-        </div>
-      </div>
-      {!shop.accepts_refunds ? (
-        <p className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-          <Store className="size-3" /> Refunds are switched off for this shop
+    <div className="flex items-center gap-3 p-4">
+      <StorageImage
+        bucket={STORAGE_BUCKETS.shopLogos}
+        path={shop.logo_url}
+        alt={`${shop.name} logo`}
+        className="size-11 shrink-0 rounded-lg"
+      />
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-medium">{shop.name}</p>
+        <p className="mt-0.5 truncate text-sm text-muted-foreground">
+          {[shop.business_type, shop.location].filter(Boolean).join(" · ") || "No details yet"}
         </p>
+      </div>
+      {role ? (
+        <span className="shrink-0 text-[11px] capitalize text-muted-foreground">{role}</span>
       ) : null}
     </div>
   );
