@@ -1,11 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { toast } from "sonner";
 
-import { ErrorState, LoadingState, PageContainer, PageHeader } from "@/components/app/AppChrome";
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  PageContainer,
+  PageHeader,
+} from "@/components/app/AppChrome";
+import { ExportReportButton } from "@/components/app/ExportReportButton";
 import { OwnerOnly } from "@/components/app/OwnerOnly";
-import { cn } from "@/lib/utils";
+import { SectionLabel } from "@/components/app/primitives";
 import { useActiveShop } from "@/hooks/useActiveShop";
 import { useShopReport } from "@/hooks/useLedger";
+import { useMinuteNow } from "@/hooks/useReportingWindow";
 import { formatMoney } from "@/lib/format";
 import { startOfDay, startOfMonth } from "@/services/reports.service";
 
@@ -20,35 +29,49 @@ export const Route = createFileRoute("/_authenticated/app/reports")({
 
 type Range = "today" | "month" | "year";
 
-const RANGES: { value: Range; label: string }[] = [
-  { value: "today", label: "Today" },
-  { value: "month", label: "This month" },
-  { value: "year", label: "This year" },
+const RANGES: { value: Range; label: string; period: string }[] = [
+  { value: "today", label: "Today", period: "today" },
+  { value: "month", label: "This month", period: "this month" },
+  { value: "year", label: "This year", period: "this year" },
 ];
 
-function rangeBounds(range: Range): { from: Date; to: Date } {
-  const now = new Date();
+function rangeBounds(range: Range, now: Date): { from: Date; to: Date } {
   if (range === "today") return { from: startOfDay(now), to: now };
   if (range === "month") return { from: startOfMonth(now), to: now };
-  const from = new Date(now.getFullYear(), 0, 1);
-  return { from, to: now };
+  return { from: new Date(now.getFullYear(), 0, 1), to: now };
 }
 
+/**
+ * Owner reporting.
+ *
+ * The wording is the important part. Takings are not profit. Gross profit is
+ * takings minus what the goods cost, which is an estimate because it uses the
+ * buying price on file rather than the last invoice. Net result is that less
+ * expenses. Every number is computed in PostgreSQL, which re-checks that the
+ * caller owns the shop before it returns anything.
+ */
 function ReportsPage() {
   const { activeShop } = useActiveShop();
   const shopId = activeShop?.id ?? "";
   const currency = activeShop?.currency ?? "KES";
   const [range, setRange] = useState<Range>("today");
 
-  const bounds = rangeBounds(range);
+  // The window has to be stable across renders, or the query key changes on
+  // every pass and the report never finishes loading.
+  const now = useMinuteNow();
+  const bounds = rangeBounds(range, now);
   const reportQuery = useShopReport(shopId, bounds.from, bounds.to, Boolean(shopId));
+  const activeRange = RANGES.find((option) => option.value === range);
 
-  if (reportQuery.isPending) return <LoadingState label="Working out the numbers…" />;
+  if (reportQuery.isLoading) {
+    return <LoadingState label="Working out the numbers…" />;
+  }
+
   if (reportQuery.isError) {
     return (
       <PageContainer>
         <PageHeader title="Reports" />
-        <div className="mt-6">
+        <div className="mt-4">
           <ErrorState
             message={reportQuery.error.message}
             onRetry={() => void reportQuery.refetch()}
@@ -59,107 +82,270 @@ function ReportsPage() {
   }
 
   const report = reportQuery.data;
-  const margin = report.grossSales - report.costOfGoods;
-  const netCash = report.collected + report.debtCollected - report.expenses - report.refunds;
+  if (!report) {
+    return (
+      <PageContainer>
+        <PageHeader title="Reports" />
+        <div className="mt-4">
+          <ErrorState
+            message="The report came back empty. Try loading it again."
+            onRetry={() => void reportQuery.refetch()}
+          />
+        </div>
+      </PageContainer>
+    );
+  }
+
+  const grossProfit = report.grossSales - report.costOfGoods;
+  const netResult = grossProfit - report.expenses;
+  const nothingYet = report.salesCount === 0 && report.expenses === 0;
 
   return (
     <PageContainer>
-      <PageHeader title="Reports" subtitle="Real figures, straight from your records." />
+      <PageHeader
+        title="Reports"
+        subtitle="Figures taken straight from your records."
+        action={
+          <ExportReportButton
+            input={{
+              shopId,
+              shopName: activeShop?.name ?? "Shop",
+              currency,
+              periodLabel: activeRange?.label ?? "This period",
+              from: bounds.from,
+              to: bounds.to,
+              report,
+            }}
+            onError={(message) =>
+              toast.error(message, {
+                description: "Nothing was changed. You can try again.",
+                duration: 8000,
+              })
+            }
+          />
+        }
+      />
 
-      <div className="mt-4 flex gap-2">
+      <div className="mb-4 flex gap-1.5">
         {RANGES.map((option) => (
           <button
             key={option.value}
             type="button"
             onClick={() => setRange(option.value)}
-            className={cn(
-              "h-9 flex-1 rounded-full border px-3 text-xs font-medium",
-              range === option.value
-                ? "border-primary bg-primary/5 text-ink"
-                : "border-border text-muted-foreground",
-            )}
+            aria-pressed={range === option.value}
+            className={
+              "press h-10 flex-1 rounded-lg border text-sm font-medium " +
+              (range === option.value
+                ? "border-ink bg-ink text-background"
+                : "border-border text-muted-foreground")
+            }
           >
             {option.label}
           </button>
         ))}
       </div>
 
-      <div className="gradient-ink mt-4 rounded-2xl p-5">
-        <p className="text-xs uppercase tracking-widest text-champagne/70">
-          {range === "today" ? "Today's takings" : range === "month" ? "This month" : "This year"}
-        </p>
-        <p className="mt-1 font-display text-3xl text-background">
-          {formatMoney(report.grossSales, currency)}
-        </p>
-        <p className="mt-1 text-xs text-background/70">
-          {report.salesCount} sale{report.salesCount === 1 ? "" : "s"} · margin{" "}
-          {formatMoney(margin, currency)}
-        </p>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <Stat label="Cash in" value={formatMoney(report.collected, currency)} />
-        <Stat label="Debt collected" value={formatMoney(report.debtCollected, currency)} />
-        <Stat label="Expenses" value={formatMoney(report.expenses, currency)} />
-        <Stat label="Refunds" value={formatMoney(report.refunds, currency)} />
-        <Stat label="Discounts given" value={formatMoney(report.discounts, currency)} />
-        <Stat label="Cost of goods" value={formatMoney(report.costOfGoods, currency)} />
-      </div>
-
-      <div className="surface-panel mt-4 p-4">
-        <p className="text-sm font-medium">Net cash position</p>
-        <p className="mt-1 text-2xl font-semibold">{formatMoney(netCash, currency)}</p>
-        <p className="mt-1 text-xs text-muted-foreground">
-          Money received (sales plus debt repayments) less expenses and refunds.
-        </p>
-      </div>
-
-      <div className="mt-4 grid grid-cols-2 gap-3">
-        <Stat label="Owed to you" value={formatMoney(report.outstandingCredit, currency)} />
-        <Stat label="Stock at cost" value={formatMoney(report.stockValue, currency)} />
-      </div>
-
-      {report.lowStockCount > 0 ? (
-        <div className="surface-panel mt-4 border-destructive/30 p-4">
-          <p className="text-sm font-medium text-destructive">
-            {report.lowStockCount} product{report.lowStockCount === 1 ? "" : "s"} at or below the
-            low-stock level
-          </p>
-          <p className="mt-1 text-xs text-muted-foreground">
-            Restock them from the Restock screen before they run out.
-          </p>
-        </div>
+      {nothingYet ? (
+        <EmptyState
+          title="Nothing recorded yet"
+          description={`There is no trading to report for ${activeRange?.period ?? "this period"}. Once you make a sale or log an expense, the figures appear here.`}
+        />
       ) : null}
 
-      <div className="surface-panel mt-4 p-4">
-        <p className="text-sm font-medium">Best sellers</p>
+      {/* ------------------------------------------------------- takings */}
+      <section className="mb-6">
+        <SectionLabel>Takings</SectionLabel>
+        <div className="glass-1 rounded-xl p-4 backdrop-blur-2xl backdrop-saturate-150">
+          <p className="tnum text-[2rem] font-semibold leading-none">
+            {formatMoney(report.grossSales, currency)}
+          </p>
+          <p className="mt-1.5 text-sm text-muted-foreground">
+            {report.salesCount === 0
+              ? "No sales in this period"
+              : `from ${report.salesCount} sale${report.salesCount === 1 ? "" : "s"}`}
+          </p>
+          {report.discounts > 0 ? (
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              after {formatMoney(report.discounts, currency)} of discounts
+            </p>
+          ) : null}
+        </div>
+      </section>
+
+      {/* -------------------------------------------------------- result */}
+      <section className="mb-6">
+        <SectionLabel>How that adds up</SectionLabel>
+        <dl className="list-divided">
+          <Line label="Takings" value={formatMoney(report.grossSales, currency)} />
+          <Line
+            label="Cost of the goods sold"
+            value={`− ${formatMoney(report.costOfGoods, currency)}`}
+          />
+          <Line
+            label="Gross profit (estimate)"
+            value={formatMoney(grossProfit, currency)}
+            note="Uses the buying price on each product, not your last invoice."
+            tone={grossProfit < 0 ? "negative" : "default"}
+            emphasis
+          />
+          <Line
+            label="Expenses"
+            value={`− ${formatMoney(report.expenses, currency)}`}
+            note={report.expenses > 0 ? "Lunch, transport, rent and the rest" : "Nothing recorded"}
+          />
+          <Line
+            label="Net result (estimate)"
+            value={formatMoney(netResult, currency)}
+            tone={netResult < 0 ? "negative" : "positive"}
+            emphasis
+          />
+        </dl>
+      </section>
+
+      {/* ---------------------------------------------------------- cash */}
+      <section className="mb-6">
+        <SectionLabel>Money in and out</SectionLabel>
+        <dl className="list-divided">
+          <Line
+            label="Taken at the till"
+            value={formatMoney(report.collected, currency)}
+            note="Cash, M-Pesa and card"
+          />
+          <Line
+            label="Collected from debtors"
+            value={formatMoney(report.debtCollected, currency)}
+          />
+          {report.refunds > 0 ? (
+            <Line
+              label="Paid back as refunds"
+              value={`− ${formatMoney(report.refunds, currency)}`}
+            />
+          ) : null}
+          <Line
+            label="Paid out in total"
+            value={`− ${formatMoney(report.expenses + report.refunds, currency)}`}
+          />
+        </dl>
+      </section>
+
+      {/* ----------------------------------------------------- the shop */}
+      <section className="mb-6">
+        <SectionLabel>Where the shop stands</SectionLabel>
+        <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+          <Figure
+            label="Owed to you"
+            value={formatMoney(report.outstandingCredit, currency)}
+            note="Across every debtor"
+          />
+          <Figure
+            label="Stock at cost"
+            value={formatMoney(report.stockValue, currency)}
+            note="What the shelves hold"
+          />
+          <Figure
+            label="Products below reorder level"
+            value={String(report.lowStockCount)}
+            note={report.lowStockCount > 0 ? "Worth topping up" : "Everything is well stocked"}
+            tone={report.lowStockCount > 0 ? "caution" : "positive"}
+          />
+          <Figure
+            label="Products being sold"
+            value={String(report.topProducts.length)}
+            note="In this period"
+          />
+        </div>
+      </section>
+
+      {/* -------------------------------------------------- best sellers */}
+      <section>
+        <SectionLabel>What is selling</SectionLabel>
         {report.topProducts.length === 0 ? (
-          <p className="mt-1 text-xs text-muted-foreground">No sales in this period yet.</p>
+          <p className="text-sm text-muted-foreground">
+            No products were sold in this period, so there is nothing to rank.
+          </p>
         ) : (
-          <ul className="mt-2 space-y-2 text-sm">
-            {report.topProducts.map((product) => (
-              <li key={product.name} className="flex justify-between gap-3">
-                <span className="min-w-0 truncate">{product.name}</span>
-                <span className="shrink-0 text-right">
-                  {formatMoney(product.revenue, currency)}
-                  <span className="block text-xs text-muted-foreground">
+          <ol className="list-divided">
+            {report.topProducts.map((product, index) => (
+              <li key={product.name} className="flex items-center gap-3 py-2.5">
+                <span
+                  className="tnum w-5 shrink-0 text-sm font-semibold text-muted-foreground"
+                  aria-hidden
+                >
+                  {index + 1}
+                </span>
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-sm">{product.name}</span>
+                  <span className="tnum block text-xs text-muted-foreground">
                     {product.quantity} sold
                   </span>
                 </span>
+                <span className="tnum shrink-0 text-sm font-semibold">
+                  {formatMoney(product.revenue, currency)}
+                </span>
               </li>
             ))}
-          </ul>
+          </ol>
         )}
-      </div>
+      </section>
     </PageContainer>
   );
 }
 
-function Stat({ label, value }: { label: string; value: string }) {
+function Line({
+  label,
+  value,
+  note,
+  tone = "default",
+  emphasis = false,
+}: {
+  label: string;
+  value: string;
+  note?: string | undefined;
+  tone?: "default" | "positive" | "negative";
+  emphasis?: boolean;
+}) {
   return (
-    <div className="surface-panel p-3.5">
+    <div className="flex items-start justify-between gap-4 py-3">
+      <div className="min-w-0">
+        <p className={emphasis ? "text-sm font-semibold" : "text-sm"}>{label}</p>
+        {note ? <p className="mt-0.5 text-xs text-muted-foreground">{note}</p> : null}
+      </div>
+      <p
+        className={
+          "tnum shrink-0 text-right " +
+          (emphasis ? "text-base font-semibold " : "text-sm ") +
+          (tone === "positive" ? "text-positive" : tone === "negative" ? "text-negative" : "")
+        }
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function Figure({
+  label,
+  value,
+  note,
+  tone = "default",
+}: {
+  label: string;
+  value: string;
+  note: string;
+  tone?: "default" | "positive" | "caution";
+}) {
+  return (
+    <div>
       <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="mt-1 text-lg font-semibold">{value}</p>
+      <p
+        className={
+          "tnum mt-0.5 text-base font-semibold " +
+          (tone === "caution" ? "text-caution" : tone === "positive" ? "text-positive" : "")
+        }
+      >
+        {value}
+      </p>
+      <p className="mt-0.5 text-[11px] text-muted-foreground">{note}</p>
     </div>
   );
 }

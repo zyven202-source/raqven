@@ -1,34 +1,31 @@
 import type { ReactNode } from "react";
-import { ShieldAlert } from "lucide-react";
+import { Lock } from "lucide-react";
 
-import { LoadingState, PageContainer, PageHeader } from "@/components/app/AppChrome";
+import { NoticeState, PageContainer, PageHeader } from "@/components/app/AppChrome";
 import { useActiveShop } from "@/hooks/useActiveShop";
 
 /**
- * Hides an owner-only screen from employees.
+ * Keeps an owner-only screen out of an employee's way.
  *
- * This is deliberately a UX affordance, not the security boundary. Every
- * owner-only operation is refused by the database (RLS policies and the
- * `is_shop_owner` checks inside the RPCs), so an employee who reaches this data
- * another way still gets nothing, and the message below says exactly that
- * rather than implying the UI is the protection.
+ * This is a courtesy, not the security boundary: the database refuses these
+ * operations for an employee regardless of what the browser does. The message
+ * says so in the user's terms without describing the mechanism.
  */
 export function OwnerOnly({ title, children }: { title: string; children: ReactNode }) {
-  const { isOwner, loading } = useActiveShop();
+  const { isOwner, loading, activeShop } = useActiveShop();
 
-  if (loading) return <LoadingState label="Checking your access…" />;
+  if (!loading && !activeShop) return null;
 
-  if (!isOwner) {
+  if (!loading && !isOwner) {
     return (
       <PageContainer>
         <PageHeader title={title} />
-        <div className="surface-panel mt-6 flex flex-col items-center gap-2 p-8 text-center">
-          <ShieldAlert className="size-6 text-ink-soft" aria-hidden />
-          <p className="font-medium">Owners only</p>
-          <p className="max-w-sm text-sm text-muted-foreground">
-            You are signed in as an employee, so this screen is not available. The database refuses
-            these operations for your account as well — it is not only hidden here.
-          </p>
+        <div className="mt-6">
+          <NoticeState
+            icon={<Lock className="size-4" aria-hidden />}
+            title="Owners only"
+            description="Ask the shop owner if you need this. RAVQEN keeps these settings with the owner so they cannot be changed from the counter."
+          />
         </div>
       </PageContainer>
     );

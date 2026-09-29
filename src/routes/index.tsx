@@ -1,148 +1,203 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { motion } from "framer-motion";
-import { BarChart3, Boxes, ReceiptText, ShieldCheck, Users, Wallet } from "lucide-react";
+import { Banknote, Boxes, HandCoins, ScanLine, ShieldCheck, Users } from "lucide-react";
 
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
+import { HOME_HEADLINE, HOME_META, SITE_URL, webApplicationJsonLd } from "@/lib/seo";
 
 export const Route = createFileRoute("/")({
   head: () => ({
-    meta: [
-      { title: "RAVQEN — Every sale. Every stock. Every number." },
+    meta: [...HOME_META],
+    /*
+      Structured data is emitted from `head()` rather than from a `<script>`
+      tag in the component, and it goes in `scripts` rather than `meta`.
+
+      Both choices are forced by how this app builds. It prerenders a static
+      shell, and that shell carries the `head()` descriptors but **not** the
+      route's rendered markup — a `<script>` written inside `Landing` would only
+      exist after JavaScript ran, which is no use to a crawler that does not
+      execute it. And the router types `head().meta` as React `<meta>` props,
+      where the `script:ld+json` descriptor does not fit; `head().scripts` maps
+      to `headScripts`, which is rendered by one shared function for the
+      prerender and for the client, so the tag in the static HTML and the tag
+      React hydrates are the same element by construction. That matters here:
+      hand-written head descriptors have already shipped a `<link>`-versus-
+      `<meta>` mismatch that threw a hydration error on every page load.
+
+      The JSON has to arrive as a string `children`, not as a
+      `dangerouslySetInnerHTML` attribute. The router renders a src-less head
+      script only when `children` is a string, so the attribute form is dropped
+      in silence — no tag in the HTML, no error anywhere, and the structured data
+      simply does not exist. Putting it through `children` also keeps React from
+      escaping it: an escaped `&` or `<` inside a `<script>` is not decoded by
+      the HTML parser, so it would corrupt the JSON.
+    */
+    scripts: [
       {
-        name: "description",
-        content:
-          "RAVQEN keeps sales, stock, debtors and daily cash in one clear record for Kenyan small businesses.",
+        type: "application/ld+json",
+        children: JSON.stringify(webApplicationJsonLd()),
       },
-      { property: "og:title", content: "RAVQEN — Every sale. Every stock. Every number." },
-      {
-        property: "og:description",
-        content:
-          "RAVQEN keeps sales, stock, debtors and daily cash in one clear record for Kenyan small businesses.",
-      },
-      { property: "og:type", content: "website" },
-      { name: "twitter:card", content: "summary_large_image" },
     ],
+    links: [{ rel: "canonical", href: `${SITE_URL}/` }],
   }),
   component: Landing,
 });
 
-const capabilities = [
-  {
-    icon: ReceiptText,
-    title: "Sales & receipts",
-    body: "Record every sale with a receipt number, payment method and the person who served.",
-  },
-  {
-    icon: Boxes,
-    title: "Stock that moves",
-    body: "Products, categories and a full movement trail so stock counts explain themselves.",
-  },
-  {
-    icon: Wallet,
-    title: "Debtors & expenses",
-    body: "Track who owes what, log repayments, and keep daily spending beside the takings.",
-  },
-  {
-    icon: Users,
-    title: "Staff with limits",
-    body: "Owners and employees — each staff member gets their own till access code.",
-  },
-  {
-    icon: BarChart3,
-    title: "Numbers you trust",
-    body: "Cost and selling price on every line, so profit is measured and not guessed.",
-  },
-  {
-    icon: ShieldCheck,
-    title: "Locked to your shop",
-    body: "Every record is tied to your shop and protected at the database level.",
-  },
-];
-
+/**
+ * The public page makes one promise: this is the record book your shop runs on.
+ * It shows the work RAVQEN actually does, with no invented statistics and no
+ * decorative dashboards — if a number cannot be real, it is not on this page.
+ *
+ * **One `<h1>`, and it carries the term people search for.** The heading is the
+ * keyword, the `<title>` and the JSON-LD `name` all read from
+ * `src/lib/seo.ts`, so the page cannot claim one thing to a reader and another
+ * to a crawler. Everything below it is a `<h2>` section, and every card or step
+ * inside one is an `<h3>`, so the document outline is the page read aloud.
+ */
 function Landing() {
   return (
-    <div className="min-h-screen bg-background">
-      <header className="mx-auto flex w-full max-w-6xl items-center justify-between px-5 py-5">
-        <Logo />
-        <div className="flex items-center gap-2">
-          <Button asChild variant="ghost" size="sm">
-            <Link to="/auth/login">Sign in</Link>
-          </Button>
-          <Button asChild size="sm">
-            <Link to="/auth/signup">Get started</Link>
-          </Button>
+    <div className="min-h-dvh bg-background">
+      <header className="border-b border-border">
+        <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-5 py-3.5">
+          <Logo />
+          <div className="flex items-center gap-1">
+            <Button asChild variant="ghost" size="sm">
+              <Link to="/auth/login">Sign in</Link>
+            </Button>
+            <Button asChild size="sm">
+              <Link to="/auth/signup">Get started</Link>
+            </Button>
+          </div>
         </div>
       </header>
 
       <main>
-        <section className="mx-auto w-full max-w-6xl px-5 pb-16 pt-8 sm:pt-16">
-          <motion.div
-            initial={{ opacity: 0, y: 16 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="max-w-2xl"
-          >
-            <span className="inline-flex items-center rounded-full bg-accent px-3 py-1 text-xs font-medium tracking-wide text-accent-foreground">
-              Built for Kenyan small businesses
-            </span>
-            <h1 className="mt-5 text-balance-tight text-4xl leading-[1.08] sm:text-6xl">
-              Every sale. Every stock. Every number.
-            </h1>
-            <p className="mt-5 max-w-xl text-base leading-relaxed text-muted-foreground sm:text-lg">
-              RAVQEN is the daily record book for your shop — sales, stock, debtors, expenses and
-              staff, kept accurate in one place instead of five notebooks.
-            </p>
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Button asChild size="lg">
-                <Link to="/auth/signup">Create your shop</Link>
-              </Button>
-              <Button asChild size="lg" variant="outline">
-                <Link to="/auth/login">I already have an account</Link>
-              </Button>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 24 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.15, ease: "easeOut" }}
-            className="gradient-ink mt-14 grid gap-px overflow-hidden rounded-2xl p-px sm:grid-cols-3"
-          >
-            {[
-              { label: "Today's sales", value: "Live from your till" },
-              { label: "Stock on hand", value: "Counted every movement" },
-              { label: "Money owed", value: "Debtor by debtor" },
-            ].map((stat) => (
-              <div key={stat.label} className="px-6 py-7">
-                <p className="text-xs uppercase tracking-widest text-champagne/70">{stat.label}</p>
-                <p className="mt-2 font-display text-xl text-background">{stat.value}</p>
-              </div>
-            ))}
-          </motion.div>
+        {/* ------------------------------------------------------------ hero */}
+        <section className="mx-auto w-full max-w-3xl px-5 py-14 sm:py-20">
+          <p className="text-sm font-medium text-ink-soft">Built for Kenyan shops</p>
+          <h1 className="mt-3 max-w-xl text-balance-tight text-[2.25rem] leading-[1.08] sm:text-5xl">
+            {HOME_HEADLINE}
+          </h1>
+          <p className="mt-5 max-w-lg text-base leading-relaxed text-muted-foreground">
+            RAVQEN replaces the till notebook, the stock book and the &ldquo;who owes what&rdquo;
+            list. It works on an Android phone, at the counter, in the sun.
+          </p>
+          <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+            <Button asChild className="h-12 px-6 text-base">
+              <Link to="/auth/signup">Create your shop</Link>
+            </Button>
+            <Button asChild variant="outline" className="h-12 px-6 text-base">
+              <Link to="/auth/login">I already have an account</Link>
+            </Button>
+          </div>
         </section>
 
-        <section className="border-t border-border bg-secondary/60">
-          <div className="mx-auto w-full max-w-6xl px-5 py-16">
-            <h2 className="text-2xl sm:text-3xl">What RAVQEN keeps for you</h2>
-            <div className="mt-8 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-              {capabilities.map((item) => (
-                <div key={item.title} className="surface-panel p-5">
-                  <item.icon className="size-5 text-ink-soft" aria-hidden />
-                  <h3 className="mt-3 text-base font-semibold">{item.title}</h3>
-                  <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
-                    {item.body}
-                  </p>
-                </div>
+        {/* ----------------------------------------------------- daily work */}
+        <section className="border-t border-border">
+          <div className="mx-auto w-full max-w-3xl px-5 py-14">
+            <h2 className="text-xl">A day at the counter</h2>
+            <p className="mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground">
+              The order these happen in is the order they happen in at the shop.
+            </p>
+            <ol className="mt-6 list-divided">
+              {[
+                {
+                  icon: ScanLine,
+                  title: "Scan and sell",
+                  body: "Scan a barcode or tap the product. Cash, M-Pesa, card or credit. Stock comes off the shelf and the receipt prints.",
+                },
+                {
+                  icon: Boxes,
+                  title: "Book in a delivery",
+                  body: "Receive stock by scanning the boxes. Every unit that arrives is recorded, so the count on screen matches the shelf.",
+                },
+                {
+                  icon: HandCoins,
+                  title: "Take a repayment",
+                  body: "Credit sales create a debtor, not a customer record. Take part of the payment or settle it in full — the balance updates itself.",
+                },
+                {
+                  icon: Banknote,
+                  title: "Log what you spent",
+                  body: "Lunch, transport, rent, packaging. Expenses sit beside the takings so the day's result is honest.",
+                },
+                {
+                  icon: Users,
+                  title: "Bring in your staff",
+                  body: "Give them one access code. They sign up and land in your shop — no accounts to create, nothing technical to explain.",
+                },
+              ].map((step) => (
+                <li key={step.title} className="flex items-start gap-4 py-4">
+                  <span
+                    className="mt-0.5 grid size-9 shrink-0 place-items-center rounded-lg bg-sunken text-ink-soft"
+                    aria-hidden
+                  >
+                    <step.icon className="size-4.5" />
+                  </span>
+                  <div>
+                    <h3 className="text-[0.9375rem] font-semibold">{step.title}</h3>
+                    <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+                      {step.body}
+                    </p>
+                  </div>
+                </li>
               ))}
+            </ol>
+          </div>
+        </section>
+
+        {/* ------------------------------------------------------- honesty */}
+        <section className="border-t border-border bg-sunken">
+          <div className="mx-auto w-full max-w-3xl px-5 py-14">
+            <h2 className="text-xl">Numbers you can defend</h2>
+            <div className="mt-6 grid gap-4 sm:grid-cols-2">
+              <div className="glass-1 rounded-xl backdrop-blur-2xl backdrop-saturate-150 p-5">
+                <ShieldCheck className="size-5 text-ink-soft" aria-hidden />
+                <h3 className="mt-3 text-[0.9375rem] font-semibold">
+                  One shop, one set of numbers
+                </h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                  Every record belongs to one shop and nobody can read another shop's data, even by
+                  changing the request. That is enforced where the data lives, not in the app.
+                </p>
+              </div>
+              <div className="glass-1 rounded-xl backdrop-blur-2xl backdrop-saturate-150 p-5">
+                <Boxes className="size-5 text-ink-soft" aria-hidden />
+                <h3 className="mt-3 text-[0.9375rem] font-semibold">Stock that explains itself</h3>
+                <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+                  Each unit that moves leaves a note saying what it was for — a sale, a delivery, a
+                  count, a return. If the number looks wrong, the reason is one tap away.
+                </p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ------------------------------------------------------------- cta */}
+        <section className="border-t border-border">
+          <div className="mx-auto w-full max-w-3xl px-5 py-14 text-center">
+            <h2 className="text-2xl leading-tight">Start your shop&rsquo;s book today</h2>
+            <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+              Create your shop, add a few products and make the first sale. RAVQEN keeps the stock,
+              the debtors and the expenses from there.
+            </p>
+            <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
+              <Button asChild className="h-12 px-6 text-base">
+                <Link to="/auth/signup">Create your shop</Link>
+              </Button>
+              <Button asChild variant="outline" className="h-12 px-6 text-base">
+                <Link to="/auth/login">Sign in</Link>
+              </Button>
             </div>
           </div>
         </section>
       </main>
 
-      <footer className="mx-auto flex w-full max-w-6xl flex-col gap-3 px-5 py-10 text-sm text-muted-foreground sm:flex-row sm:items-center sm:justify-between">
-        <Logo showTagline />
-        <p>&copy; {new Date().getFullYear()} RAVQEN</p>
+      <footer className="border-t border-border">
+        <div className="mx-auto flex w-full max-w-3xl flex-col gap-2 px-5 py-8 sm:flex-row sm:items-center sm:justify-between">
+          <Logo showTagline />
+          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} RAVQEN</p>
+        </div>
       </footer>
     </div>
   );

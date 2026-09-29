@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { HandCoins, Phone } from "lucide-react";
+import { Phone } from "lucide-react";
 import { toast } from "sonner";
 
 import {
@@ -10,9 +10,10 @@ import {
   PageContainer,
   PageHeader,
 } from "@/components/app/AppChrome";
+import { Field, MoneyField } from "@/components/app/fields";
+import { Money, StatusBadge } from "@/components/app/primitives";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -25,6 +26,7 @@ import { useActiveShop } from "@/hooks/useActiveShop";
 import { useDebtorDetail, useDebtors, useRecordDebtorPayment } from "@/hooks/useDebtors";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { PAYMENT_METHODS } from "@/services/shops.service";
+import { methodLabel } from "@/services/transactions.service";
 import type { Debtor, PaymentMethod } from "@/types/ravqen";
 
 export const Route = createFileRoute("/_authenticated/app/debtors")({
@@ -32,6 +34,11 @@ export const Route = createFileRoute("/_authenticated/app/debtors")({
   component: DebtorsPage,
 });
 
+/**
+ * Debtors are not customers. A person is on this screen because they took
+ * goods on credit, and they leave it when the balance reaches zero. There is no
+ * "add customer" anywhere in RAVQEN.
+ */
 function DebtorsPage() {
   const { activeShop } = useActiveShop();
   const shopId = activeShop?.id ?? "";
@@ -42,85 +49,91 @@ function DebtorsPage() {
 
   const debtorsQuery = useDebtors(shopId, includeSettled);
   const debtors = debtorsQuery.data ?? [];
-  const total = debtors.reduce((sum, debtor) => sum + Number(debtor.total_owed), 0);
+  const owing = debtors.filter((debtor) => Number(debtor.total_owed) > 0);
+  const total = owing.reduce((sum, debtor) => sum + Number(debtor.total_owed), 0);
 
   return (
     <PageContainer>
-      <PageHeader title="Debtors" subtitle="Credit given, and what is still owed." />
+      <PageHeader
+        title="Debtors"
+        subtitle="Only people who took goods on credit."
+        action={
+          <Button
+            variant="outline"
+            className="h-10"
+            aria-pressed={includeSettled}
+            onClick={() => setIncludeSettled((value) => !value)}
+          >
+            {includeSettled ? "Hide settled" : "Show settled"}
+          </Button>
+        }
+      />
 
-      {debtors.length > 0 ? (
-        <div className="gradient-ink mt-4 rounded-2xl p-5">
-          <p className="text-xs uppercase tracking-widest text-champagne/70">Outstanding</p>
-          <p className="mt-1 font-display text-3xl text-background">
+      {owing.length > 0 ? (
+        <div className="glass-1 mb-4 rounded-xl p-4 backdrop-blur-2xl backdrop-saturate-150">
+          <p className="text-sm text-muted-foreground">Still owed to you</p>
+          <p className="tnum mt-0.5 text-[1.75rem] font-semibold leading-none">
             {formatMoney(total, currency)}
           </p>
-          <p className="mt-1 text-xs text-background/70">
-            across {debtors.filter((debtor) => Number(debtor.total_owed) > 0).length} debtor
-            {debtors.filter((debtor) => Number(debtor.total_owed) > 0).length === 1 ? "" : "s"}
+          <p className="mt-1.5 text-xs text-muted-foreground">
+            from {owing.length} {owing.length === 1 ? "person" : "people"}
           </p>
         </div>
       ) : null}
 
-      <div className="mt-4">
-        <Button
-          type="button"
-          variant={includeSettled ? "default" : "outline"}
-          className="h-10"
-          onClick={() => setIncludeSettled((value) => !value)}
-        >
-          {includeSettled ? "Showing settled debtors" : "Show settled debtors"}
-        </Button>
-      </div>
-
-      <div className="mt-4">
-        {debtorsQuery.isPending ? (
-          <LoadingState label="Loading debtors…" />
-        ) : debtorsQuery.isError ? (
-          <ErrorState
-            message={debtorsQuery.error.message}
-            onRetry={() => void debtorsQuery.refetch()}
-          />
-        ) : debtors.length === 0 ? (
-          <EmptyState
-            title="No debtors"
-            description="A debtor appears here the first time you record a credit sale at the till."
-          />
-        ) : (
-          <ul className="space-y-2.5">
-            {debtors.map((debtor) => (
+      {debtorsQuery.isLoading ? (
+        <LoadingState label="Loading debtors…" />
+      ) : debtorsQuery.isError ? (
+        <ErrorState
+          message={debtorsQuery.error.message}
+          onRetry={() => void debtorsQuery.refetch()}
+        />
+      ) : debtors.length === 0 ? (
+        <EmptyState
+          title="No outstanding debt"
+          description="A debtor appears here the first time you record a credit sale at the till."
+        />
+      ) : (
+        <ul className="list-divided">
+          {debtors.map((debtor) => {
+            const owed = Number(debtor.total_owed);
+            return (
               <li key={debtor.id}>
                 <button
                   type="button"
                   onClick={() => setSelected(debtor)}
-                  className="surface-panel flex w-full items-center gap-3 p-3.5 text-left active:bg-secondary"
+                  className="flex w-full items-center gap-3 py-3 text-left active:opacity-70"
                 >
-                  <span className="grid size-10 shrink-0 place-items-center rounded-full bg-secondary">
-                    <HandCoins className="size-4 text-ink-soft" />
+                  <span
+                    className="grid size-9 shrink-0 place-items-center rounded-full bg-sunken text-xs font-semibold uppercase text-muted-foreground"
+                    aria-hidden
+                  >
+                    {debtor.name.slice(0, 2)}
                   </span>
                   <span className="min-w-0 flex-1">
                     <span className="block truncate text-sm font-medium">{debtor.name}</span>
                     {debtor.phone ? (
                       <span className="mt-0.5 flex items-center gap-1 text-xs text-muted-foreground">
-                        <Phone className="size-3" /> {debtor.phone}
+                        <Phone className="size-3" aria-hidden /> {debtor.phone}
                       </span>
                     ) : (
                       <span className="mt-0.5 block text-xs text-muted-foreground">No phone</span>
                     )}
                   </span>
                   <span className="shrink-0 text-right">
-                    <span className="block text-sm font-semibold">
-                      {formatMoney(debtor.total_owed, currency)}
-                    </span>
-                    <span className="block text-[11px] text-muted-foreground">
-                      {Number(debtor.total_owed) > 0 ? "owed" : "settled"}
+                    <Money amount={owed} currency={currency} className="text-sm font-semibold" />
+                    <span className="mt-0.5 block">
+                      <StatusBadge tone={owed > 0 ? "caution" : "positive"}>
+                        {owed > 0 ? "Owed" : "Settled"}
+                      </StatusBadge>
                     </span>
                   </span>
                 </button>
               </li>
-            ))}
-          </ul>
-        )}
-      </div>
+            );
+          })}
+        </ul>
+      )}
 
       <DebtorSheet
         debtor={selected}
@@ -153,6 +166,9 @@ function DebtorSheet({
   const [reference, setReference] = useState("");
 
   const owed = Number(detail.data?.debtor.total_owed ?? debtor?.total_owed ?? 0);
+  const entered = Number(amount.replace(/[^0-9.]/g, ""));
+  const overpay = owed > 0 && Number.isFinite(entered) && entered > owed;
+  const canSubmit = entered > 0 && !overpay && !recordPayment.isPending;
 
   async function submit(event: React.FormEvent) {
     event.preventDefault();
@@ -175,7 +191,7 @@ function DebtorSheet({
         description:
           result.balanceRemaining > 0
             ? `${formatMoney(result.balanceRemaining, currency)} still owed.`
-            : "This debt is now settled.",
+            : "This debt is settled.",
       });
       setAmount("");
       setReference("");
@@ -197,54 +213,61 @@ function DebtorSheet({
         onOpenChange(open);
       }}
     >
-      <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto px-4 pb-8 pt-4">
-        <SheetHeader className="px-0 pb-3 text-left">
+      <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto px-5 pb-8 pt-5">
+        <SheetHeader className="text-left">
           <SheetTitle className="text-base">{debtor?.name ?? "Debtor"}</SheetTitle>
         </SheetHeader>
 
-        {detail.isPending ? (
+        {detail.isLoading ? (
           <LoadingState label="Loading the account…" />
         ) : detail.isError ? (
-          <ErrorState message={detail.error.message} />
+          <ErrorState message={detail.error.message} onRetry={() => void detail.refetch()} />
         ) : detail.data ? (
-          <div className="space-y-4">
-            <div className="surface-panel p-4">
-              <p className="text-xs uppercase tracking-widest text-muted-foreground">Still owed</p>
-              <p className="mt-1 text-2xl font-semibold">{formatMoney(owed, currency)}</p>
+          <div className="mt-4 space-y-5">
+            <div className="glass-1 rounded-xl backdrop-blur-2xl backdrop-saturate-150 p-4">
+              <p className="text-sm text-muted-foreground">Still owed</p>
+              <p
+                className={
+                  "tnum mt-0.5 text-2xl font-semibold " +
+                  (owed > 0 ? "text-caution" : "text-positive")
+                }
+              >
+                {formatMoney(owed, currency)}
+              </p>
               {detail.data.debtor.phone ? (
                 <p className="mt-1 text-xs text-muted-foreground">{detail.data.debtor.phone}</p>
               ) : null}
             </div>
 
             {owed > 0 ? (
-              <form onSubmit={submit} className="surface-panel space-y-3 p-4">
-                <p className="text-sm font-medium">Record a payment</p>
-                <div className="space-y-1.5">
-                  <Label htmlFor="debt-amount">Amount</Label>
-                  <Input
-                    id="debt-amount"
-                    value={amount}
-                    onChange={(event) => setAmount(event.target.value)}
-                    inputMode="decimal"
-                    placeholder={String(owed)}
-                    className="h-12 text-lg"
-                    autoComplete="off"
-                  />
-                  <button
-                    type="button"
-                    className="text-xs text-ink-soft underline-offset-4 hover:underline"
-                    onClick={() => setAmount(String(owed))}
-                  >
-                    Pay the full {formatMoney(owed, currency)}
-                  </button>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="debt-method">Method</Label>
+              <form onSubmit={submit} className="space-y-4 border-t border-border pt-4">
+                <p className="text-sm font-medium">Record a repayment</p>
+
+                <MoneyField
+                  id="debt-amount"
+                  label="Amount received"
+                  value={amount}
+                  onChange={setAmount}
+                  currency={currency}
+                  error={overpay ? "That is more than they owe." : null}
+                  placeholder={String(owed)}
+                  autoFocus
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  className="h-8 px-0 text-xs"
+                  onClick={() => setAmount(String(owed))}
+                >
+                  Settle the full {formatMoney(owed, currency)}
+                </Button>
+
+                <Field label="How was it paid" htmlFor="debt-method">
                   <Select
                     value={method}
                     onValueChange={(value) => setMethod(value as PaymentMethod)}
                   >
-                    <SelectTrigger id="debt-method" className="h-11">
+                    <SelectTrigger id="debt-method" className="h-12">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -257,29 +280,34 @@ function DebtorSheet({
                       )}
                     </SelectContent>
                   </Select>
-                </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="debt-reference">Reference (optional)</Label>
+                </Field>
+
+                <Field
+                  label="Reference"
+                  hint="Optional. An M-Pesa code or a receipt note."
+                  htmlFor="debt-reference"
+                >
                   <Input
                     id="debt-reference"
                     value={reference}
                     onChange={(event) => setReference(event.target.value)}
-                    placeholder="e.g. M-Pesa code"
+                    placeholder="e.g. QJG8X2K1PL"
                     className="h-11"
                     autoComplete="off"
                   />
-                </div>
-                <Button type="submit" className="h-12 w-full" disabled={recordPayment.isPending}>
-                  {recordPayment.isPending ? "Recording…" : "Record payment"}
+                </Field>
+
+                <Button type="submit" className="h-12 w-full" disabled={!canSubmit}>
+                  {recordPayment.isPending ? "Recording…" : "Record repayment"}
                 </Button>
               </form>
             ) : (
-              <p className="surface-panel p-4 text-sm text-muted-foreground">
-                This debtor has nothing outstanding.
+              <p className="border-t border-border pt-4 text-sm text-muted-foreground">
+                Nothing is outstanding on this account.
               </p>
             )}
 
-            <div className="surface-panel p-4">
+            <section className="border-t border-border pt-4">
               <p className="text-sm font-medium">Credit sales</p>
               {detail.data.sales.length === 0 ? (
                 <p className="mt-1 text-xs text-muted-foreground">No sales on account yet.</p>
@@ -290,11 +318,11 @@ function DebtorSheet({
                       <span className="min-w-0 truncate text-muted-foreground">
                         {sale.receipt_number} · {formatDateTime(sale.sold_at)}
                       </span>
-                      <span className="shrink-0 text-right">
+                      <span className="tnum shrink-0 text-right">
                         {formatMoney(sale.total_amount, currency)}
                         {Number(sale.balance_due) > 0 ? (
-                          <span className="block text-xs text-destructive">
-                            {formatMoney(sale.balance_due, currency)} owed
+                          <span className="block text-xs text-caution">
+                            {formatMoney(sale.balance_due, currency)} still owed
                           </span>
                         ) : null}
                       </span>
@@ -302,25 +330,25 @@ function DebtorSheet({
                   ))}
                 </ul>
               )}
-            </div>
+            </section>
 
-            <div className="surface-panel p-4">
+            <section className="border-t border-border pt-4">
               <p className="text-sm font-medium">Repayments</p>
               {detail.data.payments.length === 0 ? (
-                <p className="mt-1 text-xs text-muted-foreground">No repayments recorded yet.</p>
+                <p className="mt-1 text-xs text-muted-foreground">None recorded yet.</p>
               ) : (
                 <ul className="mt-2 space-y-2 text-sm">
                   {detail.data.payments.map((payment) => (
                     <li key={payment.id} className="flex justify-between gap-3">
                       <span className="min-w-0 truncate text-muted-foreground">
-                        {payment.method} · {formatDateTime(payment.paid_at)}
+                        {methodLabel(payment.method)} · {formatDateTime(payment.paid_at)}
                       </span>
-                      <span className="shrink-0">{formatMoney(payment.amount, currency)}</span>
+                      <span className="tnum shrink-0">{formatMoney(payment.amount, currency)}</span>
                     </li>
                   ))}
                 </ul>
               )}
-            </div>
+            </section>
           </div>
         ) : null}
       </SheetContent>

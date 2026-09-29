@@ -13,10 +13,18 @@ import type {
   ShopWithRole,
 } from "@/types/ravqen";
 
+/**
+ * The shop columns the app is allowed to see. Selected explicitly rather than
+ * with `*` so internal columns (the access-code salt) can never leak into the
+ * client bundle by accident when one is added.
+ */
+const SHOP_COLUMNS =
+  "id, name, slug, owner_id, business_type, currency, phone, email, address, city, kra_pin, logo_url, location, is_active, accepts_refunds, employee_joining_enabled, created_at, updated_at" as const;
+
 export async function listMyShops(): Promise<ShopWithRole[]> {
   const { data, error } = await supabase
     .from("shop_members")
-    .select("role, shops:shop_id (*)")
+    .select(`role, shops:shop_id (${SHOP_COLUMNS})`)
     .eq("status", "active")
     .order("created_at", { ascending: true });
 
@@ -28,7 +36,11 @@ export async function listMyShops(): Promise<ShopWithRole[]> {
 }
 
 export async function getShop(shopId: string): Promise<Shop | null> {
-  const { data, error } = await supabase.from("shops").select("*").eq("id", shopId).maybeSingle();
+  const { data, error } = await supabase
+    .from("shops")
+    .select(SHOP_COLUMNS)
+    .eq("id", shopId)
+    .maybeSingle();
   if (error) throw error;
   return data;
 }
@@ -65,7 +77,7 @@ export interface CreateShopInput {
     receiptPrefix?: string;
     paperWidthMm?: 58 | 80;
   };
-  /** Mints a shop-wide till code; the plaintext is returned once, never stored. */
+  /** Mints a staff access code; the plaintext is shown once, never stored. */
   employeeAccessCode?: string | null;
 }
 
@@ -105,7 +117,7 @@ export async function createShop(input: CreateShopInput): Promise<CreateShopResu
       currency: input.currency ?? "KES",
       accepts_refunds: input.acceptsRefunds ?? false,
     })
-    .select()
+    .select(SHOP_COLUMNS)
     .single();
 
   if (error) throw error;
@@ -140,7 +152,7 @@ export async function createShop(input: CreateShopInput): Promise<CreateShopResu
   if (input.employeeAccessCode) {
     const { error: codeError } = await supabase.rpc("create_employee_access_code", {
       p_shop_id: shop.id,
-      p_label: "Shop access code",
+      p_label: "Staff access code",
       p_code: input.employeeAccessCode,
     });
     if (codeError) throw codeError;
@@ -155,7 +167,7 @@ export async function updateShop(shopId: string, patch: ShopUpdate): Promise<Sho
     .from("shops")
     .update(patch)
     .eq("id", shopId)
-    .select()
+    .select(SHOP_COLUMNS)
     .single();
   if (error) throw error;
   return data;
@@ -164,6 +176,39 @@ export async function updateShop(shopId: string, patch: ShopUpdate): Promise<Sho
 /** The refund switch is owner-only; RLS decides whether this write lands. */
 export async function setAcceptsRefunds(shopId: string, accepts: boolean): Promise<Shop> {
   return updateShop(shopId, { accepts_refunds: accepts });
+}
+
+// -------------------------------------------------------- employee joining
+
+/**
+ * Joins the signed-in user to the shop that owns this access code.
+ *
+ * The client sends a code and nothing else: it cannot name a shop, cannot pick
+ * a role, and cannot influence the membership that comes back. The database
+ * resolves the code to a shop, refuses it if the owner has closed the door, and
+ * creates the membership as an employee.
+ */
+export async function redeemAccessCode(
+  code: string,
+): Promise<{ shopId: string; shopName: string }> {
+  const trimmed = code.trim().toUpperCase();
+  const { data, error } = await supabase.rpc("redeem_employee_access_code", {
+    p_code: trimmed,
+  });
+  if (error) throw error;
+
+  const result = data as unknown as { shop_id: string; shop_name: string };
+  return { shopId: result.shop_id, shopName: result.shop_name };
+}
+
+/** Owner switch: whether new staff may join with the access code at all. */
+export async function setEmployeeJoining(shopId: string, enabled: boolean): Promise<Shop> {
+  const { data, error } = await supabase.rpc("set_employee_joining", {
+    p_shop_id: shopId,
+    p_enabled: enabled,
+  });
+  if (error) throw error;
+  return data as Shop;
 }
 
 // ------------------------------------------------------------ team + codes
@@ -188,26 +233,8 @@ export async function listShopMembers(shopId: string): Promise<ShopMemberRow[]> 
   return data ?? [];
 }
 
-/**
- * Adds an existing RAVQEN account to the shop. The account must already exist.
- * Only an owner can insert here — the RLS policy decides, not this code.
- */
-export async function addShopMember(
-  shopId: string,
-  userId: string,
-  role: "owner" | "employee",
-  displayName?: string | null,
-): Promise<void> {
-  const { error } = await supabase.from("shop_members").insert({
-    shop_id: shopId,
-    user_id: userId,
-    role,
-    display_name: displayName?.trim() || null,
-  });
-  if (error) throw error;
-}
-
 export async function updateMember(
+  shopId: string,
   memberId: string,
   patch: {
     role?: "owner" | "employee";
@@ -220,11 +247,24 @@ export async function updateMember(
   if (patch.status !== undefined) update["status"] = patch.status;
   if (patch.displayName !== undefined) update["display_name"] = patch.displayName;
 
-  const { error } = await supabase.from("shop_members").update(update).eq("id", memberId);
+  const { error } = await supabase
+    .from("shop_members")
+    .update(update)
+    .eq("id", memberId)
+    .eq("shop_id", shopId);
   if (error) throw error;
 }
 
-export async function listAccessCodes(shopId: string) {
+export interface AccessCodeRow {
+  id: string;
+  label: string;
+  is_active: boolean;
+  expires_at: string | null;
+  last_used_at: string | null;
+  created_at: string;
+}
+
+export async function listAccessCodes(shopId: string): Promise<AccessCodeRow[]> {
   const { data, error } = await supabase
     .from("employee_access_codes")
     .select("id, shop_id, member_id, label, is_active, expires_at, last_used_at, created_at")
@@ -244,34 +284,63 @@ export async function deactivateAccessCode(shopId: string, codeId: string): Prom
 }
 
 /**
- * Mints a till code. The plaintext is returned to the caller to show once —
- * PostgreSQL stores only a SHA-256 digest, so it cannot be read back later.
+ * Mints a till code. The plaintext is returned to the caller to show once — the
+ * database stores only a digest, so it cannot be read back later. Generating a
+ * new one retires the previous code in the same transaction.
  */
-export async function createAccessCode(
-  shopId: string,
-  label: string,
-  code: string,
-): Promise<{ codeId: string }> {
-  const { data, error } = await supabase.rpc("create_employee_access_code", {
+/**
+ * True when another shop already holds this code.
+ *
+ * The database refuses to redeem an ambiguous code, which protects the staff
+ * member but still leaves the owner with a code nobody can use. Asking first
+ * turns that into a message at the moment they can still fix it.
+ */
+export async function isAccessCodeTakenElsewhere(code: string): Promise<boolean> {
+  const trimmed = code.trim().toUpperCase();
+  if (trimmed.length < 4) return false;
+  const { data, error } = await supabase.rpc("access_code_is_ambiguous", {
+    p_code: trimmed,
+  });
+  if (error) return false;
+  return data === true;
+}
+
+export async function createAccessCode(shopId: string, code: string): Promise<void> {
+  const { error } = await supabase.rpc("create_employee_access_code", {
     p_shop_id: shopId,
-    p_label: label,
+    p_label: "Staff access code",
     p_code: code,
   });
   if (error) throw error;
-  const result = data as unknown as { code_id: string };
-  return { codeId: result.code_id };
 }
 
-/** A readable, hard-to-guess default the owner can change before saving. */
-export function suggestAccessCode() {
-  return String(Math.floor(100000 + Math.random() * 900000));
+export async function regenerateAccessCode(shopId: string, code: string): Promise<void> {
+  const { error } = await supabase.rpc("regenerate_employee_access_code", {
+    p_shop_id: shopId,
+    p_code: code,
+  });
+  if (error) throw error;
+}
+
+/**
+ * A readable code the owner can accept or change: six digits, no 0/1 so it is
+ * unambiguous when read aloud across a counter, and comfortably above the
+ * minimum the database enforces.
+ */
+export function suggestAccessCode(): string {
+  const digits = "23456789";
+  let out = "";
+  for (let i = 0; i < 6; i += 1) {
+    out += digits[Math.floor(Math.random() * digits.length)];
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------- payments
 
 export const PAYMENT_METHODS: { value: PaymentMethod; label: string; hint?: string }[] = [
   { value: "cash", label: "Cash" },
-  { value: "mpesa", label: "M-Pesa" },
+  { value: "mpesa", label: "Mobile money" },
   { value: "card", label: "Card" },
   { value: "credit", label: "Credit", hint: "Owed by the customer" },
 ];

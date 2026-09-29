@@ -475,7 +475,7 @@ try {
     staff.rpc("create_employee_access_code", {
       p_shop_id: shopA.id,
       p_label: "Till",
-      p_code: "1234",
+      p_code: "123456",
     }),
     "Only the shop owner",
   );
@@ -537,7 +537,7 @@ try {
   const { data: code, error: codeError } = await owner.rpc("create_employee_access_code", {
     p_shop_id: shopA.id,
     p_label: "Till one",
-    p_code: "4821",
+    p_code: "482913",
   });
   check("owner can create an employee access code", !codeError, codeError?.message);
 
@@ -548,8 +548,18 @@ try {
   const hash = stored[0]?.code_hash ?? "";
   check(
     "the access code is stored as a digest, not the code",
-    hash.length === 64 && !hash.includes("4821"),
+    hash.length === 64 && !hash.includes("482913"),
     `${hash.slice(0, 16)}…`,
+  );
+
+  await checkFails(
+    "a short access code is refused",
+    owner.rpc("create_employee_access_code", {
+      p_shop_id: shopA.id,
+      p_label: "Too short",
+      p_code: "12",
+    }),
+    "at least 6 characters",
   );
 } catch (error) {
   check("run completed without an unexpected throw", false, error?.message ?? String(error));

@@ -24,6 +24,7 @@ import { Route as AuthenticatedAppDebtorsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppEmployeesRouteImport } from './routes/_authenticated/app.employees'
 import { Route as AuthenticatedAppExpensesRouteImport } from './routes/_authenticated/app.expenses'
 import { Route as AuthenticatedAppInventoryRouteImport } from './routes/_authenticated/app.inventory'
+import { Route as AuthenticatedAppOverviewRouteImport } from './routes/_authenticated/app.overview'
 import { Route as AuthenticatedAppPosRouteImport } from './routes/_authenticated/app.pos'
 import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authenticated/app.reports'
 import { Route as AuthenticatedAppRestockRouteImport } from './routes/_authenticated/app.restock'
@@ -108,6 +109,12 @@ const AuthenticatedAppInventoryRoute =
     path: '/inventory',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const AuthenticatedAppOverviewRoute =
+  AuthenticatedAppOverviewRouteImport.update({
+    id: '/overview',
+    path: '/overview',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
 const AuthenticatedAppPosRoute = AuthenticatedAppPosRouteImport.update({
   id: '/pos',
   path: '/pos',
@@ -155,6 +162,7 @@ export interface FileRoutesByFullPath {
   '/app/employees': typeof AuthenticatedAppEmployeesRoute
   '/app/expenses': typeof AuthenticatedAppExpensesRoute
   '/app/inventory': typeof AuthenticatedAppInventoryRoute
+  '/app/overview': typeof AuthenticatedAppOverviewRoute
   '/app/pos': typeof AuthenticatedAppPosRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
   '/app/restock': typeof AuthenticatedAppRestockRoute
@@ -176,6 +184,7 @@ export interface FileRoutesByTo {
   '/app/employees': typeof AuthenticatedAppEmployeesRoute
   '/app/expenses': typeof AuthenticatedAppExpensesRoute
   '/app/inventory': typeof AuthenticatedAppInventoryRoute
+  '/app/overview': typeof AuthenticatedAppOverviewRoute
   '/app/pos': typeof AuthenticatedAppPosRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
   '/app/restock': typeof AuthenticatedAppRestockRoute
@@ -200,6 +209,7 @@ export interface FileRoutesById {
   '/_authenticated/app/employees': typeof AuthenticatedAppEmployeesRoute
   '/_authenticated/app/expenses': typeof AuthenticatedAppExpensesRoute
   '/_authenticated/app/inventory': typeof AuthenticatedAppInventoryRoute
+  '/_authenticated/app/overview': typeof AuthenticatedAppOverviewRoute
   '/_authenticated/app/pos': typeof AuthenticatedAppPosRoute
   '/_authenticated/app/reports': typeof AuthenticatedAppReportsRoute
   '/_authenticated/app/restock': typeof AuthenticatedAppRestockRoute
@@ -224,6 +234,7 @@ export interface FileRouteTypes {
     | '/app/employees'
     | '/app/expenses'
     | '/app/inventory'
+    | '/app/overview'
     | '/app/pos'
     | '/app/reports'
     | '/app/restock'
@@ -245,6 +256,7 @@ export interface FileRouteTypes {
     | '/app/employees'
     | '/app/expenses'
     | '/app/inventory'
+    | '/app/overview'
     | '/app/pos'
     | '/app/reports'
     | '/app/restock'
@@ -268,6 +280,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/employees'
     | '/_authenticated/app/expenses'
     | '/_authenticated/app/inventory'
+    | '/_authenticated/app/overview'
     | '/_authenticated/app/pos'
     | '/_authenticated/app/reports'
     | '/_authenticated/app/restock'
@@ -390,6 +403,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppInventoryRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/overview': {
+      id: '/_authenticated/app/overview'
+      path: '/overview'
+      fullPath: '/app/overview'
+      preLoaderRoute: typeof AuthenticatedAppOverviewRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/pos': {
       id: '/_authenticated/app/pos'
       path: '/pos'
@@ -440,6 +460,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppEmployeesRoute: typeof AuthenticatedAppEmployeesRoute
   AuthenticatedAppExpensesRoute: typeof AuthenticatedAppExpensesRoute
   AuthenticatedAppInventoryRoute: typeof AuthenticatedAppInventoryRoute
+  AuthenticatedAppOverviewRoute: typeof AuthenticatedAppOverviewRoute
   AuthenticatedAppPosRoute: typeof AuthenticatedAppPosRoute
   AuthenticatedAppReportsRoute: typeof AuthenticatedAppReportsRoute
   AuthenticatedAppRestockRoute: typeof AuthenticatedAppRestockRoute
@@ -454,6 +475,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppEmployeesRoute: AuthenticatedAppEmployeesRoute,
   AuthenticatedAppExpensesRoute: AuthenticatedAppExpensesRoute,
   AuthenticatedAppInventoryRoute: AuthenticatedAppInventoryRoute,
+  AuthenticatedAppOverviewRoute: AuthenticatedAppOverviewRoute,
   AuthenticatedAppPosRoute: AuthenticatedAppPosRoute,
   AuthenticatedAppReportsRoute: AuthenticatedAppReportsRoute,
   AuthenticatedAppRestockRoute: AuthenticatedAppRestockRoute,

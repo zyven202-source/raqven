@@ -1,37 +1,64 @@
 import { Loader2 } from "lucide-react";
 import { Link } from "@tanstack/react-router";
 
+import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
+import { useStorageAvailable } from "@/hooks/useStorageAvailable";
 
-/** The panel every auth form renders inside. */
-export function AuthCard({
-  title,
-  subtitle,
-  children,
-}: {
-  title: string;
-  subtitle: string;
-  children: React.ReactNode;
-}) {
+/** Every auth screen sits in the same frame: mark, title, form, one link out. */
+export function AuthLayout({ children }: { children: React.ReactNode }) {
+  const storageAvailable = useStorageAvailable();
+
   return (
-    <div className="surface-panel mt-8 p-6">
-      <h1 className="text-2xl">{title}</h1>
-      <p className="mt-1.5 text-sm text-muted-foreground">{subtitle}</p>
-      {children}
+    <div className="flex min-h-dvh flex-col bg-background">
+      <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-5 pb-10 pt-14">
+        <Link to="/" className="mx-auto" aria-label="RAVQEN home">
+          <Logo markSize="size-12" />
+        </Link>
+
+        {storageAvailable === false ? (
+          <p className="mt-6 rounded-lg border border-caution/40 bg-caution-soft/60 px-3.5 py-2.5 text-center text-xs leading-relaxed text-caution">
+            This browser is blocking website storage, so signing in here will not stick. Open RAVQEN
+            in its own tab instead of inside an embedded preview.
+          </p>
+        ) : null}
+
+        {children}
+      </div>
     </div>
   );
 }
 
-export function SubmitButton({ busy, label }: { busy: boolean; label: string }) {
+/** The heading block shared by sign-in and sign-up. */
+export function AuthHeading({ title, subtitle }: { title: string; subtitle: string }) {
   return (
-    <Button type="submit" className="h-11 w-full text-base" disabled={busy}>
-      {busy ? <Loader2 className="animate-spin" /> : null}
-      {label}
+    <div className="mt-8 text-center">
+      <h1 className="text-xl leading-tight">{title}</h1>
+      <p className="mx-auto mt-1.5 max-w-xs text-sm leading-relaxed text-muted-foreground">
+        {subtitle}
+      </p>
+    </div>
+  );
+}
+
+export function SubmitButton({
+  busy,
+  label,
+  busyLabel = "Working…",
+}: {
+  busy: boolean;
+  label: string;
+  busyLabel?: string;
+}) {
+  return (
+    <Button type="submit" className="h-12 w-full text-[0.9375rem]" disabled={busy}>
+      {busy ? <Loader2 className="size-4 animate-spin" /> : null}
+      {busy ? busyLabel : label}
     </Button>
   );
 }
 
-/** Footer link row: switches mode or goes back to the landing page. */
+/** Footer link row: switches mode or steps back. */
 export function AuthSwitchLink({
   leading,
   to,
@@ -42,9 +69,9 @@ export function AuthSwitchLink({
   linkLabel: string;
 }) {
   return (
-    <p className="mt-5 text-center text-sm text-muted-foreground">
+    <p className="mt-6 text-center text-sm text-muted-foreground">
       {leading}{" "}
-      <Link to={to} className="font-medium text-ink-soft underline-offset-4 hover:underline">
+      <Link to={to} className="font-medium text-ink hover:underline">
         {linkLabel}
       </Link>
     </p>

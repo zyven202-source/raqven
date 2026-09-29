@@ -10,6 +10,15 @@ import type { StorageBucket } from "@/services/storage.service";
  * The database holds the object path, not a URL, so this resolves a signed URL
  * on demand. Until it resolves (or if it fails) an explicit placeholder is
  * shown — never a broken image icon.
+ *
+ * **`alt` is required and is not allowed to be empty.** Every image this
+ * component draws is a real, named thing — a shop's own logo, a product's own
+ * photo — so the description always exists and the caller always has the name
+ * in scope. An empty `alt` here would be a silent loss: the placeholder div is
+ * what should be hidden, not the photograph, and a screen reader reaching a
+ * product row would otherwise be told nothing about the picture it is sitting
+ * next to. The text is composed at the call site (`"Maziwa 500ml — product
+ * photo"`) so it names the thing in the shopkeeper's own words.
  */
 export function StorageImage({
   bucket,

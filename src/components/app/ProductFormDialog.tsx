@@ -1,19 +1,19 @@
 import { useEffect, useState } from "react";
-import { Loader2, Plus } from "lucide-react";
+import { Loader2, Plus, ScanLine } from "lucide-react";
 import { toast } from "sonner";
 
+import { Field, MoneyField, QuantityField } from "@/components/app/fields";
 import { StorageImage } from "@/components/app/StorageImage";
+import { BarcodeScannerSheet } from "@/components/pos/BarcodeScannerSheet";
 import { Button } from "@/components/ui/button";
 import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from "@/components/ui/sheet";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   Select,
   SelectContent,
@@ -21,6 +21,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { useActiveShop } from "@/hooks/useActiveShop";
 import {
   useCategories,
   useCreateCategory,
@@ -36,8 +37,9 @@ const UNITS = ["pc", "kg", "g", "ltr", "ml", "pack", "crate", "dozen", "metre"];
  * Add or edit a product.
  *
  * Opening stock is not written into the product row: it is booked through the
- * `record_stock_movement` RPC so the very first unit already has a ledger entry
- * explaining it.
+ * `record_stock_movement` path so the very first unit already has a ledger
+ * entry explaining it. The barcode can be typed, pasted, or scanned — scanning
+ * is the fast path, never the only path.
  */
 export function ProductFormDialog({
   shopId,
@@ -57,6 +59,8 @@ export function ProductFormDialog({
   onCreated?: (product: Product) => void;
 }) {
   const editing = Boolean(product);
+  const { activeShop } = useActiveShop();
+  const currency = activeShop?.currency ?? "KES";
   const categories = useCategories(shopId);
   const createProduct = useCreateProduct(shopId);
   const updateProduct = useUpdateProduct(shopId);
@@ -64,8 +68,7 @@ export function ProductFormDialog({
 
   const [name, setName] = useState("");
   const [barcode, setBarcode] = useState("");
-  const [sku, setSku] = useState("");
-  const [categoryId, setCategoryId] = useState<string>("");
+  const [categoryId, setCategoryId] = useState("");
   const [unit, setUnit] = useState("pc");
   const [buyingPrice, setBuyingPrice] = useState("");
   const [sellingPrice, setSellingPrice] = useState("");
@@ -75,13 +78,14 @@ export function ProductFormDialog({
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [imagePath, setImagePath] = useState<string | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [errors, setErrors] = useState<Record<string, string | undefined>>({});
 
   // Reset whenever the dialog opens so a previous edit never leaks into a new one.
   useEffect(() => {
     if (!open) return;
     setName(product?.name ?? "");
     setBarcode(product?.barcode ?? initialBarcode ?? "");
-    setSku(product?.sku ?? "");
     setCategoryId(product?.category_id ?? "");
     setUnit(product?.unit ?? "pc");
     setBuyingPrice(product ? String(product.buying_price) : "");
@@ -91,6 +95,7 @@ export function ProductFormDialog({
     setNewCategory("");
     setImageFile(null);
     setImagePath(product?.image_url ?? null);
+    setErrors({});
   }, [open, product, initialBarcode]);
 
   const busy = createProduct.isPending || updateProduct.isPending || uploading;
@@ -104,7 +109,7 @@ export function ProductFormDialog({
       setImagePath(path);
     } catch (error) {
       setImageFile(null);
-      toast.error(error instanceof Error ? error.message : "The image could not be uploaded.");
+      toast.error(error instanceof Error ? error.message : "The photo could not be uploaded.");
     } finally {
       setUploading(false);
     }
@@ -131,35 +136,26 @@ export function ProductFormDialog({
     const threshold = Number(lowStockThreshold || 0);
     const opening = Number(openingQuantity || 0);
 
-    if (name.trim().length < 2) {
-      toast.error("Give the product a name.");
-      return;
-    }
-    if (!Number.isFinite(buying) || buying < 0) {
-      toast.error("The buying price must be zero or more.");
-      return;
-    }
+    const next: Record<string, string | undefined> = {};
+    if (name.trim().length < 2) next["name"] = "Give the product a name.";
+    if (!Number.isFinite(buying) || buying < 0) next["buyingPrice"] = "Zero or more.";
     if (!Number.isFinite(selling) || selling <= 0) {
-      toast.error("Enter a selling price above zero.");
-      return;
+      next["sellingPrice"] = "Enter a selling price above zero.";
     }
-    if (!Number.isFinite(threshold) || threshold < 0) {
-      toast.error("The low-stock level must be zero or more.");
-      return;
-    }
+    if (!Number.isFinite(threshold) || threshold < 0) next["lowStockThreshold"] = "Zero or more.";
     if (!editing && (!Number.isFinite(opening) || opening < 0)) {
-      toast.error("Opening stock must be zero or more.");
-      return;
+      next["openingQuantity"] = "Zero or more.";
     }
+    setErrors(next);
+    if (Object.keys(next).length > 0) return;
 
     try {
       if (editing && product) {
         await updateProduct.mutateAsync({
           id: product.id,
           patch: {
-            name,
+            name: name.trim(),
             barcode: barcode.trim() || null,
-            sku: sku.trim() || null,
             categoryId: categoryId || null,
             unit,
             buyingPrice: buying,
@@ -172,9 +168,8 @@ export function ProductFormDialog({
       } else {
         const created = await createProduct.mutateAsync({
           shopId,
-          name,
+          name: name.trim(),
           barcode: barcode.trim() || null,
-          sku: sku.trim() || null,
           categoryId: categoryId || null,
           unit,
           buyingPrice: buying,
@@ -183,63 +178,90 @@ export function ProductFormDialog({
           imageUrl: imagePath,
           openingQuantity: opening,
         });
-        toast.success("Product added", {
-          description: opening > 0 ? `Opening stock of ${opening} ${unit} recorded.` : undefined,
+        toast.success(`${created.name} added`, {
+          description:
+            opening > 0
+              ? `${opening} ${unit} recorded as opening stock.`
+              : "Add stock from the Stock screen to start selling it.",
         });
         onCreated?.(created);
       }
       onOpenChange(false);
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "The product could not be saved.");
+      const message = error instanceof Error ? error.message : "The product could not be saved.";
+      setErrors({ ["form"]: message });
+      toast.error(message, { duration: 8000 });
     }
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[92vh] overflow-y-auto sm:max-w-md">
-        <DialogHeader>
-          <DialogTitle>{editing ? "Edit product" : "Add a product"}</DialogTitle>
-          <DialogDescription>
-            {editing
-              ? "Stock changes are recorded from the Stock screens, so the ledger stays complete."
-              : "Opening stock is written as a stock movement, so every unit has a reason."}
-          </DialogDescription>
-        </DialogHeader>
+    <>
+      <Sheet open={open} onOpenChange={onOpenChange}>
+        <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto px-5 pb-8 pt-5">
+          <SheetHeader className="text-left">
+            <SheetTitle className="text-base">
+              {editing ? "Edit product" : "Add a product"}
+            </SheetTitle>
+            <SheetDescription className="text-sm">
+              {editing
+                ? "Change the details. Stock levels are changed from the Stock screen so every movement keeps a reason."
+                : "Opening stock is recorded as a delivery, so your stock count adds up from day one."}
+            </SheetDescription>
+          </SheetHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="space-y-1.5">
-            <Label htmlFor="product-name">Name</Label>
-            <Input
-              id="product-name"
-              value={name}
-              onChange={(event) => setName(event.target.value)}
-              placeholder="e.g. Coca-Cola 500ml"
-              className="h-11"
-              autoComplete="off"
-            />
-          </div>
+          <form onSubmit={handleSubmit} className="mt-5 space-y-4" noValidate>
+            <Field label="Product name" error={errors["name"]} htmlFor="product-name">
+              <Input
+                id="product-name"
+                value={name}
+                onChange={(event) => {
+                  setName(event.target.value);
+                  setErrors((c) => ({ ...c, name: undefined }));
+                }}
+                placeholder="e.g. Coca-Cola 500ml"
+                className="h-12"
+                autoComplete="off"
+                autoFocus={!editing}
+              />
+            </Field>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="product-barcode">Barcode (optional)</Label>
-            <Input
-              id="product-barcode"
-              value={barcode}
-              onChange={(event) => setBarcode(event.target.value)}
-              placeholder="Scan or type"
-              inputMode="numeric"
-              className="h-11 font-mono"
-              autoComplete="off"
-            />
-          </div>
+            <Field
+              label="Barcode"
+              hint="Scan it, or type it. Leave blank if the product has none."
+              htmlFor="product-barcode"
+            >
+              <div className="flex gap-2">
+                <Input
+                  id="product-barcode"
+                  value={barcode}
+                  onChange={(event) => setBarcode(event.target.value)}
+                  placeholder="e.g. 5449000000996"
+                  inputMode="numeric"
+                  className="tnum h-12 flex-1"
+                  autoComplete="off"
+                />
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="size-12 shrink-0"
+                  onClick={() => setScannerOpen(true)}
+                  aria-label="Scan the barcode"
+                >
+                  <ScanLine className="size-5" />
+                </Button>
+              </div>
+            </Field>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="product-category">Category (optional)</Label>
-            <div className="flex gap-2">
+            <Field
+              label="Category"
+              hint="Optional, but it makes searching faster."
+              htmlFor="product-category"
+            >
               <Select
                 value={categoryId || "none"}
                 onValueChange={(value) => setCategoryId(value === "none" ? "" : value)}
               >
-                <SelectTrigger id="product-category" className="h-11 flex-1">
+                <SelectTrigger id="product-category" className="h-12">
                   <SelectValue placeholder="No category" />
                 </SelectTrigger>
                 <SelectContent>
@@ -251,84 +273,79 @@ export function ProductFormDialog({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
+            </Field>
+
             <div className="flex gap-2">
               <Input
                 value={newCategory}
                 onChange={(event) => setNewCategory(event.target.value)}
-                placeholder="New category"
-                className="h-10"
+                placeholder="Or add a new category"
+                className="h-11 flex-1"
                 autoComplete="off"
               />
               <Button
                 type="button"
                 variant="outline"
-                className="h-10"
+                className="h-11 shrink-0"
                 onClick={() => void handleAddCategory()}
                 disabled={!newCategory.trim() || createCategory.isPending}
               >
-                {createCategory.isPending ? <Loader2 className="animate-spin" /> : <Plus />} Add
+                {createCategory.isPending ? (
+                  <Loader2 className="size-4 animate-spin" />
+                ) : (
+                  <Plus className="size-4" />
+                )}
+                Add
               </Button>
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            <div className="space-y-1.5">
-              <Label htmlFor="product-buying">Buying price</Label>
-              <Input
+            <div className="grid grid-cols-2 gap-3">
+              <MoneyField
                 id="product-buying"
+                label="Buying price"
+                hint="What you pay."
+                error={errors["buyingPrice"]}
                 value={buyingPrice}
-                onChange={(event) => setBuyingPrice(event.target.value)}
-                inputMode="decimal"
-                placeholder="60"
-                className="h-11"
-                autoComplete="off"
+                onChange={setBuyingPrice}
+                currency={currency}
               />
-            </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="product-selling">Selling price</Label>
-              <Input
+              <MoneyField
                 id="product-selling"
+                label="Selling price"
+                hint="What you charge."
+                error={errors["sellingPrice"]}
                 value={sellingPrice}
-                onChange={(event) => setSellingPrice(event.target.value)}
-                inputMode="decimal"
-                placeholder="100"
-                className="h-11"
-                autoComplete="off"
+                onChange={setSellingPrice}
+                currency={currency}
               />
             </div>
-          </div>
 
-          <div className="grid grid-cols-2 gap-3">
-            {!editing ? (
-              <div className="space-y-1.5">
-                <Label htmlFor="product-opening">Opening stock</Label>
-                <Input
+            <div className="grid grid-cols-2 gap-3">
+              {!editing ? (
+                <QuantityField
                   id="product-opening"
+                  label="Opening stock"
+                  hint="On the shelf today."
+                  error={errors["openingQuantity"]}
                   value={openingQuantity}
-                  onChange={(event) => setOpeningQuantity(event.target.value)}
-                  inputMode="decimal"
-                  placeholder="0"
-                  className="h-11"
-                  autoComplete="off"
+                  onChange={setOpeningQuantity}
+                  unit={unit}
                 />
-              </div>
-            ) : null}
-            <div className="space-y-1.5">
-              <Label htmlFor="product-low">Low-stock level</Label>
-              <Input
+              ) : null}
+              <QuantityField
                 id="product-low"
+                label="Reorder at"
+                hint="Warn me below this."
+                error={errors["lowStockThreshold"]}
                 value={lowStockThreshold}
-                onChange={(event) => setLowStockThreshold(event.target.value)}
-                inputMode="decimal"
-                className="h-11"
-                autoComplete="off"
+                onChange={setLowStockThreshold}
+                unit={unit}
               />
             </div>
-            <div className="space-y-1.5">
-              <Label htmlFor="product-unit">Unit</Label>
+
+            <Field label="Sold by" hint="How this product is counted." htmlFor="product-unit">
               <Select value={unit} onValueChange={setUnit}>
-                <SelectTrigger id="product-unit" className="h-11">
+                <SelectTrigger id="product-unit" className="h-12">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -339,44 +356,62 @@ export function ProductFormDialog({
                   ))}
                 </SelectContent>
               </Select>
-            </div>
-          </div>
+            </Field>
 
-          <div className="space-y-1.5">
-            <Label htmlFor="product-image">Photo (optional)</Label>
-            <div className="flex items-center gap-3">
-              {imagePath ? (
-                <StorageImage
-                  bucket={STORAGE_BUCKETS.productImages}
-                  path={imagePath}
-                  alt={name || "Product"}
-                  className="size-14"
+            <Field
+              label="Photo"
+              hint="Optional. Helps staff recognise it at the till."
+              htmlFor="product-image"
+            >
+              <div className="flex items-center gap-3">
+                {imagePath || imageFile ? (
+                  <StorageImage
+                    bucket={STORAGE_BUCKETS.productImages}
+                    path={imagePath}
+                    alt={name.trim() ? `Photo of ${name.trim()}` : "Product photo"}
+                    className="size-12 shrink-0 rounded-md"
+                  />
+                ) : null}
+                <Input
+                  id="product-image"
+                  type="file"
+                  accept="image/*"
+                  className="h-12"
+                  onChange={(event) => void handleImage(event.target.files?.[0] ?? null)}
                 />
+              </div>
+              {imageFile && uploading ? (
+                <p className="text-xs text-muted-foreground">Uploading the photo…</p>
               ) : null}
-              <Input
-                id="product-image"
-                type="file"
-                accept="image/*"
-                className="h-11"
-                onChange={(event) => void handleImage(event.target.files?.[0] ?? null)}
-              />
-            </div>
-            {imageFile && uploading ? (
-              <p className="text-xs text-muted-foreground">Uploading…</p>
-            ) : null}
-            {imageFile && !uploading && imagePath ? (
-              <p className="text-xs text-muted-foreground">Photo uploaded.</p>
-            ) : null}
-          </div>
+            </Field>
 
-          <DialogFooter>
-            <Button type="submit" className="h-12 w-full sm:w-auto" disabled={busy}>
-              {busy ? <Loader2 className="animate-spin" /> : null}
+            {errors["form"] ? (
+              <p className="rounded-lg border border-negative/30 bg-negative-soft/60 px-3.5 py-2.5 text-sm text-negative">
+                {errors["form"]}
+              </p>
+            ) : null}
+
+            <Button type="submit" className="h-12 w-full" disabled={busy}>
+              {busy ? <Loader2 className="size-4 animate-spin" /> : null}
               {editing ? "Save changes" : "Add product"}
             </Button>
-          </DialogFooter>
-        </form>
-      </DialogContent>
-    </Dialog>
+          </form>
+        </SheetContent>
+      </Sheet>
+
+      <BarcodeScannerSheet
+        open={scannerOpen}
+        onOpenChange={setScannerOpen}
+        onDetected={(code) => {
+          setBarcode(code);
+          setScannerOpen(false);
+          toast.success("Barcode captured", { description: code });
+        }}
+        onManualSubmit={(code) => {
+          setBarcode(code);
+          setScannerOpen(false);
+        }}
+      />
+    </>
   );
 }

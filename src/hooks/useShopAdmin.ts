@@ -1,13 +1,14 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 import {
-  addShopMember,
   createAccessCode,
   deactivateAccessCode,
   getShop,
   listAccessCodes,
   listShopMembers,
+  regenerateAccessCode,
   setAcceptsRefunds,
+  setEmployeeJoining,
   updateMember,
   updateShop,
 } from "@/services/shops.service";
@@ -87,6 +88,15 @@ export function useSetRefunds(shopId: string) {
   });
 }
 
+/** Owner switch that decides whether anybody may join with the access code. */
+export function useSetEmployeeJoining(shopId: string) {
+  const invalidate = useShopWriteInvalidation(shopId);
+  return useMutation({
+    mutationFn: (enabled: boolean) => setEmployeeJoining(shopId, enabled),
+    onSuccess: invalidate,
+  });
+}
+
 export function useUpdateReceiptSettings(shopId: string) {
   const invalidate = useShopWriteInvalidation(shopId);
   return useMutation({
@@ -108,30 +118,12 @@ export function useUpdateMember(shopId: string) {
         status?: "active" | "suspended" | "removed";
         displayName?: string | null;
       };
-    }) => updateMember(memberId, patch),
+    }) => updateMember(shopId, memberId, patch),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: adminKeys.members(shopId) });
       void queryClient.invalidateQueries({ queryKey: adminKeys.codes(shopId) });
       void queryClient.invalidateQueries({ queryKey: ["transactions", shopId] });
-    },
-  });
-}
-
-export function useAddMember(shopId: string) {
-  const queryClient = useQueryClient();
-  return useMutation({
-    mutationFn: ({
-      userId,
-      role,
-      displayName,
-    }: {
-      userId: string;
-      role: "owner" | "employee";
-      displayName?: string | null;
-    }) => addShopMember(shopId, userId, role, displayName),
-    onSuccess: () => {
-      void queryClient.invalidateQueries({ queryKey: adminKeys.members(shopId) });
-      void queryClient.invalidateQueries({ queryKey: ["transactions", shopId] });
+      void queryClient.invalidateQueries({ queryKey: shopsQueryKey });
     },
   });
 }
@@ -139,8 +131,17 @@ export function useAddMember(shopId: string) {
 export function useCreateAccessCode(shopId: string) {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: ({ label, code }: { label: string; code: string }) =>
-      createAccessCode(shopId, label, code),
+    mutationFn: (code: string) => createAccessCode(shopId, code),
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: adminKeys.codes(shopId) });
+    },
+  });
+}
+
+export function useRegenerateAccessCode(shopId: string) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (code: string) => regenerateAccessCode(shopId, code),
     onSuccess: () => {
       void queryClient.invalidateQueries({ queryKey: adminKeys.codes(shopId) });
     },
