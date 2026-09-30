@@ -159,9 +159,14 @@ last week.
 - **Registration** is production-only (`useServiceWorker`): a worker on the
   dev server is pure HMR friction, and no shop ever runs the dev server. An
   update never swaps itself in underneath a half-entered sale — a waiting
-  worker raises a banner and the owner applies it.
-- **`ConnectivityBar.tsx`** — the offline banner (rendered only while actually
-  offline, saying plainly that some things won't load until the network
+  worker raises a banner and the owner applies it. The same hook probe-checks
+  connectivity: the browser's online/offline signals only ever trigger a real
+  HEAD request to the app's own origin, and the offline state is what that
+  request says, because the browser's word alone has been caught pinning a
+  false "Offline" tag over a working till.
+- **`ConnectivityBar.tsx`** — the offline banner (rendered only while the
+  offline state is probe-confirmed — a real request to the app's own origin
+  has failed — saying plainly that some things won't load until the network
   returns) and the update banner.
 - **`manifest.webmanifest`** — id, standalone display, portrait orientation,
   `#032F25` theme, 192/512 icons plus a maskable entry.
@@ -170,8 +175,10 @@ last week.
 worker activates and controls the page with no precache, the cached shell
 matches the bytes the server serves now (network-first, not a stale copy),
 assets/fonts/runtime files cache from successful network responses, an
-offline navigation still renders the shell (the fallback path), the only
-cross-origin responses in any cache are Google Fonts, and the manifest meets
+offline navigation still renders the shell (the fallback path), the offline
+banner is probe-confirmed — absent on a healthy network, present under a real
+offline probe, cleared the moment it answers — the only cross-origin
+responses in any cache are Google Fonts, and the manifest meets
 Chrome's installability criteria.
 
 ### The glass material, in three levels

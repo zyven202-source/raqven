@@ -14,28 +14,96 @@ import { useCallback, useEffect, useState } from "react";
  *     update to a cash-register: the owner taps "Update now", the page
  *     reloads, and the new version is running. No silent swap underneath a
  *     half-entered sale.
- *   - `online` — the browser's connectivity. The UI renders an offline
- *     banner from it.
+ *   - `online` — connectivity, **probe-confirmed**. The browser's own
+ *     signals (navigator.onLine and the online/offline events) are treated
+ *     as suspicion only: Chromium fires spurious offline events on Wi-Fi↔mobile
+ *     handoffs, captive-portal flags and VPN toggles, and a backgrounded PWA
+ *     can miss the recovery event entirely — and either lie pins a false
+ *     "Offline" tag over a till that is working. The flag never reaches the
+ *     UI on its own; it only triggers a real HEAD request to our own origin,
+ *     and the banner shows only while that request actually fails. While
+ *     offline the hook keeps probing — on a short timer, on visibility, on
+ *     the recovery event — so the banner clears the moment the network
+ *     answers.
  *
  * In dev, or where service workers are unavailable (http:// origins that are
- * not localhost, old WebViews), the hook is a no-op that reports online and
+ * not localhost, old WebViews), the hook still probe-checks connectivity and
  * never offers an update — which is the truth about that environment.
  */
+/** How often a confirmed-offline app re-tests the network. */
+const REPROBE_INTERVAL_MS = 10_000;
+/** A probe slower than this has not proven reachability; treat as offline. */
+const PROBE_TIMEOUT_MS = 8_000;
+
+/**
+ * Ask the wire itself, not the browser's opinion of it. HEAD on our own
+ * origin with every cache bypassed: non-GET requests never reach the service
+ * worker (it handles GET only), so this is answered by the network or not at
+ * all — any response of any status proves the wire is live, a rejection
+ * proves it is not. Same-origin on purpose: the app's connectivity answer
+ * must not depend on a third party being reachable.
+ */
+async function probeNetwork(): Promise<boolean> {
+  try {
+    // AbortSignal.timeout needs a guard for engines without it (old WebViews);
+    // exactOptionalPropertyTypes forbids passing `signal: undefined`, so the
+    // init object is built twice rather than conditionally nulled.
+    await fetch(
+      `/?connectivity-probe=${Date.now()}`,
+      typeof AbortSignal.timeout === "function"
+        ? { method: "HEAD", cache: "no-store", signal: AbortSignal.timeout(PROBE_TIMEOUT_MS) }
+        : { method: "HEAD", cache: "no-store" },
+    );
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 export function useServiceWorker() {
   const [updateReady, setUpdateReady] = useState(false);
-  const [online, setOnline] = useState(() =>
-    typeof navigator === "undefined" ? true : navigator.onLine,
-  );
+  // Optimistic start: the network is assumed present until a probe proves
+  // otherwise. Seeding from navigator.onLine is exactly what pinned a
+  // permanent "Offline" tag above a working till.
+  const [online, setOnline] = useState(true);
   const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
 
   useEffect(() => {
-    const goOnline = () => setOnline(true);
-    const goOffline = () => setOnline(false);
-    window.addEventListener("online", goOnline);
-    window.addEventListener("offline", goOffline);
+    let disposed = false;
+    let timer: number | undefined;
+    let inFlight = false;
+
+    const recheck = async () => {
+      if (inFlight) return; // a probe is already deciding; the next one follows
+      inFlight = true;
+      const reachable = await probeNetwork();
+      inFlight = false;
+      if (disposed) return;
+      setOnline(reachable);
+      if (timer !== undefined) window.clearTimeout(timer);
+      // Only a confirmed-offline app keeps polling, so a recovery event a
+      // backgrounded PWA misses cannot strand the banner on screen.
+      if (!reachable) timer = window.setTimeout(recheck, REPROBE_INTERVAL_MS);
+    };
+
+    const onSuspicion = () => void recheck();
+    const onVisible = () => {
+      if (document.visibilityState === "visible") void recheck();
+    };
+
+    window.addEventListener("offline", onSuspicion);
+    window.addEventListener("online", onSuspicion);
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+    void recheck(); // confirm the state we optimistically assumed
+
     return () => {
-      window.removeEventListener("online", goOnline);
-      window.removeEventListener("offline", goOffline);
+      disposed = true;
+      if (timer !== undefined) window.clearTimeout(timer);
+      window.removeEventListener("offline", onSuspicion);
+      window.removeEventListener("online", onSuspicion);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
     };
   }, []);
 

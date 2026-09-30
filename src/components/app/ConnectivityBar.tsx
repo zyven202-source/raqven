@@ -8,8 +8,10 @@ import { Button } from "@/components/ui/button";
  * `OfflineBanner` — the network is gone. RAVQEN is online-first: pages you
  * have already opened may still render, but reads and writes that need
  * Supabase will fail until it returns, and pretending otherwise would be a
- * lie with a ledger's worth of damage. Rendered only while actually offline,
- * out of the way, above the content.
+ * lie with a ledger's worth of damage. Rendered only while the offline state
+ * is probe-confirmed — a real request to our own origin failed — because the
+ * browser's online/offline signals alone have been caught lying over a
+ * working till. Out of the way, above the content.
  *
  * `UpdateBanner` — a new version has been downloaded and is waiting. The user
  * chooses when to apply it; nothing reloads underneath a half-entered sale.
