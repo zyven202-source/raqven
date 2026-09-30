@@ -152,8 +152,11 @@ reading code and hoping.
   (`public/sw.js`, v2) always tries the network first — navigations, hashed
   assets, fonts, miscellany — with the cache only as a failure fallback, and
   no install-time precache. Supabase responses are never served from cache
-  and never stored; the offline banner states plainly that some things won't
-  load until the network returns. Verified by `scripts/verify-pwa.mjs`
+  and never stored; the offline banner is probe-confirmed — it states plainly
+  that some things won't load until the network returns, and shows only after
+  a real request to the app's own origin fails (never on the browser's
+  online/offline word alone, which lies), clearing the moment a probe
+  succeeds. Verified by `scripts/verify-pwa.mjs`
   (online-first suite, browser-verified against the production build). What
   still requires the network: every read and write of business data.
 

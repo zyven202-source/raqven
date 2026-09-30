@@ -18,6 +18,8 @@
 //   7. offline, the shell fallback renders the app instead of a browser error
 //   8. Supabase and every other cross-origin request is never cached
 //   9. the manifest meets Chrome's installability criteria
+//  10. the offline banner is probe-confirmed: absent on a healthy network,
+//      present under a real offline probe, cleared the moment it answers
 //
 // Usage (from the pwtest checkout, against a production build server):
 //   CHROMIUM_PATH=... bun verify-pwa.mjs [baseUrl]
@@ -186,9 +188,19 @@ check(
 // ------------------------------------------------------------ offline
 // The offline behaviour of an online-first app: the network is gone, so
 // navigations fall back to the cached shell — an app renders instead of the
-// browser's error page. This is the fallback, never the strategy.
+// browser's error page. This is the fallback, never the strategy. The
+// offline banner rides on the same truth: it must be absent on a healthy
+// network (no trusting navigator.onLine, which lies), appear only once a
+// real probe fails, and clear the moment a probe succeeds again.
+const hasOfflineBanner = (scope) =>
+  scope.evaluate(() =>
+    Array.from(document.querySelectorAll('[role="status"]')).some((el) =>
+      (el.textContent ?? "").includes("some things won"),
+    ),
+  );
 const offlinePage = await context.newPage();
 await offlinePage.goto(`${BASE}/app/pos`, { waitUntil: "networkidle" });
+check("no offline banner while the network answers", !(await hasOfflineBanner(offlinePage)));
 await context.setOffline(true);
 await offlinePage.goto(`${BASE}/app/pos`, { waitUntil: "load" }).catch(() => {});
 await offlinePage.waitForTimeout(1500);
@@ -202,7 +214,27 @@ check(
   offlineVerdict.hasRoot && offlineVerdict.bodyLength > 0,
   `${offlineVerdict.bodyLength} chars at ${offlineVerdict.url}`,
 );
+check(
+  "the offline banner appears once the probe confirms the network is gone",
+  await hasOfflineBanner(offlinePage),
+);
 await context.setOffline(false);
+// The recovery path a backgrounded PWA must not miss: the banner clears as
+// soon as a probe succeeds — driven here by the same window event a phone
+// fires when the wire returns.
+await offlinePage.evaluate(() => window.dispatchEvent(new Event("online")));
+const bannerCleared = await offlinePage
+  .waitForFunction(
+    () =>
+      !Array.from(document.querySelectorAll('[role="status"]')).some((el) =>
+        (el.textContent ?? "").includes("some things won"),
+      ),
+    undefined,
+    { timeout: 10_000 },
+  )
+  .then(() => true)
+  .catch(() => false);
+check("the banner clears once a probe confirms the network is back", bannerCleared);
 await offlinePage.close();
 
 // ------------------------------------------------------------ Supabase isolation
