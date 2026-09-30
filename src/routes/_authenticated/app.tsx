@@ -69,6 +69,16 @@ function AppShell({
 
   return (
     <div className="min-h-screen bg-background">
+      {/*
+        The skip link. The app is a single-column list of links, so a keyboard
+        user tabbing in lands on the shop bar and has to traverse the whole
+        navigation on every single screen before reaching the content they
+        asked for. This is the one line that fixes that, and it costs nothing
+        to a pointer user because it is invisible until focused.
+      */}
+      <a href="#main" className="sr-only-focusable">
+        Skip to the main content
+      </a>
       <header className="glass-header sticky top-0 z-30 backdrop-blur-2xl backdrop-saturate-150">
         <ShopBar
           shop={activeShop}
@@ -78,7 +88,9 @@ function AppShell({
         />
       </header>
 
-      <Outlet />
+      <div id="main" tabIndex={-1}>
+        <Outlet />
+      </div>
 
       <FloatingNav isOwner={role === "owner"} onSignOut={() => void handleSignOut()} />
     </div>
@@ -117,7 +129,18 @@ function ShopBar({
       >
         <span className="min-w-0 flex-1">
           <span className="block truncate text-sm font-semibold leading-tight">{shop.name}</span>
-          <span className="block text-[11px] leading-tight text-muted-foreground">
+          {/*
+            The role is not decoration — it is the one word that tells a member
+            what they are allowed to do, and it is the word that stops an
+            employee hunting for a settings screen they cannot open.
+
+            It was `text-[11px] text-muted-foreground` and measured 3.41:1
+            against the glass header, which is below the 4.5:1 that small text
+            needs. `verify-contrast.mjs` found it by screenshotting the real
+            rendered pixels. Hierarchy now comes from size and weight rather
+            than from dropping the contrast.
+          */}
+          <span className="block text-xs font-medium leading-tight text-foreground">
             {role === "owner" ? "Owner" : "Staff"}
           </span>
         </span>

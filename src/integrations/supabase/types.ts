@@ -897,6 +897,111 @@ export type Database = {
         };
         Relationships: [];
       };
+      audit_log: {
+        Row: {
+          action: string;
+          actor_id: string | null;
+          created_at: string;
+          entity_id: string | null;
+          entity_type: string | null;
+          id: string;
+          metadata: Json;
+          shop_id: string;
+          summary: string | null;
+        };
+        Insert: {
+          action: string;
+          actor_id?: string | null;
+          created_at?: string;
+          entity_id?: string | null;
+          entity_type?: string | null;
+          id?: string;
+          metadata?: Json;
+          shop_id: string;
+          summary?: string | null;
+        };
+        Update: {
+          action?: string;
+          actor_id?: string | null;
+          created_at?: string;
+          entity_id?: string | null;
+          entity_type?: string | null;
+          id?: string;
+          metadata?: Json;
+          shop_id?: string;
+          summary?: string | null;
+        };
+        Relationships: [];
+      };
+      consent_records: {
+        Row: {
+          consent_type: string;
+          created_at: string;
+          granted: boolean;
+          id: string;
+          policy_version: string;
+          source: string;
+          subject_hash: string;
+          user_id: string | null;
+        };
+        Insert: {
+          consent_type: string;
+          created_at?: string;
+          granted: boolean;
+          id?: string;
+          policy_version: string;
+          source?: string;
+          subject_hash: string;
+          user_id?: string | null;
+        };
+        Update: {
+          consent_type?: string;
+          created_at?: string;
+          granted?: boolean;
+          id?: string;
+          policy_version?: string;
+          source?: string;
+          subject_hash?: string;
+          user_id?: string | null;
+        };
+        Relationships: [];
+      };
+      data_requests: {
+        Row: {
+          created_at: string;
+          details: string | null;
+          id: string;
+          request_type: string;
+          response: string | null;
+          shop_id: string | null;
+          status: string;
+          updated_at: string;
+          user_id: string;
+        };
+        Insert: {
+          created_at?: string;
+          details?: string | null;
+          id?: string;
+          request_type: string;
+          response?: string | null;
+          shop_id?: string | null;
+          status?: string;
+          updated_at?: string;
+          user_id: string;
+        };
+        Update: {
+          created_at?: string;
+          details?: string | null;
+          id?: string;
+          request_type?: string;
+          response?: string | null;
+          shop_id?: string | null;
+          status?: string;
+          updated_at?: string;
+          user_id?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: {
       [_ in never]: never;
@@ -982,6 +1087,34 @@ export type Database = {
         Returns: Json;
       };
       storage_shop_id: { Args: { _name: string }; Returns: string };
+      consent_subject_hash: { Args: { p_user_id: string }; Returns: string };
+      delete_my_account: { Args: Record<PropertyKey, never>; Returns: Json };
+      lodge_data_request: {
+        Args: {
+          p_details?: string | null;
+          p_request_type: string;
+          p_shop_id?: string | null;
+        };
+        Returns: string;
+      };
+      record_consent: {
+        Args: {
+          p_consent_type: string;
+          p_granted: boolean;
+          p_policy_version: string;
+          p_source?: string;
+        };
+        Returns: string;
+      };
+      withdraw_data_request: { Args: { p_request_id: string }; Returns: boolean };
+      // Owner-initiated shop deletion. `shop_deletion_counts` is deliberately
+      // absent: it is revoked from `authenticated` and only ever called from
+      // inside the two below.
+      //
+      // `shop_deletions` is absent from Tables too, for the same reason — the
+      // tombstone is server-only and no client may read or write it.
+      shop_deletion_preview: { Args: { p_shop_id: string }; Returns: Json };
+      delete_shop: { Args: { p_confirm_shop_name: string; p_shop_id: string }; Returns: Json };
     };
     Enums: {
       member_status: "active" | "suspended" | "removed";

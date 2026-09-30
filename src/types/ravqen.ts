@@ -57,6 +57,11 @@ export type ReceiptSettings = Tables["receipt_settings"]["Row"];
 export type ReceiptSettingsUpdate = Tables["receipt_settings"]["Update"];
 export type ShopMemberUpdate = Tables["shop_members"]["Update"];
 
+/** Governance tables. Read-only from the client by design — see the migration. */
+export type AuditLogEntry = Tables["audit_log"]["Row"];
+export type ConsentRecord = Tables["consent_records"]["Row"];
+export type DataRequest = Tables["data_requests"]["Row"];
+
 /** A shop together with the signed-in user's role in it. */
 export interface ShopWithRole extends Shop {
   role: ShopRole;

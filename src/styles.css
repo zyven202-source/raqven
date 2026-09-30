@@ -364,6 +364,20 @@
  * -------------------------------------------------------------------------*/
 
 /** A contained surface. Used only where grouping genuinely aids comprehension. */
+/**
+ * The R tile's fill: the same emerald ramp the app icon renders. Only the
+ * image — pair it with a real background-colour so the letter always has its
+ * dark ground even where images do not paint.
+ */
+@utility gradient-ink {
+  background-image: linear-gradient(
+    145deg,
+    var(--ink-soft) 0%,
+    var(--ink) 55%,
+    var(--ink-deep) 100%
+  );
+}
+
 @utility panel {
   background-color: var(--glass-1);
   background-image: linear-gradient(180deg, var(--glass-1-sheen) 0%, oklch(0 0 0 / 0) 40%);
@@ -588,5 +602,50 @@
     background-color: var(--color-card);
     border: 1px solid var(--border);
     border-radius: var(--radius-md);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+ * Reduced motion
+ *
+ * `FloatingNav` already collapses its own Framer Motion transitions when
+ * `useReducedMotion()` is true. What it cannot reach is the CSS: the loading
+ * spinner, the press states and any transition written as a utility class keep
+ * animating for a person who has asked the operating system not to have
+ * anything move. This collapses all of it to a state change.
+ *
+ * The spinner is the interesting one. A loading indicator that stops spinning
+ * stops meaning "still working", so it is not removed — it is slowed to a
+ * pulse-free opacity hold, and `LoadingState`'s 12-second timeout still turns
+ * into the honest "this is taking too long" state, which is the part that
+ * actually matters when a screen will not load.
+ * ------------------------------------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  /*
+   * `animate-spin` is disabled above, which would leave a motionless ring that
+   * reads as a stuck screen. A slow opacity hold reads as "working" without
+   * moving anything across the retina, which is the whole point of the setting.
+   */
+  .animate-spin {
+    animation: ravqen-reduced-pulse 2.4s steps(1, end) infinite !important;
+  }
+}
+
+@keyframes ravqen-reduced-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
   }
 }

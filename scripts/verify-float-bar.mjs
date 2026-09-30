@@ -52,6 +52,7 @@ try {
   await page.fill("#signup-phone", "0712000009");
   await page.fill("#signup-email", EMAIL);
   await page.fill("#signup-password", PASSWORD);
+  await page.check("#signup-accepted");
   await page.click('button[type="submit"]');
   await page.waitForURL(/onboarding|dashboard/, { timeout: 40_000 }).catch(() => {});
 

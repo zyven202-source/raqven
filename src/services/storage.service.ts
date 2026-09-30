@@ -94,3 +94,41 @@ export async function removeObject(bucket: StorageBucket, path: string): Promise
   const { error } = await supabase.storage.from(bucket).remove([path]);
   if (error) throw error;
 }
+
+/** Objects removed per `remove` call — the API caps a single request at 100. */
+const REMOVE_BATCH = 100;
+
+/**
+ * Every object under a shop's prefix, in every bucket this app owns.
+ *
+ * Used after a shop is deleted. Deleting the `shops` row does not delete files:
+ * storage has no foreign keys, so without this the shop's logo, product photos
+ * and expense receipts would sit in the buckets forever. They would be
+ * unreachable — the policies derive tenancy from the first path segment, so with
+ * no shop row there is no membership to authorise — but unreachable is not the
+ * same as gone.
+ *
+ * Every bucket in `STORAGE_BUCKETS` is walked, because a shop's files are spread
+ * across all three and a caller should not have to know which.
+ */
+export async function removeShopFiles(shopId: string): Promise<number> {
+  let removed = 0;
+  for (const bucket of Object.values(STORAGE_BUCKETS)) {
+    // One folder per shop, and files are keyed flat inside it, so a single level
+    // of listing is enough — `id === null` is Supabase's marker for a folder.
+    const { data, error } = await supabase.storage.from(bucket).list(shopId, { limit: 1000 });
+    if (error) throw error;
+    const paths = (data ?? [])
+      .filter((entry) => entry.id !== null)
+      .map((entry) => `${shopId}/${entry.name}`);
+    if (paths.length === 0) continue;
+
+    for (let at = 0; at < paths.length; at += REMOVE_BATCH) {
+      const batch = paths.slice(at, at + REMOVE_BATCH);
+      const { error: removeError } = await supabase.storage.from(bucket).remove(batch);
+      if (removeError) throw removeError;
+      removed += batch.length;
+    }
+  }
+  return removed;
+}

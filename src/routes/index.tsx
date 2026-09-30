@@ -82,6 +82,14 @@ function Landing() {
             RAVQEN replaces the till notebook, the stock book and the &ldquo;who owes what&rdquo;
             list. It works on an Android phone, at the counter, in the sun.
           </p>
+          <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted-foreground">
+            No advertising, no tracking, no analytics. Your shop&rsquo;s records stay in your shop
+            &mdash; see the{" "}
+            <Link to="/legal/privacy" className="font-medium text-ink underline underline-offset-4">
+              privacy policy
+            </Link>
+            .
+          </p>
           <div className="mt-8 flex flex-col gap-3 sm:flex-row">
             <Button asChild className="h-12 px-6 text-base">
               <Link to="/auth/signup">Create your shop</Link>
@@ -194,9 +202,39 @@ function Landing() {
       </main>
 
       <footer className="border-t border-border">
-        <div className="mx-auto flex w-full max-w-3xl flex-col gap-2 px-5 py-8 sm:flex-row sm:items-center sm:justify-between">
-          <Logo showTagline />
-          <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} RAVQEN</p>
+        <div className="mx-auto w-full max-w-3xl px-5 py-8">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <Logo showTagline />
+            <p className="text-sm text-muted-foreground">
+              &copy; {new Date().getFullYear()} RAVQEN
+            </p>
+          </div>
+          {/*
+            The three policies are linked from every public page, not buried on a
+            legal sub-page. There is no cookie banner, because there is no
+            non-essential tracking to consent to — the Privacy Policy says so
+            in those words rather than leaving a reader to work it out.
+          */}
+          <nav aria-label="Policies" className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+            <Link
+              to="/legal/privacy"
+              className="text-muted-foreground hover:text-ink hover:underline"
+            >
+              Privacy policy
+            </Link>
+            <Link
+              to="/legal/terms"
+              className="text-muted-foreground hover:text-ink hover:underline"
+            >
+              Terms of service
+            </Link>
+            <Link
+              to="/legal/refunds"
+              className="text-muted-foreground hover:text-ink hover:underline"
+            >
+              Refund policy
+            </Link>
+          </nav>
         </div>
       </footer>
     </div>

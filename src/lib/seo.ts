@@ -44,7 +44,7 @@ export const HOME_HEADLINE = "The Kenyan shop POS that keeps every sale, stock a
 
 /** The square app icon, which is the only large image the product ships. */
 export const OG_IMAGE_URL = `${SITE_URL}/icon-512.png`;
-export const OG_IMAGE_ALT = "The RAVQEN mark: a folded ribbon R on a deep emerald tile.";
+export const OG_IMAGE_ALT = "The RAVQEN app icon: a champagne letter R on a deep emerald tile.";
 
 /** Every meta descriptor the home page needs, in the order crawlers read them. */
 export const HOME_META = [

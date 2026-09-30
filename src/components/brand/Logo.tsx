@@ -1,60 +1,65 @@
 import { cn } from "@/lib/utils";
 
-import { AppIcon } from "./AppIcon";
-import { Mark } from "./Mark";
+interface LogoProps {
+  className?: string;
+  tone?: "ink" | "light";
+  showTagline?: boolean;
+  compact?: boolean;
+  /** Kept so existing callers keep working; it sizes the R tile. */
+  markSize?: string;
+}
 
 /**
- * RAVQEN's identity, symbol first.
+ * RAVQEN's logo: a simple typographic R.
  *
- * The app icon carries the identity on its own. The wordmark is optional and
- * only appears where there is room and a reason for it — the splash screen, the
- * sign-in screen, the empty state before a shop exists. Everywhere dense, the
- * symbol stands alone, because a wordmark in a 56px bar is decoration that costs
- * legibility and buys nothing.
+ * The identity is the letter itself — the display face's R in champagne on the
+ * deep-emerald tile — not a drawn symbol. Deliberately plain: at a glance it is
+ * a letter, not a logo system, and that is what the owner asked for. The
+ * wordmark is optional and only appears where there is room for it (splash,
+ * sign-in, the pre-shop empty state); everywhere dense, the tile stands alone.
  *
- * `tone` selects the ground the symbol sits on, because a dark mark on a dark
- * bar is invisible and a light mark on a white receipt is a smudge.
+ * `tone` selects the ground, because a dark mark on a dark bar is invisible and
+ * a light mark on a white receipt is a smudge:
+ *
+ *   - `ink` — the emerald tile with the champagne R.
+ *   - `light` — a bare champagne R on nothing, for dark grounds.
  */
 export function Logo({
   className,
   tone = "ink",
   showTagline = false,
   compact = false,
-  markSize = "size-8",
-}: {
-  className?: string;
-  tone?: "ink" | "light";
-  showTagline?: boolean;
-  /** Symbol only. The default everywhere the wordmark would crowd the screen. */
-  compact?: boolean;
-  /**
-   * The symbol's size, as a Tailwind class. It is a class rather than a number
-   * because the mark is sized in the same scale as the type around it, and every
-   * caller already picks a size for that reason.
-   */
-  markSize?: string;
-}) {
-  // On a dark ground the symbol loses its container and becomes a plain mark in
-  // the light ink, which is how a symbol behaves when it is placed rather than
-  // installed.
+  markSize = "size-9",
+}: LogoProps) {
   const bare = tone === "light";
+  const sizeClass = markSize === "size-8" ? "size-9" : markSize;
 
-  const symbol = bare ? (
-    <Mark className={cn(markSize, "text-champagne")} title="RAVQEN" />
-  ) : (
-    <AppIcon className={markSize} title="RAVQEN" />
+  const tile = (
+    <span
+      className={cn(
+        "grid shrink-0 place-items-center rounded-xl font-display text-lg font-semibold",
+        sizeClass,
+        // The colour sits under the gradient image so the R always has its
+        // dark ground — including in print stylesheets and anywhere a
+        // background image does not paint.
+        bare ? "text-champagne" : "gradient-ink bg-ink-deep text-champagne",
+      )}
+      aria-hidden
+    >
+      R
+    </span>
   );
 
-  if (compact) return symbol;
+  if (compact) return tile;
 
   return (
     <div className={cn("flex items-center gap-2.5", className)}>
-      {symbol}
+      {tile}
       <span className="leading-none">
         <span
           className={cn(
-            "block font-display text-base font-semibold tracking-[0.02em]",
-            tone === "ink" ? "text-foreground" : "text-background",
+            "block font-display text-lg font-semibold tracking-tight",
+            bare ? "text-background" : "text-foreground",
           )}
         >
           RAVQEN
@@ -63,7 +68,7 @@ export function Logo({
           <span
             className={cn(
               "mt-1 block text-[11px] tracking-wide",
-              tone === "ink" ? "text-muted-foreground" : "text-champagne/80",
+              bare ? "text-champagne/80" : "text-muted-foreground",
             )}
           >
             Every sale. Every stock. Every number.

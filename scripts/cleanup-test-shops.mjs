@@ -18,9 +18,13 @@ const DELETE = process.argv.includes("--delete");
 const PATTERNS = [
   "Duka%", // business-engine.mjs, verify-ui-acceptance.mjs
   "Access Test Shop%", // verify-staff-access.mjs
+  "Access Test Rival Shop%", // verify-staff-access.mjs (the cross-shop probe)
+  "Other Shop", // verify-staff-access.mjs (the outsider's own shop)
   "Float %", // verify-float-bar.mjs
   "Glass %", // verify-glass-ui.mjs
   "Rail %", // the desktop-rail check
+  "Contrast %", // verify-contrast.mjs
+  "Closing %", // verify-shop-deletion.mjs
 ];
 
 const url = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;

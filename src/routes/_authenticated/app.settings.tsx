@@ -1,10 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useEffect, useState } from "react";
-import { Loader2, LogOut } from "lucide-react";
-import { useNavigate } from "@tanstack/react-router";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { ErrorState, LoadingState, PageContainer, PageHeader } from "@/components/app/AppChrome";
+import { ActivityLog } from "@/components/app/ActivityLog";
+import { DataPrivacySection } from "@/components/app/DataPrivacySection";
+import { DeleteShopSection } from "@/components/app/DeleteShopSection";
 import { Field, ToggleRow } from "@/components/app/fields";
 import { OwnerOnly } from "@/components/app/OwnerOnly";
 import { StorageImage } from "@/components/app/StorageImage";
@@ -25,8 +27,6 @@ import {
   useUpdateReceiptSettings,
   useUpdateShop,
 } from "@/hooks/useShopAdmin";
-import { useQueryClient } from "@tanstack/react-query";
-import { signOut } from "@/services/auth.service";
 import { uploadImage } from "@/services/storage.service";
 import { BUSINESS_TYPES } from "@/services/shops.service";
 import { STORAGE_BUCKETS } from "@/types/ravqen";
@@ -56,8 +56,6 @@ function SettingsPage() {
   const updateShop = useUpdateShop(shopId);
   const updateReceipt = useUpdateReceiptSettings(shopId);
   const setRefunds = useSetRefunds(shopId);
-  const queryClient = useQueryClient();
-  const navigate = useNavigate();
 
   const [name, setName] = useState("");
   const [businessType, setBusinessType] = useState("general");
@@ -190,16 +188,6 @@ function SettingsPage() {
     }
   }
 
-  async function handleSignOut() {
-    try {
-      await signOut();
-      queryClient.clear();
-      await navigate({ to: "/auth/login", replace: true });
-    } catch (error) {
-      toast.error(error instanceof Error ? error.message : "Could not sign out.");
-    }
-  }
-
   return (
     <PageContainer>
       <PageHeader title="Settings" />
@@ -233,7 +221,8 @@ function SettingsPage() {
           </Select>
         </Field>
 
-        <div className="grid grid-cols-2 gap-3">
+        {/* min-w-0 lets the inputs shrink inside the grid instead of forcing the page wide on a 360px phone. */}
+        <div className="grid grid-cols-2 gap-3 [&>*]:min-w-0">
           <Field label="Location" htmlFor="settings-location">
             <Input
               id="settings-location"
@@ -340,7 +329,8 @@ function SettingsPage() {
           />
         </Field>
 
-        <div className="grid grid-cols-2 gap-3">
+        {/* min-w-0 lets the inputs shrink inside the grid instead of forcing the page wide on a 360px phone. */}
+        <div className="grid grid-cols-2 gap-3 [&>*]:min-w-0">
           <Field label="Receipt numbers start with" htmlFor="settings-prefix">
             <Input
               id="settings-prefix"
@@ -371,15 +361,25 @@ function SettingsPage() {
       </form>
 
       {/* --------------------------------------------------------- account */}
-      <section className="mt-8 border-t border-border pt-5">
-        <Section title="Your account" />
-        <Button
-          variant="outline"
-          className="h-12 w-full text-negative"
-          onClick={() => void handleSignOut()}
-        >
-          <LogOut className="size-4" /> Sign out
-        </Button>
+      <section id="activity" className="mt-8 scroll-mt-20 border-t border-border pt-5">
+        <Section title="Activity log" />
+        <ActivityLog shopId={shopId} />
+      </section>
+
+      <section id="data" className="mt-8 scroll-mt-20 border-t border-border pt-5">
+        <Section title="Data & privacy" />
+        <DataPrivacySection />
+      </section>
+
+      {/*
+        Last on the screen, and below everything else on purpose. Account deletion
+        above it explicitly tells an owner who still runs a shop to close it
+        first, so this has to be the thing they scroll to next — not something
+        they meet halfway down a settings page.
+      */}
+      <section id="delete-shop" className="mt-8 scroll-mt-20 border-t border-border pt-5">
+        <Section title="Closing the shop" />
+        <DeleteShopSection />
       </section>
     </PageContainer>
   );

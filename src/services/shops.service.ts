@@ -4,6 +4,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { slugify } from "@/lib/format";
+import { removeShopFiles } from "@/services/storage.service";
 import type {
   PaymentMethod,
   ReceiptSettingsUpdate,
@@ -233,6 +234,20 @@ export async function listShopMembers(shopId: string): Promise<ShopMemberRow[]> 
   return data ?? [];
 }
 
+/**
+ * The shop's member directory: name, role and status per user.
+ *
+ * A SECURITY DEFINER function that reads `profiles` internally so a member can
+ * see a colleague's name without being able to read a colleague's phone number
+ * or email. It is the same directory the Employees screen renders and the same
+ * one the transaction ledger uses to label who did what.
+ */
+export async function listMemberDirectory(shopId: string): Promise<Map<string, string>> {
+  const { data, error } = await supabase.rpc("shop_member_directory", { p_shop_id: shopId });
+  if (error) throw error;
+  return new Map((data ?? []).map((member) => [member.user_id, member.display_name]));
+}
+
 export async function updateMember(
   shopId: string,
   memberId: string,
@@ -344,3 +359,152 @@ export const PAYMENT_METHODS: { value: PaymentMethod; label: string; hint?: stri
   { value: "card", label: "Card" },
   { value: "credit", label: "Credit", hint: "Owed by the customer" },
 ];
+
+// ---------------------------------------------------------- shop deletion
+
+/**
+ * Everything a shop deletion takes with it, as the database counts it.
+ *
+ * The list is here rather than in the component because the keys are the RPC's
+ * output shape: `shop_deletion_counts` builds this exact object in SQL, and the
+ * union below is what stops the UI from asking for a key that does not exist.
+ */
+export const DELETION_COUNT_KEYS = [
+  "sales",
+  "sale_items",
+  "payments",
+  "refunds",
+  "refund_items",
+  "debtors",
+  "debtor_payments",
+  "products",
+  "categories",
+  "inventory_movements",
+  "expenses",
+  "staff",
+  "access_codes",
+  "activity_entries",
+] as const;
+
+export type DeletionCountKey = (typeof DELETION_COUNT_KEYS)[number];
+export type DeletionCounts = Record<DeletionCountKey, number>;
+
+/**
+ * The RPC's jsonb into numbers.
+ *
+ * A missing key is zero rather than `NaN`: the database is the only writer of
+ * this object, and a count of zero is the safe reading of a key it did not send.
+ * `NaN` in a list of things being destroyed would render as "NaN" on a screen
+ * asking someone to confirm the most destructive action in the product.
+ */
+function readCounts(value: unknown): DeletionCounts {
+  const raw = (value ?? {}) as Record<string, unknown>;
+  const counts = {} as DeletionCounts;
+  for (const key of DELETION_COUNT_KEYS) {
+    const n = Number(raw[key]);
+    counts[key] = Number.isFinite(n) && n > 0 ? Math.trunc(n) : 0;
+  }
+  return counts;
+}
+
+export interface ShopDeletionPreview {
+  shopId: string;
+  shopName: string;
+  createdAt: string;
+  counts: DeletionCounts;
+  /** Privacy requests that survive the deletion, with their shop link cleared. */
+  dataRequestsRetained: number;
+}
+
+/**
+ * What deleting this shop would destroy, and what would outlive it.
+ *
+ * Owner-only in the database, before anything is counted — so this is also the
+ * check that a staff member's client cannot read a shop's ledger size. It is
+ * fetched fresh every time it is asked for and never cached: a stale count here
+ * is a count the owner is being asked to confirm a lie about.
+ */
+export async function shopDeletionPreview(shopId: string): Promise<ShopDeletionPreview> {
+  const { data, error } = await supabase.rpc("shop_deletion_preview", { p_shop_id: shopId });
+  if (error) throw error;
+
+  const row = data as unknown as {
+    shop_id: string;
+    shop_name: string;
+    created_at: string;
+    counts: unknown;
+    data_requests_retained: number;
+  };
+
+  return {
+    shopId: row.shop_id,
+    shopName: row.shop_name,
+    createdAt: row.created_at,
+    counts: readCounts(row.counts),
+    dataRequestsRetained: Number(row.data_requests_retained) || 0,
+  };
+}
+
+export interface ShopDeletionResult {
+  shopId: string;
+  shopName: string;
+  counts: DeletionCounts;
+  membersRemoved: number;
+  /**
+   * Files removed from storage afterwards, or `null` when the count could not be
+   * established.
+   *
+   * `null` rather than `0` on purpose: "nothing was left behind" and "we could
+   * not find out" are different answers, and the caller says so.
+   */
+  filesRemoved: number | null;
+}
+
+/**
+ * Deletes a shop and everything in it. Owner only, and the database checks that
+ * the name typed back is the name it holds.
+ *
+ * The three guards live in `delete_shop()` rather than here because a client is
+ * not a security boundary — everything this function assumes is re-checked
+ * server-side against `shops.owner_id`, in one transaction, before a row goes.
+ *
+ * Files are cleaned up afterwards, and that step is allowed to fail quietly.
+ * Storage has no foreign keys, so the shop's logo and product photos are still
+ * in the buckets when this function returns; they are unreachable either way,
+ * because their policies derive tenancy from a `shops` row that no longer
+ * exists. Reporting a storage failure as a failed *deletion* would be a lie —
+ * the rows are gone and no retry brings them back — so the caller is told how
+ * many files went instead.
+ */
+export async function deleteShop(
+  shopId: string,
+  confirmShopName: string,
+): Promise<ShopDeletionResult> {
+  const { data, error } = await supabase.rpc("delete_shop", {
+    p_shop_id: shopId,
+    p_confirm_shop_name: confirmShopName,
+  });
+  if (error) throw error;
+
+  const row = data as unknown as {
+    shop_id: string;
+    shop_name: string;
+    counts: unknown;
+    members_removed: number;
+  };
+
+  let filesRemoved: number | null = 0;
+  try {
+    filesRemoved = await removeShopFiles(shopId);
+  } catch {
+    filesRemoved = null;
+  }
+
+  return {
+    shopId: row.shop_id,
+    shopName: row.shop_name,
+    counts: readCounts(row.counts),
+    membersRemoved: Number(row.members_removed) || 0,
+    filesRemoved,
+  };
+}

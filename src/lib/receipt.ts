@@ -5,27 +5,23 @@
  * can only ever print what was actually stored — there is no client-side
  * recomputation of totals that could disagree with the ledger.
  */
-import { BARE_SCALE, GLYPH, markTransform, VIEW_BOX } from "@/components/brand/mark-geometry";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import type { ReceiptPayload } from "@/services/sales.service";
 
 /**
- * RAVQEN's symbol, for the receipt header.
+ * RAVQEN's mark, for the receipt header.
  *
- * One ink, no tile, no gradient, and small. A thermal printer has no greys to
- * fade and no room to waste, so the mark is reduced to the only form that
- * survives that: the same three filled paths in black on white, scaled by the
- * same number the app uses, and inlined rather than linked so the receipt is a
- * single self-contained file a shopkeeper can share or print from a phone with
- * no network.
+ * The identity is the letter itself, so the receipt carries a plain R — set in
+ * a serif every print stack already has, in the one ink a thermal head cannot
+ * lose. No image and no webfont: a receipt has to print from a phone with no
+ * network, so the mark is typography, not a file.
  */
 function receiptMark(size = 26) {
-  const paths = [GLYPH.bowl, GLYPH.stem, GLYPH.leg].map((d) => `<path d="${d}"/>`).join("");
   return (
-    `<svg class="mark" width="${size}" height="${size}" viewBox="0 0 ${VIEW_BOX} ${VIEW_BOX}" ` +
-    `fill="#000" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">` +
-    `<g transform="${markTransform(BARE_SCALE)}">${paths}</g>` +
-    `</svg>`
+    `<div class="mark" aria-hidden="true" ` +
+    `style="width:${size}px;height:${size}px;line-height:${size}px;` +
+    `font-family:Georgia,'Times New Roman',serif;font-weight:700;` +
+    `font-size:${Math.round(size * 0.72)}px;text-align:center;color:#000">R</div>`
   );
 }
 
