@@ -124,8 +124,8 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         rel: "stylesheet",
         href: "https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600;9..144,700&family=Manrope:wght@400;500;600;700&display=swap",
       },
-      // The favicon is the flat, single-ink cut of the mark: a gradient and a
-      // gloss are mud at 16px, so `generate-icons.mjs` renders these without
+      // The favicon is the flat, single-ink cut of the R tile: a gradient and
+      // a gloss are mud at 16px, so `generate-icons.mjs` renders these without
       // the lighting. The larger icons carry the full material, for the home
       // screen and for anything that asks for a real app icon.
       //

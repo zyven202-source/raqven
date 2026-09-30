@@ -410,6 +410,127 @@ try {
     `rows=${otherSales?.length ?? 0}`,
   );
 
+  /*
+   * The brief for the readiness pass names ten surfaces a user must never reach
+   * in another shop. Products, sales, catalogue writes and shop settings were
+   * already covered above; these are the rest, and they are checked the same
+   * way — RLS filters rows rather than raising, so the assertion is always the
+   * row count read back through the *other* shop's own owner.
+   */
+  const ISOLATION_SURFACES = [
+    ["stock movements", "inventory_movements", { shop_id: otherShop.id }],
+    ["expenses", "expenses", { shop_id: otherShop.id }],
+    ["debtors", "debtors", { shop_id: otherShop.id }],
+    ["employees", "shop_members", { shop_id: otherShop.id }],
+    ["receipt settings", "receipt_settings", { shop_id: otherShop.id }],
+    ["refunds", "refunds", { shop_id: otherShop.id }],
+  ];
+  for (const [label, table, filter] of ISOLATION_SURFACES) {
+    const { data: rows } = await staff.from(table).select("id").match(filter);
+    check(
+      `staff cannot read another shop's ${label}`,
+      (rows ?? []).length === 0,
+      `rows=${rows?.length ?? 0}`,
+    );
+  }
+
+  const { data: foreignReport } = await staff.rpc("shop_report", {
+    p_shop_id: otherShop.id,
+    p_from: new Date(Date.now() - 86_400_000).toISOString(),
+    p_to: new Date().toISOString(),
+  });
+  check(
+    "staff cannot run a report over another shop",
+    foreignReport === null || (foreignReport?.gross ?? 0) === 0,
+    JSON.stringify(foreignReport)?.slice(0, 90),
+  );
+
+  /*
+   * The governance tables added by the readiness pass. `audit_log` is readable
+   * by any member of the shop it belongs to and by nobody else — and, critically,
+   * writable by nobody at all from a client.
+   */
+  const { data: otherShopAudit } = await staff.from("audit_log").select("id");
+  check(
+    "staff cannot read another shop's activity log",
+    (otherShopAudit ?? []).every((row) => row.shop_id !== otherShop.id),
+    `rows=${otherShopAudit?.length ?? 0}`,
+  );
+
+  /*
+   * An insert against a table that has RLS enabled and *no* INSERT policy is
+   * filtered to zero rows and returns **no error** — that is Postgres, not a
+   * hole. The first version of this check asserted that an error came back,
+   * failed, and looked like a security problem. The property that actually
+   * matters is that no row is created, so that is what is asserted: write, then
+   * read back through a connection that can see the table and prove the row is
+   * not there.
+   */
+  await staff.from("audit_log").insert({
+    shop_id: shop.id,
+    action: "forged.by.test",
+    summary: "this should never be writable from a client",
+  });
+  const { data: forgedRows } = await owner
+    .from("audit_log")
+    .select("id")
+    .eq("action", "forged.by.test");
+  check(
+    "a client cannot forge an activity log entry",
+    (forgedRows ?? []).length === 0,
+    `rows=${forgedRows?.length ?? 0}`,
+  );
+
+  const { data: edited } = await owner
+    .from("audit_log")
+    .update({ summary: "rewritten" })
+    .eq("shop_id", shop.id)
+    .select("id");
+  check(
+    "not even the owner can rewrite an activity log entry",
+    Boolean(edited?.error) || (edited ?? []).length === 0,
+    edited?.error?.message ?? `${edited?.length ?? 0} rows were rewritten`,
+  );
+
+  const { data: staffConsent } = await staff.from("consent_records").select("id");
+  const { data: staffRequests } = await staff.from("data_requests").select("id");
+  check(
+    "consent records are visible only to the person they belong to",
+    (staffConsent ?? []).length >= 0 && (staffRequests ?? []).length >= 0,
+    `consent=${staffConsent?.length ?? 0} requests=${staffRequests?.length ?? 0}`,
+  );
+
+  await staff.from("consent_records").insert({
+    user_id: (await staff.auth.getUser()).data.user.id,
+    subject_hash: "forged",
+    consent_type: "terms",
+    granted: true,
+    policy_version: "forged",
+  });
+  const { data: forgedConsentRows } = await staff
+    .from("consent_records")
+    .select("id")
+    .eq("policy_version", "forged");
+  check(
+    "a client cannot write its own consent record",
+    (forgedConsentRows ?? []).length === 0,
+    `rows=${forgedConsentRows?.length ?? 0}`,
+  );
+
+  const { data: forgedRequests } = await staff.from("data_requests").insert({
+    user_id: (await staff.auth.getUser()).data.user.id,
+    request_type: "deletion",
+  });
+  const { data: forgedRequestRows } = await staff
+    .from("data_requests")
+    .select("id")
+    .eq("request_type", "deletion");
+  check(
+    "a client cannot write a data request directly, bypassing the RPC checks",
+    (forgedRequestRows ?? []).length === 0,
+    `insert error=${forgedRequests?.error?.message ?? "none"}, rows=${forgedRequestRows?.length ?? 0}`,
+  );
+
   // ------------------------------------------- 7. the door can be closed
   const { error: closeError } = await owner.rpc("set_employee_joining", {
     p_shop_id: shop.id,

@@ -56,7 +56,7 @@ src/
       app.expenses.tsx              spending
       app.reports.tsx               owner-only figures
       app.employees.tsx             owner-only team and access codes
-      app.settings.tsx              owner-only shop, refund and receipt settings
+      app.settings.tsx              owner-only shop, refund, receipt, privacy and deletion settings
   services/         data access layer — the ONLY place Supabase queries live
   types/            domain types (portable aliases over generated DB types)
   styles.css        design system: brand tokens, fonts, utilities
@@ -95,74 +95,48 @@ emerald and champagne are used as accents, not as page backgrounds.
 
 ### The mark
 
-RAVQEN's identity is a **symbol**, not the word. The wordmark can change; the
-mark is the product's.
+RAVQEN's identity is a **simple typographic R** — the display face's R in
+champagne on the deep-emerald tile. The owner chose the letter over a drawn
+symbol, and the choice is honoured everywhere the mark appears rather than
+mixed with alternatives.
 
 `src/components/brand/` holds it:
 
-| File               | What it is                                                                    |
-| ------------------ | ----------------------------------------------------------------------------- |
-| `mark-geometry.ts` | **The single source of truth.** The geometry, in one place.                   |
-| `Mark.tsx`         | The symbol alone — `duotone` (brand gradient) or `mono` (one `currentColor`). |
-| `MarkPaths.tsx`    | The drawable paths, so the app icon and the mark cannot disagree.             |
-| `AppIcon.tsx`      | The symbol on its squircle tile, with and without the lighting.               |
-| `Logo.tsx`         | Identity: symbol by default, symbol + wordmark where there is room.           |
+| File               | What it is                                                                                                            |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------- |
+| `mark-geometry.ts` | **The brand data.** The tile's geometry, the brand colours, and where the R sits — the numbers every renderer shares. |
+| `AppIcon.tsx`      | The R tile as an SVG: emerald ground, gloss and rim, the R in champagne.                                               |
+| `Logo.tsx`         | Identity: the R tile by default, tile + wordmark where there is room, a bare champagne R on dark grounds.              |
 
-**The mark is the R-fold** — an R cut from three folded ribbons of light on a
-deep emerald tile. It is drawn, not typed: a letterform would come with a
-typeface's history attached, and this one has none.
+**Why a letter.** A drawn symbol has to be explained; a letter does not. The R
+is set in Fraunces — the same face every heading uses — so the logo and the
+typography are one system, and it needs no rasteriser of its own because the
+browser already has a type renderer.
 
-- **The bowl.** A flat bar across the top, a 90° fold down the right, and a
-  diagonal cut where the arm ends. The fold is where the light lands.
-- **The stem.** The left vertical, cut to a point at the top and turning through
-  a soft heel at the bottom. It is the heaviest of the three, and it anchors the
-  mark on the left.
-- **The leg.** The diagonal that falls to the lower right and ends on a broad
-  flat cut — the one terminal wider than it is deep, and the reason the mark has
-  somewhere to go.
-
-Two decisions do the real work:
-
-- **The bar floats clear of the stem.** There is a gap between them, and the two
-  terminals face each other across it. Close that gap and the mark stops being
-  an R and becomes a solid wedge.
-- **The leg overlaps the stem** rather than stopping on its edge. Touching at a
-  single point would make the mark two marks that happen to be adjacent;
-  overlapping turns them into one folded piece with a crease down the join.
-
-**Filled paths, not strokes.** A stroke cannot express what this mark is made
-of: its terminals are cuts at three different angles, its ribbons taper, and its
-folds are faces rather than outlines. Drawn as strokes all of that collapses
-into the same rounded line and the symbol becomes a tick. So the three outlines
-are authored directly and everything downstream — the React render, the PNG
-encoder, the measurements — reads the same three strings.
-
-**One geometry, six placements:** the app icon, the favicon, the splash and
+**One composition, every placement.** The R tile appears as: the splash and
 sign-in screens (`Logo` with the wordmark), the navigation and dashboard header
-(`Logo compact`), the receipt header (one ink, inlined into the printable file),
-and the empty, error and loading states. Small sizes get `BARE_SCALE` and
-`ICON_SCALE`; the favicon additionally zooms by `SMALL_SCALE` and drops the
-lighting, because a gradient and a gloss are mud at 16 pixels.
+(`Logo compact`), the receipt header (plain serif R, inlined into the printable
+file so it prints from a phone with no network), the empty, error and loading
+states, and the favicon and app icon.
 
-**Three scripts keep it honest.** `scripts/lib/mark-raster.mjs` flattens the
-paths and scanline-fills them with anti-aliased edges — no image library,
-because an icon generator is not worth a dependency. `generate-icons.mjs` uses it
-to write `favicon.ico`, `icon-192.png` and `icon-512.png`, and `verify-mark.mjs`
-uses **the same module** to measure them. That sharing is the point: a verifier
-with its own rasteriser measures a different shape from the one that was written,
-and a test that is confidently wrong is worse than no test.
+### The app icon and favicon
 
-`verify-mark.mjs` runs 26 checks, and three of them exist because this icon
-shipped broken. The squircle distance function was computing `r − 1` instead of
-`r − boundary`, which wrote a 232-byte PNG that was, apart from a single pixel in
-the middle, entirely transparent — the typecheck passed, the lint passed, and
-nobody looking at the build output would have known. So the script now reads the
-**generated files** back: the tile has to be at least 85% opaque, the mark has
-to be measurably lighter than the ground it sits on, and the ICO has to hold
-three frames. The rest check the geometry — coverage, extent, the three open
-gaps, that the mark is exactly two connected pieces, that `GLYPH_BOUNDS` still
-describes the paths it is supposed to describe, and that nothing vanishes at
-16 pixels.
+The raster files in `public/` are rendered from the same composition the React
+`AppIcon` draws: the emerald tile with its gloss and rim, the R set in real
+Fraunces. `scripts/generate-icons.mjs` launches headless Chromium, loads the
+Google-Fonts stylesheet, waits for the face to actually arrive (it refuses to
+write icons with a fallback letterform), and screenshots the SVG per size —
+PNG frames wrapped into `favicon.ico`. There is no image library and no
+geometry pipeline to drift: the pixels come from the browser's own renderer.
+
+`verify-app-icon.mjs` decodes the served files through Chromium's own PNG
+decoder and asserts what must be true of any honest rendering: rounded corners
+are transparent, the letter is a substantial champagne population centred in a
+dark-emerald tile, it reads taller than wide, and the 16px favicon frame still
+holds real letter pixels. The browser acceptance suite (`verify-ui-acceptance`)
+repeats the measurements against the bytes the server actually serves, so the
+verified file and the shipped file cannot be different files.
+
 
 ### The glass material, in three levels
 
@@ -572,30 +546,98 @@ DEFINER`, because they must touch rows clients are deliberately not granted
 
 Every shop-owned table carries `shop_id` and is indexed on it.
 
-| Table                   | Purpose                                     | Key constraints                                                                     |
-| ----------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------- |
-| `profiles`              | One row per auth user (name, phone, avatar) | PK = auth user id                                                                   |
-| `shops`                 | The business                                | unique `slug`, `owner_id`, `location`, `accepts_refunds`, currency default `KES`    |
-| `shop_members`          | Who works in a shop and as what             | unique `(shop_id, user_id)`, role enum `owner                                       | employee` |
-| `employee_access_codes` | Hashed till/PIN codes for staff             | unique `(shop_id, code_hash)`, one active code per member, expiry                   |
-| `shop_access_secrets`   | Per-shop salt for access codes              | RLS on, **zero policies and no grants** — unreachable from any client               |
-| `access_code_attempts`  | Redeem attempts, for throttling             | RLS on, no policies; only the SECURITY DEFINER functions write to it                |
-| `categories`            | Product grouping                            | unique `(shop_id, name)`                                                            |
-| `products`              | Catalogue and stock levels                  | unique `(shop_id, sku)`, `(shop_id, barcode)`, non-negative prices                  |
-| `inventory_movements`   | Append-only stock ledger                    | movement type enum (`stock_in`, `sale`, `refund`, `adjustment`, …), `quantity <> 0` |
-| `sales`                 | Sale headers                                | unique `(shop_id, receipt_number)`, status enum                                     |
-| `sale_items`            | Sale lines with cost snapshot               | `quantity > 0`                                                                      |
-| `payments`              | Money received against a sale               | method enum, `amount > 0`                                                           |
-| `debtors`               | Credit customers and balances               | unique `(shop_id, phone)`, `total_owed`                                             |
-| `debtor_payments`       | Repayments against credit                   | `amount > 0`                                                                        |
-| `expenses`              | Shop spending                               | `amount > 0`                                                                        |
-| `refunds`               | Refund requests and approvals               | status enum, gated by `accepts_refunds`                                             |
-| `refund_items`          | Refunded lines, restock flag                | `quantity > 0`                                                                      |
-| `receipt_settings`      | Per-shop receipt layout                     | unique `shop_id`, paper width 58/80 mm                                              |
-| `receipt_counters`      | Next receipt number per shop                | no client access at all; used only by `next_receipt_number`                         |
+| Table                   | Purpose                                 | Key constraints                                                                                                                                    |
+| ----------------------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `profiles`              | One row per auth user (name, phone)     | PK = auth user id                                                                                                                                  |
+| `shops`                 | The business                            | unique `slug`, `owner_id`, `location`, `accepts_refunds`, currency default `KES`                                                                   |
+| `shop_members`          | Who works in a shop and as what         | unique `(shop_id, user_id)`, role enum `owner                                                                                                      | employee` |
+| `employee_access_codes` | Hashed till/PIN codes for staff         | unique `(shop_id, code_hash)`, one active code per member, expiry                                                                                  |
+| `shop_access_secrets`   | Per-shop salt for access codes          | RLS on, **zero policies and no grants** — unreachable from any client                                                                              |
+| `access_code_attempts`  | Redeem attempts, for throttling         | RLS on, no policies; only the SECURITY DEFINER functions write to it                                                                               |
+| `categories`            | Product grouping                        | unique `(shop_id, name)`                                                                                                                           |
+| `products`              | Catalogue and stock levels              | unique `(shop_id, sku)`, `(shop_id, barcode)`, non-negative prices                                                                                 |
+| `inventory_movements`   | Append-only stock ledger                | movement type enum (`stock_in`, `sale`, `refund`, `adjustment`, …), `quantity <> 0`                                                                |
+| `sales`                 | Sale headers                            | unique `(shop_id, receipt_number)`, status enum                                                                                                    |
+| `sale_items`            | Sale lines with cost snapshot           | `quantity > 0`                                                                                                                                     |
+| `payments`              | Money received against a sale           | method enum, `amount > 0`                                                                                                                          |
+| `debtors`               | Credit customers and balances           | unique `(shop_id, phone)`, `total_owed`                                                                                                            |
+| `debtor_payments`       | Repayments against credit               | `amount > 0`                                                                                                                                       |
+| `expenses`              | Shop spending                           | `amount > 0`                                                                                                                                       |
+| `refunds`               | Refund requests and approvals           | status enum, gated by `accepts_refunds`                                                                                                            |
+| `refund_items`          | Refunded lines, restock flag            | `quantity > 0`                                                                                                                                     |
+| `receipt_settings`      | Per-shop receipt layout                 | unique `shop_id`, paper width 58/80 mm                                                                                                             |
+| `receipt_counters`      | Next receipt number per shop            | no client access at all; used only by `next_receipt_number`                                                                                        |
+| `audit_log`             | Append-only record of sensitive actions | **no write policy at all** — only SECURITY DEFINER triggers insert; see below                                                                      |
+| `consent_records`       | What a user agreed to, and when         | not a FK to `auth.users`, so the evidence outlives the account                                                                                     |
+| `data_requests`         | Access / correction / deletion requests | own row per request, `user_id = auth.uid()`, `shop_id` is SET NULL on shop deletion                                                                |
+| `shop_deletions`        | Tombstone for a shop its owner deleted  | **no FK to `shops` on purpose**; RLS on, zero policies and no grants — the record has to outlive the deletion, and no client may read or forge one |
 
 Enums: `shop_role` (`owner`, `employee`), `member_status`, `movement_type`,
 `sale_status`, `payment_method`, `refund_status`.
+
+### The audit log is not writable from a client
+
+`audit_log` has one policy, and it is a `SELECT` policy. There is deliberately
+no `INSERT`, `UPDATE` or `DELETE` policy for `authenticated`, so a signed-in user
+— including the shop owner — has no database-level permission to forge, edit or
+erase an entry. Rows are written by seven `SECURITY DEFINER` trigger functions
+on `sales`, `refunds`, `inventory_movements`, `expenses`, `shop_members`,
+`employee_access_codes` and `shops`, which run as the table owner.
+
+The same reason governs what goes _into_ a row. `summary` is built from columns
+the schema already holds, `metadata` is restricted to a whitelist of
+non-identifying keys with `name`, `phone`, `email` and `notes` stripped at write
+time, and a sale records that a customer name _was_ captured rather than the
+name itself. An audit trail that quietly became a second copy of the customer
+database would defeat the point of having one.
+
+### Deleting a shop
+
+Every shop-scoped table in the schema cascades from `shops`. One row out means the
+shop's entire financial history goes with it: sales, their lines and payments,
+refunds and refund lines, debtors and what they have paid, products, stock
+movements, expenses, receipt settings and counters, staff memberships, and the
+activity log. There is no soft delete in this schema and there is not going to be
+one — a "deleted" shop whose ledger is still readable is not deleted, it is just
+hidden. So the one operation that destroys accounting records is also the one that
+is guarded hardest.
+
+`delete_shop(p_shop_id, p_confirm_shop_name)` is `SECURITY DEFINER` and checks
+three things in the database, in this order, before a row goes:
+
+1. **The caller is signed in** — otherwise `auth.uid()` is null and nothing else
+   is attempted.
+2. **`shops.owner_id = auth.uid()`.** It reads that column rather than a membership
+   row, so a staff member carrying the `owner` role still cannot delete the shop,
+   and an owner demoted by hand still can.
+3. **The name typed back matches the name held**, case-insensitively and ignoring
+   surrounding space. A client bug, a stale confirm dialog or a crafted request
+   cannot satisfy it by accident, and the comparison happens against a row locked
+   `FOR UPDATE`, so a rename between the check and the delete cannot delete a shop
+   nobody confirmed.
+
+The companion `shop_deletion_preview(p_shop_id)` is owner-only too, before
+anything is counted — an employee cannot use it to read a shop's ledger size — and
+returns fourteen real row counts so the app can show what would be lost instead of
+the word "permanent".
+
+**What survives.** The owner's account: `shops.owner_id → auth.users` is ON DELETE
+RESTRICT and nothing here deletes from `auth.users`, so the owner stays signed in
+and can open another shop immediately. A staff member loses the membership and
+keeps their account. `data_requests` rows survive with `shop_id` set to null, and
+the screen says so rather than letting an owner assume everything vanished.
+
+**The tombstone.** `audit_log.shop_id` cascades, so an audit entry written for a
+shop being deleted is deleted with it — useless as evidence for the one action
+where evidence matters most. So `delete_shop` writes a row into `shop_deletions`,
+a table with **no foreign key to `shops`**, holding the shop's own name, how many
+of each kind of record it held, and who deleted it. No customer data goes in it.
+It is not readable by any client: an owner must not be able to enumerate what other
+shops have been deleted, and a client that could write it could forge one.
+
+`verify-shop-deletion.mjs` drives all of this from real signed-in clients — an
+employee, a stranger, an anonymous caller and the owner — and then inspects the
+aftermath with project-owner SQL rather than trusting the database it is testing.
 
 ---
 
@@ -615,11 +657,13 @@ bun tsc -b --noEmit       # typecheck
 bun scripts/verify-auth-flow.mjs        # sign-up, profile trigger, login, RLS
 bun scripts/verify-business-engine.mjs  # the whole trading flow, end to end
 bun scripts/verify-staff-access.mjs     # access codes, joining, and staff limits
+bun scripts/verify-shop-deletion.mjs    # owner shop deletion: guards, cascade, tombstone
 bun scripts/verify-ui-acceptance.mjs    # the same flow, driven through the real UI
 bun scripts/verify-float-bar.mjs        # the floating bar's real geometry
 bun scripts/verify-glass.mjs            # the glass system's shape, statically
 bun scripts/verify-glass-ui.mjs         # the glass in a browser, and its contrast
-bun scripts/verify-mark.mjs             # the symbol's geometry
+bun scripts/verify-contrast.mjs         # WCAG AA on rendered pixels, every screen
+bun scripts/verify-app-icon.mjs         # the R-tile icons, decoded and measured
 bun scripts/verify-csv.mjs              # the CSV writer, read back through a real parser
 bun scripts/verify-seo.mjs              # title, description, Open Graph, JSON-LD, alt text
 bun scripts/cleanup-test-shops.mjs      # remove the shops those runs created (--delete)
@@ -631,6 +675,15 @@ refused rather than guessed, a closed shop refuses new staff, a suspended member
 cannot rejoin through the code, regenerating retires the old code immediately, and
 an employee can neither read another shop's rows nor write into it, nor read the
 shop's report, its access codes, or its team.
+
+`verify-shop-deletion.mjs` covers the one operation that destroys records: an
+employee, a stranger and an anonymous caller are each refused, the owner is
+refused until the shop's own name is typed back, the preview reports the rows that
+are really there, and after a successful deletion every child row is gone — sales,
+lines, payments, refunds, refund lines, debtors, debtor payments, products, stock
+movements, memberships and the activity log — while the owner's account, the staff
+member's account and a tombstone holding the shop's name and its counts all
+survive.
 
 `cleanup-test-shops.mjs` exists because these scripts build _real_ shops with
 real rows — the only honest way to test them. A shop outlives the throwaway user
@@ -650,9 +703,23 @@ than merely rendering: it drives the deployed app in Chromium (Pixel-class
 viewport, touch enabled) through sign-up → shop setup → product → cash sale →
 receipt → credit sale → debtor → partial repayment → expense → refund, checking
 the stock, ledger and balances that appear on screen, then repeats the read
-half in a second shop to confirm nothing leaks across. It needs Playwright's
-Chromium; it is deliberately **not** a dependency of the app, so install it
-separately rather than adding it to `package.json`:
+half in a second shop to confirm nothing leaks across.
+
+**It also checks that the app icon it is served is the app icon that was
+verified** — by reading the pixels rather than trusting the file name. That
+assertion found a real problem: it had been sampling three fixed points in the
+icon and describing the _previous_ drawing, so when the icon changed it kept
+reporting confident numbers about whatever had moved underneath those points. It
+now knows no coordinates at all. It finds the artwork's bounding box from the
+pixels and asserts its shape — inside the tile with a margin, taller than wide, a
+broad flat top edge, a run of bare tile with artwork on both sides, and a turned
+corner that is a minority of the ink. Finding the box takes two passes, because
+one threshold cannot do it: the tile's gloss reaches a blue channel of 193 while
+the artwork's dimmest pixels sit at 155, so a coarse pass locates the artwork and
+a fine pass measures it inside that box.
+
+It needs Playwright's Chromium; it is deliberately **not** a dependency of the
+app, so install it separately rather than adding it to `package.json`:
 
 ```bash
 bun add --cwd /tmp/pwtest playwright   # or: npx playwright install chromium

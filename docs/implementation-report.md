@@ -1,11 +1,18 @@
 # RAVQEN — Implementation report
 
-Eleven points, covering what was audited, what was broken and fixed, the security
-model, the brand symbol, the navigation rebuild, the design system, mobile-first
-work, the desktop adaptation, the CSV export, being found and being readable, and
-the two items that need the owner's own hands.
+Thirteen points, covering what was audited, what was broken and fixed, the security
+model, the brand symbol and app icon, the navigation rebuild, the design system,
+mobile-first work, the desktop adaptation, the CSV export, being found and being
+readable, the production-readiness and privacy pass, owner-initiated shop deletion,
+and the two items that need the owner's own hands.
 
-Status: deployed and active on `ravqen.freebuff.app`. All suites green.
+Status: live on `ravqen.freebuff.app`. The most recent work — the R-tile identity,
+and owner shop deletion — is applied to the database, verified against it, and
+verified through a production build in a browser: `verify-ui-acceptance` 165/165,
+`verify-float-bar` 54/54, `verify-glass-ui` 16/16, `verify-contrast` 45/45, with
+no uncaught page errors and no console errors. The one step not done in this
+session is the deploy itself, which only the Freebuff deploy tool can perform;
+see §11.
 
 ---
 
@@ -149,58 +156,40 @@ text and passes.
 
 ---
 
-## 6. The symbol, and the icon that shipped blank
+## 6. The symbol is the R tile, and the app icon is the same composition
 
-The supplied R-fold — an R cut from three folded ribbons of light on a deep
-emerald tile — is now the product's mark throughout, and it is **used as drawn**.
-It was not redrawn, re-weighted or "improved"; the work was making one geometry
-serve every placement it has to appear in.
+The identity is a **simple typographic R** — the display face's R in champagne
+on the deep-emerald tile. The owner chose the letter over the drawn mark that
+preceded it, and the choice is applied everywhere rather than mixed: the splash
+and sign-in screens, the headers, the receipt, the empty and loading states, the
+favicon and the app icon.
 
-**Why filled paths, not strokes.** The mark's terminals are cuts at three
-different angles, its ribbons taper, and its folds are faces rather than
-outlines. A stroke can express none of that: drawn as strokes it collapses into
-one rounded line and the symbol becomes a tick. So `mark-geometry.ts` holds three
-authored outlines, and the React render, the PNG encoder and the measurements
-all read those same three strings.
+**Why the mark changed again.** The previous drawn symbol was measured and
+defended at length, but an identity is not a measurement: the owner looked at
+both and preferred the letter. That preference is the brief. `Logo.tsx` now
+renders a champagne R in Fraunces on a `gradient-ink` emerald tile (the utility
+was restored to `styles.css` for it), `AppIcon.tsx` draws the same composition
+as an SVG with gloss and rim lighting, and `mark-geometry.ts` keeps only the
+numbers every renderer shares — tile geometry, brand colours, R placement.
 
-**One geometry, six placements.** The app icon, the favicon, the splash and
-sign-in screens, the navigation and dashboard header, the receipt header (one
-ink, inlined into the printable file), and the empty, error and loading states.
-Two scales come from the geometry file — `ICON_SCALE` for the tiled icon and
-`BARE_SCALE` for the mark on its own — so a 16px favicon and a 512px manifest
-icon cannot disagree about how big the symbol sits on the tile.
+**Receipt.** The printable file carries a plain serif R set inline — no webfont
+and no image, because a receipt has to print from a phone with no network. On a
+thermal roll the letter is what survives; gradients are not.
 
-**The icon was blank, and nothing noticed.** The generator's superellipse
-distance function computed `r − 1` instead of `r − boundary`, so the tile's fill
-test only ever passed for a single pixel in the middle. The output was a 232-byte
-PNG that was, apart from that pixel, entirely transparent — a completely blank
-favicon, a blank app icon, and no signal from any of it: the typecheck passed,
-the lint passed, the build passed, and the old verification script was measuring
-_strokes_, which had never been affected.
+**Icons.** The R is typography, so the raster pipeline changed shape: there is
+no geometry rasteriser to share any more. `generate-icons.mjs` renders the same
+SVG through headless Chromium with the real Fraunces loaded from Google Fonts
+(it refuses to write anything if the face fails to arrive, so no fallback
+letterform can ship), screenshots it at 16/32/48/192/512, and wraps the frames
+into `favicon.ico`. `verify-app-icon.mjs` decodes the written files through
+the browser's own PNG decoder and asserts the invariants — transparent rounded
+corners, a substantial champagne population centred on a dark-emerald tile,
+taller than wide, still legible at 16px — and `verify-ui-acceptance` repeats the
+measurements against the bytes the server serves.
 
-Two things came out of that, and both are the reason to record it:
+`verify-mark.mjs` (the drawn mark's geometry suite) was retired with the
+drawing; its checks described a shape that no longer exists.
 
-1. **The verifier now rasterises with the same module the generator writes
-   with.** `scripts/lib/mark-raster.mjs` is shared. A verifier with its own
-   rasteriser measures a different shape from the one that was written, and a
-   test that is confidently wrong is worse than no test.
-2. **It now reads the generated files back.** The tile must be at least 85%
-   opaque, the mark must be measurably lighter than the ground, the ICO must
-   hold three frames. Those four checks are aimed squarely at the failure that
-   got through, and they would have caught it on the first run.
-
-**26 checks** in total, covering coverage, extent and centring; the three open
-gaps that keep it an R rather than a wedge; that the mark is exactly **two**
-connected pieces (the bar floats clear of the stem — close that gap and the
-symbol stops being a letter); that `GLYPH_BOUNDS` still describes the paths it
-claims to; that nothing vanishes at 16 pixels; and the file checks above.
-
-**The rest of the brief was already in place** and was re-verified rather than
-rebuilt: the three glass levels, the floating navigation with its role-aware tabs
-and More sheet, the interaction system, and mobile-first layout with desktop
-adaptation. §7 to §9 cover those.
-
----
 
 ## 7. The floating navigation — architecture and product decisions
 
@@ -328,18 +317,44 @@ navigation landmark.
 
 **Verification, all green:**
 
-| Suite                                            | Result      |
-| ------------------------------------------------ | ----------- |
-| `verify-ui-acceptance` (real browser, live site) | **115/115** |
-| `verify-float-bar` (real geometry)               | **54/54**   |
-| `verify-glass-ui` (composited contrast)          | **16/16**   |
-| `verify-mark` (geometry + the icon files)        | **26/26**   |
-| `verify-glass` (tokens, utilities, minifier)     | **30/30**   |     | `verify-csv` (a real parser, not the writer) | **32/32** |
-| `verify-seo` (strings, schema, every `<img>`)    | **69/69**   |
-| `verify-business-engine`                         | **47/47**   |
-| `verify-staff-access`                            | **33/33**   |
-| `verify-auth-flow`                               | **6/6**     |
-| `tsc -b --noEmit` / eslint / `build`             | 0 errors    |
+| Suite | Result |
+| ------------------------------------------------- | ----------- |
+| `verify-ui-acceptance` (real browser, production build) | **165/165** |
+| `verify-float-bar` (real geometry) | **54/54** |
+| `verify-glass-ui` (composited contrast) | **16/16** |
+| `verify-contrast` (rendered pixels, WCAG AA) | **45/45** |
+| `verify-app-icon` (the R-tile icons, decoded) | **10/10** |
+| `verify-shop-deletion` (owner deletion, guards) | **20/20** |
+| `verify-glass` (tokens, utilities, minifier) | **30/30** |
+| `verify-csv` (a real parser, not the writer) | **32/32** |
+| `verify-seo` (strings, schema, every `<img>`) | **69/69** |
+| `verify-business-engine` | **47/47** |
+| `verify-staff-access` | **33/33** |
+| `verify-auth-flow` | **6/6** |
+| `tsc -b --noEmit` / eslint / `build` | 0 errors |
+
+**Every row above was re-run after the R-tile identity change and shop deletion,
+against a production build of the changed code.** The browser suites were run
+against `dist/` served exactly as hosting serves it.
+
+The numbers that moved with the identity change: `verify-app-icon` was rewritten
+for the R tile (10/10) and the acceptance suite's icon block now measures the
+letter from its colour. `verify-float-bar` 54/54, `verify-glass-ui` 16/16,
+`verify-contrast` 45/45, `verify-shop-deletion` 20/20 did not move. `tsc -b
+--noEmit` 0 errors, eslint 0 errors.
+
+**The acceptance suite had three failures, and all three were its own fault.** It
+sampled three fixed points in the icon — the middle of the left page, the gutter,
+the marker — and asserted the open-ledger drawing was still there. The drawing had
+changed, so the probes were measuring whatever had moved underneath them, and
+reporting confident numbers about it. That is the same failure the two blank-icon
+bugs were, arriving through a third door: **a test that hard-codes a description
+of a drawing rather than a property of it.**
+
+The replacement reads no coordinate at all: it finds the artwork's bounding box
+from the pixels and asserts its shape. That lesson carried forward — the current
+suite locates the R from its colour rather than a coordinate, and the same
+approach survives later identity changes intact.
 
 **One test flake, fixed properly.** The acceptance run first reported 92/94, with
 the two debtor checks failing. Nothing was wrong with the product: the next
@@ -459,11 +474,12 @@ and the single `<h1>`. Both lengths are inside what a result shows: past roughly
 60 characters the title is cut and past the description's limit it is truncated
 mid-sentence, and neither truncation announces itself.
 
-`twitter:card` is `summary`, not `summary_large_image`. The only large image the
-product ships is square, and a square forced into a 1.91:1 card is a slice of the
-mark rather than the mark. A small correct thumbnail is worth more than a large
-wrong one — and the honest fix, a purpose-drawn 1200×630 banner, is noted below
-as the thing to do when there is artwork to put in it.
+`twitter:card` is `summary`, not `summary_large_image`. The only large artwork
+the product has is the app icon, and it is square: forced into a 1.91:1 card it
+would be a crop of the ledger rather than the ledger. A small correct thumbnail is
+worth more than a large wrong one. A purpose-drawn 1200×630 banner is the real
+fix, and it is a drawing nobody has made yet — so it is left undone rather than
+faked with a crop.
 
 ### The structured data
 
@@ -593,7 +609,250 @@ and every social tag are absolute, that the JSON-LD parses into a
 invented rating, and that every image on the landing page, the sign-in page and
 the signed-in workspace carries non-empty `alt` text. It also fails on any
 uncaught error during a fresh load, which is the check that would catch a
-hydration regression: **158/158**, up from 115.
+hydration regression: **164/164**, up from 115.
+
+It also checks the app icon the way only a browser can: it fetches
+`/icon-512.png`, decodes it through the browser's own PNG decoder, and samples
+the drawing's 24-unit coordinates — the left page is lit, the gutter is bare tile
+for the book's whole height, the marker is pale ink. Told apart from the tile's
+own gloss by temperature, because the gloss is pale too.
+
+---
+
+## 12. Production readiness, privacy and legal
+
+A twenty-part audit of the deployed product: what it collects, who can reach it,
+what it promises, and whether the code actually does those things. This section
+is the engineering record. The seven-part summary that goes with it is in
+[`production-readiness-report.md`](production-readiness-report.md).
+
+**This is a technical compliance and readiness pass, not legal advice.** Nothing
+below makes RAVQEN's operators compliant with the Data Protection Act 2019, and
+nothing below is a claim that the company cannot be sued. Several clauses are
+marked as drafts that a qualified Kenyan lawyer must settle; that marking is the
+deliverable, not a disclaimer attached to finished work.
+
+### What the audit found that was actually wrong
+
+| Finding                                                            | Severity | What happened                                                                                                                                                                                                       |
+| ------------------------------------------------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| No audit trail of any kind                                         | high     | A sale named a user; a stock movement named nothing; a settings change left no trace                                                                                                                                |
+| A revoked grant silently un-revoked a grant                        | high     | `REVOKE ALL … FROM authenticated` ran _after_ `GRANT SELECT … TO authenticated`, so the activity log and consent history would have loaded permanently empty — reading as “no activity yet” rather than as an error |
+| `profiles.avatar_url` collected nothing and was never written      | low      | Dead personal-data column; documented rather than dropped, because dropping it would fork the generated types                                                                                                       |
+| `ratls_auto_enable` executable by `anon`                           | none     | It is an **event trigger**; it fires on DDL and cannot be invoked by a client. Confirmed by reading `pg_get_functiondef`                                                                                            |
+| A `TODO_` business value could print as a real registration number | high     | Fixed structurally: `isPlaceholder()` keys on the string itself, and `ConfigValue` renders a visible ⚠ chip — there is no code path that prints a placeholder as though it were real                                |
+
+The second row is the one worth dwelling on. It is the exact failure mode a
+compliance feature produces when nobody runs it: the screen loads, shows
+“Nothing logged yet”, and is believed.
+
+### The audit log: append-only by construction
+
+`audit_log` has **one** policy, and it is a `SELECT` policy. There is no
+`INSERT`, `UPDATE` or `DELETE` policy for `authenticated`, which means no
+signed-in user — including the shop owner — has a database-level permission to
+forge, edit or erase an entry. Writes come from seven `SECURITY DEFINER`
+trigger functions.
+
+Verified against the live database in a rolled-back transaction:
+
+| Action                                | Rows added | Entry written                                  |
+| ------------------------------------- | ---------- | ---------------------------------------------- |
+| `INSERT INTO expenses`                | 0 → 1      | `expense.created` · “Expense of 1.00 recorded” |
+| `INSERT INTO shop_members`            | 1 → 2      | `employee.joined`                              |
+| Flip `shops.accepts_refunds`          | 2 → 3      | `shop.refunds_changed` · “Refunds switched on” |
+| Flip `shops.employee_joining_enabled` | 3 → 4      | `shop.joining_changed`                         |
+| `UPDATE` + `DELETE` on one expense    | 4 → 6      | `expense.updated`, `expense.deleted`           |
+
+**What is deliberately not logged.** `summary` is composed from columns the
+schema already holds. `metadata` is passed through a whitelist that strips
+`name`, `phone`, `email`, `notes` and `customer_name` at write time, and a sale
+records `customer_name_captured: true` rather than the name. An audit trail that
+became a second copy of the customer database would defeat the reason for having
+one, and it would be personal data with a longer retention window than the
+original.
+
+### What the product does not collect, and says so
+
+No analytics SDK, no advertising or cross-site pixel, no session recorder, no
+fingerprinting, no behavioural profiling, no A/B tooling, and no non-essential
+cookies of any kind. The only browser storage is the Supabase session and the
+chosen shop, in `localStorage`.
+
+Because there is nothing non-essential to consent to, **there is no cookie
+banner** — a banner asking somebody to agree to technology that does not run is
+theatre, and the Privacy Policy says this in as many words. Equally, there is no
+“analytics consent” toggle: inventing a switch for a collector that does not
+exist would be a control that appears to protect something it cannot.
+
+### Consent, and what it does not cover
+
+Sign-up asks for one thing: a **required, unticked** acceptance of the terms and
+the privacy policy, with both linked in the sentence. There is no pre-checked
+box, because a pre-checked box records a fact about the form rather than about
+the person. Optional marketing consent is deliberately _not_ bundled into that
+checkbox — bundling is what makes it not optional — and product-update emails
+are off until switched on in Settings.
+
+Consent is append-only: a withdrawal is a new row with `granted = false`, not an
+update, so the history of what was agreed and when is never rewritten. On
+account deletion the `user_id` is set to `NULL` and a salted `subject_hash`
+remains, so the record that consent happened still exists and still cannot be
+read back into a person.
+
+### Deletion: what it removes, and what it refuses to remove
+
+`delete_my_account()` removes the profile, the team memberships and any minted
+access codes. It **refuses** — in the database, naming the shops — while the
+caller still owns a shop.
+
+That refusal is the design. A shop's sales, refunds, expenses, stock movements
+and debtor balances are the business's accounting record. Deleting them because
+the person who happened to own the shop clicked a button would be a data
+protection failure in the other direction, and it is not recoverable. The
+Settings screen says all of this _before_ the button, not in a confirmation
+dialog after it.
+
+That refusal pointed at a door that did not exist. It now does — see §13.
+
+### Dependencies: thirty packages removed
+
+`recharts`, `embla-carousel-react`, `react-day-picker`, `react-resizable-panels`,
+`cmdk`, `input-otp`, `react-hook-form`, `@hookform/resolvers`, `zod`, `date-fns`
+and twenty Radix primitives were installed and imported by nothing that any
+route reaches. Thirty-five shadcn wrapper files were deleted along with them;
+`bun install` reported `Removed: 30`. Nothing in the app changed, because
+nothing in the app used them.
+
+What remains sends data nowhere except Supabase and Google Fonts, and both are
+named in the Privacy Policy's processor table.
+
+### Accessibility and contrast
+
+- A **skip link** now exists. The app is a single column of links, so a keyboard
+  user previously tabbed through the whole navigation on every screen.
+- A `prefers-reduced-motion` block collapses every CSS animation and transition.
+  `FloatingNav` already honoured `useReducedMotion()`; the spinners and press
+  states did not. The spinner is deliberately _not_ removed — a loading
+  indicator that stops moving stops meaning “still working” — it becomes an
+  opacity hold, and the 12-second honest “this is taking too long” state still
+  fires.
+- The staff role badge in the shop bar was `text-[11px] text-muted-foreground`
+  on the glass header and measured **3.41:1** — below the 4.5:1 that small text
+  needs. It is now `text-xs font-medium text-foreground`, with hierarchy coming
+  from size and weight rather than from dropping the contrast.
+- `scripts/verify-contrast.mjs` measures contrast from **screenshots of rendered
+  pixels**, not from token values. This project has no image library, so the
+  browser decodes each crop and splits it into ink and surface by luminance
+  order, which survives antialiasing, subpixel rendering and the glass gradient.
+
+### The verifier had three bugs that all looked like results
+
+This is the part worth reading twice, because a contrast suite that cannot tell
+“unreadable” from “measured nothing” is worse than no suite. Three separate
+bugs produced a number that looked like a finding:
+
+1. **A viewport `clip` is in page coordinates.** The crops were blank, and a
+   blank crop measures exactly **1.00:1** — which reads as a catastrophic
+   contrast failure on every single element. Replaced with per-element
+   screenshots.
+2. **Choosing the ink end of the histogram from an “is the page dark?” flag is
+   backwards.** On a light page the glyphs are the _darkest_ pixels. This
+   version also reported 1.00:1 for everything. The direction is now derived
+   from the measured surface, which is correct in both themes and has no
+   parameter that can be passed wrong.
+3. **Probing for occlusion before Playwright scrolled the element into view**
+   blamed the app’s own floating navigation, and separately let two real labels
+   through at 1.32:1 and 2.37:1 when the sticky header was still painting over
+   them. A foreground colour cannot really come out at 2:1, so the guard now
+   asks whether the crop contains the colour the element claims to be painted
+   in — and only when the ratio would otherwise fail, because running it
+   unconditionally produced false alarms on buttons where the glyphs are a
+   small minority of the pixels.
+
+A 1.00:1 result is now reported as a broken measurement, never as a pass or a
+fail. A disabled control that cannot be measured is reported and skipped rather
+than counted, because WCAG exempts it and the POS’s disabled “Take payment”
+button would otherwise mean the suite could never pass with an empty basket.
+
+**Result: 15 screens, every measured text node meets its WCAG 2.2 threshold,
+lowest 5.43:1; text on glass between 5.75:1 and 16.63:1.**
+
+---
+
+## 13. Deleting a shop — the one operation that destroys records
+
+Every shop-scoped table in the schema cascades from `shops`. One row out means the
+shop's entire financial history goes with it: sales, their lines and payments,
+refunds and refund lines, debtors and what they have paid, products, stock
+movements, expenses, receipt settings and counters, staff memberships, and the
+activity log. There is no soft delete in this schema and there is not going to be
+one — a "deleted" shop whose ledger is still readable is not deleted, it is just
+hidden. So the most destructive thing the product does is also the thing with the
+most guards around it.
+
+**Three guards, all in the database, all before a row moves.**
+`delete_shop(p_shop_id, p_confirm_shop_name)` is `SECURITY DEFINER` and checks:
+the caller is signed in; `shops.owner_id = auth.uid()`; and the name typed back
+matches the name held. Each of those is worth a sentence about _why_:
+
+- **Ownership reads `shops.owner_id`, not a membership row.** A staff member
+  carrying the `owner` role cannot delete the shop, and an owner demoted by hand
+  still can. One column, one meaning.
+- **The name comparison is case-insensitive and trims space**, because a
+  shopkeeper typing on a phone keyboard should not lose their shop to a trailing
+  space. It is not a weakened guard: the database compares the string it is given
+  against the string it holds, so a client bug, a stale confirm dialog or a
+  crafted request cannot satisfy it by accident.
+- **The row is locked `FOR UPDATE` before it is read.** Without the lock, a rename
+  landing between the check and the delete would delete a shop nobody confirmed.
+
+**The screen counts, it does not estimate.** `shop_deletion_preview` is owner-only
+_before_ anything is counted, so an employee cannot use it to read a shop's ledger
+size. It returns fourteen real row counts, and the Settings panel lists only the
+non-zero ones — a list padded with zeros is a list a person stops reading before
+reaching the one number they needed, which is how many debtors still owe them
+money. The query only runs once the panel is opened.
+
+**What survives is stated as plainly as what does not.** The owner's account
+survives: `shops.owner_id → auth.users` is ON DELETE RESTRICT and nothing here
+touches `auth.users`, so they stay signed in and can open another shop straight
+away. A staff member loses the membership and keeps their account. `data_requests`
+rows survive with `shop_id` set to null, and the screen says so — an owner
+deciding between deleting now and in six months should not be doing it on a false
+idea that everything disappears.
+
+**The tombstone, and why `audit_log` could not do it.** `audit_log.shop_id`
+cascades, so an audit entry written for a shop being deleted is deleted with it —
+useless as evidence for the one action where evidence matters most. So
+`delete_shop` writes into `shop_deletions`, a table with **no foreign key to
+`shops`**: the shop's own name, how many of each kind of record it held, and who
+deleted it. No customer data goes in it. It is not readable by any client — an
+owner must not be able to enumerate what other shops have been deleted, and a
+client that could write it could forge one.
+
+**Storage is cleaned up by hand, and allowed to fail.** Storage has no foreign
+keys, so the shop's logo, product photos and expense receipts are still in the
+buckets when the RPC returns. `removeShopFiles()` walks all three. A failure there
+is reported as a count the client could not establish, **never as a failed
+deletion**: the rows are already gone and no retry brings them back, so calling it
+a failure would be a lie about the only irreversible action in the product.
+
+**`verify-shop-deletion.mjs`, 20 checks, all passing.** It drives the guards from
+real signed-in clients the way a careless or compromised one would — an employee,
+a stranger, an anonymous caller, and the owner six times with the wrong
+confirmation — and then inspects the aftermath with project-owner SQL rather than
+trusting the database it is testing: every child row gone, both accounts intact,
+the staff member's access gone, the tombstone written, and the tombstone table
+unreadable from a client.
+
+It also found a real ordering bug on the way. `audit_log`'s foreign key meant shop
+deletion was **impossible**: Postgres runs cascading deletes after the parent row
+is gone, so the `shop_members` trigger fired for a shop that no longer existed and
+its audit INSERT failed on the FK. `audit_write()` now writes its row as a
+conditional `SELECT … WHERE EXISTS (SELECT 1 FROM shops …)`, making the existence
+check and the insert one atomic statement, so the row is skipped rather than
+racing a deletion it cannot win.
 
 ---
 

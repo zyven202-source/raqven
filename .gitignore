@@ -27,6 +27,11 @@ isolate
 supabase/.temp/
 *.tsbuildinfo
 
+# Local environment files (values are workspace secrets, never versioned)
+.env
+.env.local
+.env.*.local
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

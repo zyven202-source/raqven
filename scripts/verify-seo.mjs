@@ -196,9 +196,10 @@ check(
 
 log(`\n=== The files the tags point at ===`);
 
-// The ICO floor is lower than the PNG floor on purpose: 588 bytes is a correct
-// three-frame 16/32/48 icon, and the size that would catch a blank one is
-// already measured properly in `verify-mark.mjs`, which decodes the pixels.
+// The ICO floor is lower than the PNG floor on purpose: a three-frame 16/32/48
+// icon of flat artwork compresses to about 1.7 kB, and a blank one is only a few
+// hundred bytes smaller — which is why the check that would catch a blank icon
+// is not this one. `verify-app-icon.mjs` decodes the pixels and measures them.
 for (const [file, minimum] of [
   ["public/icon-512.png", 20_000],
   ["public/icon-192.png", 5_000],

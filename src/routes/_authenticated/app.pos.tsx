@@ -596,6 +596,21 @@ function PosPage() {
                   The full {formatMoney(totals.total, currency)} is recorded as owed. This sale is
                   not marked as paid — take repayments from the Debtors screen.
                 </p>
+                {/*
+                  The shop is about to record a real person&rsquo;s name and phone
+                  number. One line saying what happens to it, at the moment it is
+                  collected, is the difference between a book the shop owns and a
+                  list of people the shop was handed. It is not a consent box: it
+                  is the shop telling its own customer why the shop is writing
+                  this down, which is the shop&rsquo;s obligation, not a click RAVQEN
+                  can collect consent for on someone else&rsquo;s behalf.
+                */}
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  This name and number are kept as {activeShop?.name ?? "this shop"}&rsquo;s record
+                  of who owes the money, visible to everyone in the shop and kept for as long as the
+                  balance is outstanding. Nothing is sent anywhere and nothing is used to contact
+                  them. Delete the account from Debtors once the balance is settled.
+                </p>
               </div>
             ) : null}
 

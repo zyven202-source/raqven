@@ -69,6 +69,19 @@ function DebtorsPage() {
         }
       />
 
+      {/*
+        A debtor record is personal data about a real person, and this screen is
+        the shop&rsquo;s own notice of what it is holding and why. The shop — not
+        RAVQEN — is the party that decided to collect it, so this is the shop
+        explaining itself to its own customer, not a consent box RAVQEN could
+        collect on someone else&rsquo;s behalf.
+      */}
+      <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
+        A name and phone number on this screen is {activeShop?.name ?? "your shop"}&rsquo;s record
+        of who owes money. Everyone in the shop can see it, nothing is sent to RAVQEN&rsquo;s
+        servers beyond this shop&rsquo;s own database, and it stays until you delete the record.
+      </p>
+
       {owing.length > 0 ? (
         <div className="glass-1 mb-4 rounded-xl p-4 backdrop-blur-2xl backdrop-saturate-150">
           <p className="text-sm text-muted-foreground">Still owed to you</p>

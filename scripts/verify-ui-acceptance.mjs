@@ -204,6 +204,14 @@ try {
   await page.fill("#signup-phone", "0712000000");
   await page.fill("#signup-email", EMAIL);
   await page.fill("#signup-password", PASSWORD);
+  // The terms/privacy box is required and is deliberately not pre-ticked, so a
+  // real person has to tick it. A suite that skipped it would be testing a
+  // form no user ever sees.
+  await page.check("#signup-accepted");
+  check(
+    "terms must be accepted before the form will submit",
+    await page.evaluate(() => document.querySelector("#signup-accepted")?.checked === true),
+  );
   await page.click('button[type="submit"]');
   await page.waitForURL(/onboarding|dashboard/, { timeout: 40_000 }).catch(() => {});
   check("sign up lands on setup", /onboarding|dashboard/.test(page.url()), page.url());
@@ -718,6 +726,7 @@ try {
     await staffPage.fill("#signup-name", "Staff Member");
     await staffPage.fill("#signup-email", STAFF_EMAIL);
     await staffPage.fill("#signup-password", PASSWORD);
+    await staffPage.check("#signup-accepted");
     await staffPage.click('button[type="submit"]');
     await staffPage.waitForURL(/onboarding/, { timeout: 40_000 }).catch(() => {});
     await staffPage
@@ -1058,6 +1067,127 @@ try {
   check(
     "it invents no ratings or prices",
     schema !== null && !/aggregateRating|"review"|"offers"|"price"/.test(JSON.stringify(schema)),
+  );
+
+  // -------------------------------------------------------------- app icon
+  //
+  // The icon is written by a script rather than drawn by hand, and the only thing
+  // that proves the file the browser is served is the artwork that was verified
+  // is to look at it through the browser's own PNG decoder.
+  //
+  // Nothing below samples a fixed point. An earlier version named three of them
+  // — the middle of the left page, the gutter, the marker — and they described
+  // the open-ledger icon that this replaced. They kept passing for a while
+  // afterwards by measuring whatever had since moved underneath them, which is
+  // the failure mode this block now avoids: the artwork's bounding box is found
+  // from the pixels, and the assertions are about its shape.
+  const icon = await seoPage.evaluate(async () => {
+    const image = new Image();
+    image.src = new URL("/icon-512.png", location.href).href;
+    await image.decode();
+    const canvas = document.createElement("canvas");
+    canvas.width = image.naturalWidth;
+    canvas.height = image.naturalHeight;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return null;
+    ctx.drawImage(image, 0, 0);
+    const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    //
+    // The letter is found from its colour, not from a coordinate: champagne is
+    // the one pale-warm population on a dark emerald tile.
+    const isLetter = (i) => {
+      const r = data[i];
+      const g = data[i + 1];
+      const b = data[i + 2];
+      return data[i + 3] > 128 && r > 170 && g > 150 && b > 100 && b <= g;
+    };
+    //
+    // What must be true of the R tile is measured, not pointed at: two
+    // populations (pale-warm letter, dark tile), the letter's bounding box and
+    // centroid, and the tile's lightness range. Nothing below knows a
+    // coordinate.
+    const size = canvas.width;
+    let letter = 0;
+    let tile = 0;
+    let lx = 0;
+    let ly = 0;
+    let minX = size;
+    let maxX = -1;
+    let minY = size;
+    let maxY = -1;
+    const tileLights = [];
+    for (let y = 0; y < size; y += 1) {
+      for (let x = 0; x < size; x += 1) {
+        const i = (y * size + x) * 4;
+        if (data[i + 3] <= 128) continue;
+        if (isLetter(i)) {
+          letter += 1;
+          lx += x;
+          ly += y;
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        } else {
+          tile += 1;
+          tileLights.push(
+            Math.round(0.2126 * data[i] + 0.7152 * data[i + 1] + 0.0722 * data[i + 2]),
+          );
+        }
+      }
+    }
+    tileLights.sort((a, b) => a - b);
+    const tileDark = tileLights[Math.floor(tileLights.length * 0.1)] ?? null;
+    const tileBright = tileLights[Math.floor(tileLights.length * 0.95)] ?? null;
+    return {
+      width: size,
+      height: canvas.height,
+      letter,
+      tile,
+      centre: letter ? [lx / letter, ly / letter] : null,
+      box: letter ? { w: maxX - minX, h: maxY - minY } : null,
+      corners: [
+        [0, 0],
+        [size - 1, 0],
+        [0, size - 1],
+        [size - 1, size - 1],
+      ].map(([x, y]) => data[(y * size + x) * 4 + 3]),
+      tileDark,
+      tileBright,
+    };
+  });
+  check(
+    "the browser can decode the served app icon",
+    icon !== null && icon.width === 512 && icon.height === 512,
+    icon ? `${icon.width}x${icon.height}` : "undecodable",
+  );
+  check(
+    "the tile's corners are transparent (rounded, not a full-bleed square)",
+    (icon?.corners ?? []).every((a) => a < 40),
+    `corner alphas ${icon?.corners?.join(", ") ?? "?"}`,
+  );
+  check(
+    "the R is present and substantial",
+    (icon?.letter ?? 0) > 3000,
+    `${icon?.letter ?? 0} champagne px`,
+  );
+  check("the tile is present behind it", (icon?.tile ?? 0) > 100000, `${icon?.tile ?? 0} tile px`);
+  check(
+    "the tile is dark emerald and the letter pale",
+    (icon?.tileDark ?? 255) < 110 && (icon?.tileBright ?? 0) > 150,
+    `tile dark ${icon?.tileDark ?? "?"}, bright ${icon?.tileBright ?? "?"}`,
+  );
+  check(
+    "the R is centred in the tile",
+    icon?.centre != null &&
+      Math.abs(icon.centre[0] - 256) < 30 &&
+      Math.abs(icon.centre[1] - 256) < 30,
+    icon?.centre ? `centre ${icon.centre.map((n) => Math.round(n)).join(", ")}` : "none",
+  );
+  check(
+    "the R reads as a letter, taller than wide",
+    icon?.box != null && icon.box.h >= icon.box.w,
+    icon?.box ? `${icon.box.w}x${icon.box.h}` : "none",
   );
 
   // ------------------------------------------------------------------- alt
