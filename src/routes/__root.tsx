@@ -9,7 +9,9 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
+import { OfflineBanner, UpdateBanner } from "@/components/app/ConnectivityBar";
 import { Toaster } from "@/components/ui/sonner";
+import { useServiceWorker } from "@/hooks/useServiceWorker";
 import {
   OG_IMAGE_ALT,
   OG_IMAGE_URL,
@@ -133,11 +135,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // descriptor — `theme-color`, `apple-mobile-web-app-title` — is written
       // into the prerendered shell as a `<link>` but rendered by React as a
       // `<meta>`, and the two disagreeing makes every single page load throw a
-      // hydration error. Both of those values live in `site.webmanifest`
+      // hydration error. Both of those values live in `manifest.webmanifest`
       // instead, which is where the platform actually reads them from.
       { rel: "icon", href: "/favicon.ico", sizes: "16x16 32x32 48x48" },
       { rel: "apple-touch-icon", href: "/icon-192.png" },
-      { rel: "manifest", href: "/site.webmanifest" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
     ],
   }),
   shellComponent: RootShell,
@@ -162,9 +164,13 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const { online, updateReady, applyUpdate } = useServiceWorker();
 
   return (
     <QueryClientProvider client={queryClient}>
+      {/* The two slivers of PWA truth: connectivity and a pending update. */}
+      {!online ? <OfflineBanner /> : null}
+      {updateReady ? <UpdateBanner onUpdate={applyUpdate} /> : null}
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <Toaster position="top-center" richColors />

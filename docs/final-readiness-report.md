@@ -9,23 +9,23 @@ ready", legally guaranteed, Play-approved, or fully secure.
 Suite evidence from this pass, all run against the local production build
 (`bun run build`, served on 127.0.0.1:4173):
 
-| Suite | Result |
-| --- | --- |
-| verify-app-icon (R-tile icons, decoded and measured) | 10/10 |
-| verify-csv | 32/32 |
-| verify-glass | 30/30 |
-| verify-seo | 69/69 |
-| verify-shop-deletion (live DB) | 20/20 |
-| verify-staff-access (live DB) | 46/46 |
-| verify-business-engine (live DB) | 47/47 |
-| verify-auth-flow (live API) | 6/6 |
-| verify-ui-acceptance (browser, live DB) | 165/165, no console/page errors |
-| verify-float-bar (browser) | 54/54 |
-| verify-glass-ui (browser) | 16/16 |
-| verify-contrast (browser) | 45/45 |
-| verify-mobile-qa (browser, new this pass) | 26/26 |
-| `tsc -b --noEmit` | exit 0 |
-| `bun x eslint src/ scripts/…` | 0 errors (4 pre-existing warnings) |
+| Suite                                                | Result                             |
+| ---------------------------------------------------- | ---------------------------------- |
+| verify-app-icon (R-tile icons, decoded and measured) | 10/10                              |
+| verify-csv                                           | 32/32                              |
+| verify-glass                                         | 30/30                              |
+| verify-seo                                           | 69/69                              |
+| verify-shop-deletion (live DB)                       | 20/20                              |
+| verify-staff-access (live DB)                        | 46/46                              |
+| verify-business-engine (live DB)                     | 47/47                              |
+| verify-auth-flow (live API)                          | 6/6                                |
+| verify-ui-acceptance (browser, live DB)              | 165/165, no console/page errors    |
+| verify-float-bar (browser)                           | 54/54                              |
+| verify-glass-ui (browser)                            | 16/16                              |
+| verify-contrast (browser)                            | 45/45                              |
+| verify-mobile-qa (browser, new this pass)            | 26/26                              |
+| `tsc -b --noEmit`                                    | exit 0                             |
+| `bun x eslint src/ scripts/…`                        | 0 errors (4 pre-existing warnings) |
 
 ## 1. FIXED
 
@@ -97,7 +97,7 @@ reading code and hoping.
   on `sales`, `refunds`, `inventory_movements`, `expenses`, `shop_members`,
   `employee_access_codes` — exactly the Part-16 list; writes go through the
   conditional `audit_write()`; the log has no client INSERT/UPDATE/DELETE.
-- **Secrets (Part 15).** No secret *values* in tracked source: `git grep`
+- **Secrets (Part 15).** No secret _values_ in tracked source: `git grep`
   finds no JWT/service-role/sk-style strings outside `bun.lock` integrity
   hashes; the production bundle in `dist/` contains no secret-name strings;
   the client uses only the publishable key. Dependency audit (Part 14): every
@@ -147,9 +147,13 @@ reading code and hoping.
   walkthrough has not been performed. MANUAL VERIFICATION REQUIRED.
 - **Store listing copy and assets** — feature graphic, screenshots captured
   from the real app, and final store description (§10.6).
-- **Offline strategy** — there is no service worker; the site requires
-  connectivity. That is honest and consistent with the policy, but it blocks
-  the TWA packaging route and should be a deliberate decision (§10.5).
+- **Offline strategy** — RESOLVED after this report was first written: the
+  app is now a PWA. `public/sw.js` precaches the shell and hashed assets,
+  fonts cache offline, an offline banner states plainly that numbers may be
+  out of date, and Supabase responses are never served from cache. Verified
+  by `scripts/verify-pwa.mjs` (18/18, browser-verified against the production
+  build). What still requires the network: every read and write of business
+  data.
 
 ## 4. BLOCKED
 
@@ -207,7 +211,7 @@ reading code and hoping.
   Google Fonts, Freebuff) matches the actual network surface.
 - Three business-identity placeholders remain visible on the live policy
   (§3.1) — the policy is honest about being unfinished rather than falsely
-  final. This is a launch blocker for *publishing* the policy, tracked in §10.3.
+  final. This is a launch blocker for _publishing_ the policy, tracked in §10.3.
 - No unsupported claims found: the policy says "no system is perfect", avoids
   "fully compliant/secure" language, and its deletion-limits section matches
   the real `delete_my_account()` behaviour (financial records survive; consent
@@ -247,7 +251,9 @@ reading code and hoping.
 - Fonts: two families, `display=swap`, preconnected; brand images total <100 KB.
 - Uploads capped by bucket limits (2–10 MB by type).
 - Watch items, not defects: transactions query caps at 80 rows without
-  pagination UI; no service worker (also a Play/TWA factor, §5.6).
+  pagination UI; the service worker adds no measurable runtime cost — it
+  precaches after first paint and serves cache-first afterwards (a Play/TWA
+  factor, §5.6, now satisfied).
 
 ## 10. REMAINING WORK
 
@@ -275,8 +281,8 @@ reading code and hoping.
    network, including rotation.
 8. **TalkBack screen-reader walkthrough** of signup, POS, and settings.
 9. **Optional hardening:** CI secret scan; `aria-live` on form errors; a
-   "no table without RLS" regression assertion; decide on a service worker
-   for offline (also unblocks TWA).
+   "no table without RLS" regression assertion. (The service worker has since
+   shipped — see §3, offline strategy.)
 
 **Status sentence, carefully worded:** the web application is substantially
 hardened and every automatable claim in this report is backed by a passing

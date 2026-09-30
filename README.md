@@ -105,8 +105,8 @@ mixed with alternatives.
 | File               | What it is                                                                                                            |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------- |
 | `mark-geometry.ts` | **The brand data.** The tile's geometry, the brand colours, and where the R sits — the numbers every renderer shares. |
-| `AppIcon.tsx`      | The R tile as an SVG: emerald ground, gloss and rim, the R in champagne.                                               |
-| `Logo.tsx`         | Identity: the R tile by default, tile + wordmark where there is room, a bare champagne R on dark grounds.              |
+| `AppIcon.tsx`      | The R tile as an SVG: emerald ground, gloss and rim, the R in champagne.                                              |
+| `Logo.tsx`         | Identity: the R tile by default, tile + wordmark where there is room, a bare champagne R on dark grounds.             |
 
 **Why a letter.** A drawn symbol has to be explained; a letter does not. The R
 is set in Fraunces — the same face every heading uses — so the logo and the
@@ -137,6 +137,34 @@ holds real letter pixels. The browser acceptance suite (`verify-ui-acceptance`)
 repeats the measurements against the bytes the server actually serves, so the
 verified file and the shipped file cannot be different files.
 
+### The PWA layer
+
+RAVQEN is an installable, offline-tolerant app, because a till that dies with
+the network is not a till.
+
+- **`public/sw.js`** — the service worker, plain JavaScript on purpose: it
+  ships verbatim from `public/`, never transpiled, reviewable by anyone who
+  wants to know what runs on their phone. It precaches the app shell and the
+  hashed assets, serves fonts cache-first from their own bucket, and answers
+  same-origin miscellany stale-while-revalidate. Two lines it will not cross:
+  **Supabase responses are never served from cache** — a number that cannot
+  tell "old" from "wrong" has no place in a ledger — and only an HTML
+  navigation may replace the cached shell (a `robots.txt` navigation stored as
+  `/index.html` would clobber it).
+- **Registration** is production-only (`useServiceWorker`): a worker on the
+  dev server is pure HMR friction, and no shop ever runs the dev server. An
+  update never swaps itself in underneath a half-entered sale — a waiting
+  worker raises a banner and the owner applies it.
+- **`ConnectivityBar.tsx`** — the offline banner (rendered only while actually
+  offline, saying plainly that saved screens are shown and numbers may be out
+  of date) and the update banner.
+- **`manifest.webmanifest`** — id, standalone display, portrait orientation,
+  `#032F25` theme, 192/512 icons plus a maskable entry.
+
+`scripts/verify-pwa.mjs` proves the behaviour rather than the files: the
+worker activates and controls the page, the shell and hashed assets really
+land in the caches, a cold offline navigation still renders the app, fonts
+survive offline, and the manifest meets Chrome's installability criteria.
 
 ### The glass material, in three levels
 
