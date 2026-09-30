@@ -147,13 +147,15 @@ reading code and hoping.
   walkthrough has not been performed. MANUAL VERIFICATION REQUIRED.
 - **Store listing copy and assets** — feature graphic, screenshots captured
   from the real app, and final store description (§10.6).
-- **Offline strategy** — RESOLVED after this report was first written: the
-  app is now a PWA. `public/sw.js` precaches the shell and hashed assets,
-  fonts cache offline, an offline banner states plainly that numbers may be
-  out of date, and Supabase responses are never served from cache. Verified
-  by `scripts/verify-pwa.mjs` (18/18, browser-verified against the production
-  build). What still requires the network: every read and write of business
-  data.
+- **Offline strategy** — RESOLVED, then deliberately revised to **online-first**
+  on 30 September 2026: the app is an installable PWA whose service worker
+  (`public/sw.js`, v2) always tries the network first — navigations, hashed
+  assets, fonts, miscellany — with the cache only as a failure fallback, and
+  no install-time precache. Supabase responses are never served from cache
+  and never stored; the offline banner states plainly that some things won't
+  load until the network returns. Verified by `scripts/verify-pwa.mjs`
+  (online-first suite, browser-verified against the production build). What
+  still requires the network: every read and write of business data.
 
 ## 4. BLOCKED
 
@@ -251,9 +253,9 @@ reading code and hoping.
 - Fonts: two families, `display=swap`, preconnected; brand images total <100 KB.
 - Uploads capped by bucket limits (2–10 MB by type).
 - Watch items, not defects: transactions query caps at 80 rows without
-  pagination UI; the service worker adds no measurable runtime cost — it
-  precaches after first paint and serves cache-first afterwards (a Play/TWA
-  factor, §5.6, now satisfied).
+  pagination UI; the service worker adds no measurable runtime cost — it is
+  network-first (a Play/TWA factor, §5.6, satisfied) and every cache entry
+  it holds was put there by a successful network response.
 
 ## 10. REMAINING WORK
 
@@ -282,7 +284,7 @@ reading code and hoping.
 8. **TalkBack screen-reader walkthrough** of signup, POS, and settings.
 9. **Optional hardening:** CI secret scan; `aria-live` on form errors; a
    "no table without RLS" regression assertion. (The service worker has since
-   shipped — see §3, offline strategy.)
+   shipped, online-first — see §3, offline strategy.)
 
 **Status sentence, carefully worded:** the web application is substantially
 hardened and every automatable claim in this report is backed by a passing

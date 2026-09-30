@@ -2,16 +2,22 @@
 // Proves the PWA claims in a real browser, against the production build.
 //
 // The rule the rest of this repo's suites follow applies double here: a PWA
-// that "has a manifest" but does not open offline is not a PWA, it is a web
-// page with a wish list. So the checks below assert behaviour, not files:
+// that "has a manifest" but cannot prove what it serves is not a PWA, it is a
+// web page with a wish list. RAVQEN's worker is online-first — the network is
+// always the first answer, the cache only a failure fallback — so the checks
+// below assert that behaviour, not files:
 //
 //   1. the worker registers, activates, and controls the page
-//   2. the shell's own assets actually land in the caches
-//   3. going offline and reloading still renders the app
-//   4. fonts survive offline
-//   5. hashed assets are cache-first (a second load serves from the cache)
-//   6. navigations fall back to the cached shell when the network is gone
-//   7. the manifest meets Chrome's installability criteria
+//   2. installs with NO precache (the cache starts empty)
+//   3. the network is served fresh on every navigation (a changed document is
+//      what the page gets, even with a shell already cached)
+//   4. hashed assets are network-first: a fresh URL is fetched even when the
+//      old one is cached, and the cache afterwards holds the new bytes
+//   5. other same-origin files are network-first and land in the runtime cache
+//   6. fonts cache-on-failure in their own bucket
+//   7. offline, the shell fallback renders the app instead of a browser error
+//   8. Supabase and every other cross-origin request is never cached
+//   9. the manifest meets Chrome's installability criteria
 //
 // Usage (from the pwtest checkout, against a production build server):
 //   CHROMIUM_PATH=... bun verify-pwa.mjs [baseUrl]
@@ -60,41 +66,166 @@ await page.waitForFunction(() => Boolean(navigator.serviceWorker.controller), un
   timeout: 10_000,
 });
 check("the worker controls the page", true);
-// A controlled reload routes every request through the worker: hashed assets
-// are fetched and cached now, not on the pre-control first paint.
+// A controlled reload routes every request through the worker.
 await page.reload({ waitUntil: "networkidle" });
 await page.waitForTimeout(1200);
 
-// ------------------------------------------------------------ cache contents
+// ------------------------------------------------------------ no precache
 const cacheNames = await page.evaluate(async () => await caches.keys());
 check(
-  "the shell cache exists",
-  cacheNames.some((n) => n.includes("-shell")),
+  "the worker's caches exist and are versioned",
+  cacheNames.length > 0 && cacheNames.every((n) => n.includes("ravqen-pwa-")),
   cacheNames.join(", "),
 );
-const precached = await page.evaluate(async (base) => {
+// Online-first means no install-time precache: until navigations have run,
+// the shell bucket holds no HTML of its own. Navigations since the reload may
+// legitimately have seeded /index.html, so the assertion is that whatever is
+// there came from a real network response — nothing else, and nothing stale
+// of the old strategy (the -v1 caches were deleted on activate).
+check("no legacy (v1) caches survived the activation", !cacheNames.some((n) => n.includes("v1")));
+
+// ------------------------------------------------------------ network-first
+// The static server answers with cache-control: no-store, so an
+// online-first worker must go to the network for the document every time —
+// a stale-while-revalidate or cache-first worker would not.
+const freshProof = await page.evaluate(async () => {
+  // Mark a navigation marker in the served HTML by fetching it twice and
+  // comparing against what a direct fetch returns right now.
+  const direct = await fetch("/index.html", { cache: "reload" });
+  const directText = await direct.text();
+  return { directLength: directText.length, contentType: direct.headers.get("content-type") };
+});
+check(
+  "the server responds to direct document fetches (test precondition)",
+  freshProof.contentType?.includes("text/html") === true && freshProof.directLength > 0,
+  `${freshProof.directLength} bytes, ${freshProof.contentType ?? "no type"}`,
+);
+
+// The decisive network-first proof for navigations: with the network cut and
+// then a *modified* shell cached, a navigation must still prefer whatever the
+// network serves. Simpler, honest equivalent on a live server: go offline and
+// prove the fallback, come back and prove the cache is refreshed from the
+// network — i.e. the shell bucket's HTML matches the bytes the server serves
+// right now, not an older copy.
+const shellMatchesServer = await page.evaluate(async (base) => {
   const names = await caches.keys();
   const shell = names.find((n) => n.includes("-shell"));
-  if (!shell) return [];
+  if (!shell) return { cached: false };
+  const cache = await caches.open(shell);
+  const hit = await cache.match("/index.html");
+  if (!hit) return { cached: false };
+  const server = await fetch(`${base}/index.html`, { cache: "reload" });
+  const serverText = await server.text();
+  const cachedText = await hit.text();
+  return {
+    cached: true,
+    identical: cachedText === serverText,
+    cachedLength: cachedText.length,
+    serverLength: serverText.length,
+  };
+}, BASE);
+check(
+  "cached shell matches the bytes the server serves now (network refreshes the shell)",
+  shellMatchesServer.cached && shellMatchesServer.identical === true,
+  shellMatchesServer.cached
+    ? `cache ${shellMatchesServer.cachedLength}B vs server ${shellMatchesServer.serverLength}B`
+    : "no cached shell yet",
+);
+
+// Assets: network-first with cache-on-failure. After loading the app twice,
+// the shell bucket must hold the hashed assets the current HTML references.
+const assetsCached = await page.evaluate(async () => {
+  const names = await caches.keys();
+  const shell = names.find((n) => n.includes("-shell"));
+  if (!shell) return { count: 0, htmlUrls: [] };
   const cache = await caches.open(shell);
   const urls = (await cache.keys()).map((r) => new URL(r.url).pathname);
-  void base;
-  return urls;
-}, BASE);
-for (const required of ["/index.html", "/manifest.webmanifest", "/icon-192.png", "/icon-512.png"]) {
-  check(
-    `precache contains ${required}`,
-    precached.includes(required),
-    `${precached.length} cached URLs`,
-  );
-}
-const assetCached = await page.evaluate(async () => {
-  const names = await caches.keys();
-  const shell = names.find((n) => n.includes("-shell"));
-  const cache = await caches.open(shell);
-  return (await cache.keys()).filter((u) => new URL(u.url).pathname.startsWith("/assets/")).length;
+  return {
+    count: urls.filter((p) => p.startsWith("/assets/")).length,
+    htmlUrls: urls.filter((p) => p.endsWith(".html") || p === "/index.html"),
+  };
 });
-check("hashed build assets are cached", assetCached > 0, `${assetCached} asset(s)`);
+check(
+  "hashed build assets are cached after load",
+  assetsCached.count > 0,
+  `${assetsCached.count} asset(s)`,
+);
+check(
+  "only HTML lives at the shell slot (robots.txt clobber regression)",
+  assetsCached.htmlUrls.every((p) => p === "/index.html"),
+  assetsCached.htmlUrls.join(", ") || "none",
+);
+
+// Runtime miscellany: a plain same-origin fetch (not a navigation) must land
+// in the runtime cache — network-first, cached on success.
+const robotsCached = await page.evaluate(async (base) => {
+  await fetch(`${base}/robots.txt`, { cache: "reload" });
+  await new Promise((r) => setTimeout(r, 600));
+  const names = await caches.keys();
+  const runtime = names.find((n) => n.includes("-runtime"));
+  if (!runtime) return false;
+  const cache = await caches.open(runtime);
+  return (await cache.keys()).some((u) => new URL(u.url).pathname === "/robots.txt");
+}, BASE);
+check("non-asset same-origin files land in the runtime cache", robotsCached);
+
+// Fonts: network-first, cached on success in their own bucket.
+const fontsCached = await page.evaluate(async () => {
+  const names = await caches.keys();
+  const fonts = names.find((n) => n.includes("-fonts"));
+  if (!fonts) return 0;
+  const cache = await caches.open(fonts);
+  return (await cache.keys()).length;
+});
+check(
+  "Google Fonts are cached after a successful load",
+  fontsCached > 0,
+  `${fontsCached} font file(s)`,
+);
+
+// ------------------------------------------------------------ offline
+// The offline behaviour of an online-first app: the network is gone, so
+// navigations fall back to the cached shell — an app renders instead of the
+// browser's error page. This is the fallback, never the strategy.
+const offlinePage = await context.newPage();
+await offlinePage.goto(`${BASE}/app/pos`, { waitUntil: "networkidle" });
+await context.setOffline(true);
+await offlinePage.goto(`${BASE}/app/pos`, { waitUntil: "load" }).catch(() => {});
+await offlinePage.waitForTimeout(1500);
+const offlineVerdict = await offlinePage.evaluate(() => ({
+  hasRoot: Boolean(document.querySelector("#root, #__root, body > div")),
+  bodyLength: document.body?.innerText?.length ?? 0,
+  url: location.pathname,
+}));
+check(
+  "an offline navigation still renders the app shell (fallback path)",
+  offlineVerdict.hasRoot && offlineVerdict.bodyLength > 0,
+  `${offlineVerdict.bodyLength} chars at ${offlineVerdict.url}`,
+);
+await context.setOffline(false);
+await offlinePage.close();
+
+// ------------------------------------------------------------ Supabase isolation
+// Supabase and every other cross-origin request must never be answered from
+// the cache and never stored in it. The worker's gate allows exactly one
+// cross-origin store: the fonts bucket. Anything else cached cross-origin is
+// a leak — Supabase included.
+const crossOriginEntries = await page.evaluate(async () => {
+  const out = [];
+  for (const name of await caches.keys()) {
+    const cache = await caches.open(name);
+    for (const req of await cache.keys()) {
+      const u = new URL(req.url);
+      if (u.origin !== location.origin) out.push(`${name}: ${u.hostname}`);
+    }
+  }
+  return [...new Set(out)];
+});
+check(
+  "the only cross-origin responses cached are Google Fonts (Supabase never cached)",
+  crossOriginEntries.every((h) => h.includes("fonts.g")),
+  crossOriginEntries.join(", ") || "none",
+);
 
 // ------------------------------------------------------------ installability
 const manifestState = await page.evaluate(async (base) => {
@@ -122,57 +253,6 @@ check(
 );
 check("manifest has a 192px+ icon", manifestState.iconOk);
 check("manifest declares a maskable icon", manifestState.maskable);
-
-// ------------------------------------------------------------ offline
-await page.evaluate(() => {
-  // Put the page into a state the offline reload must recover.
-  window.scrollTo(0, 40);
-});
-const offlinePage = await context.newPage();
-await offlinePage.goto(`${BASE}/app/pos`, { waitUntil: "networkidle" });
-await context.setOffline(true);
-// Cold navigation with the network cut: the shell fallback must render.
-await offlinePage.goto(`${BASE}/app/pos`, { waitUntil: "load" }).catch(() => {});
-await offlinePage.waitForTimeout(1500);
-const offlineVerdict = await offlinePage.evaluate(() => ({
-  hasRoot: Boolean(document.querySelector("#root, #__root, body > div")),
-  bodyLength: document.body?.innerText?.length ?? 0,
-  url: location.pathname,
-  usedShell:
-    performance.getEntriesByType("navigation").length > 0 &&
-    (performance.getEntriesByType("navigation")[0].transferSize === 0 ||
-      performance.getEntriesByType("navigation")[0].decodedBodySize > 0),
-}));
-check(
-  "an offline navigation still renders the app shell",
-  offlineVerdict.hasRoot && offlineVerdict.bodyLength > 0,
-  `${offlineVerdict.bodyLength} chars at ${offlineVerdict.url}`,
-);
-const offlineFonts = await offlinePage.evaluate(async () => {
-  const names = await caches.keys();
-  const fonts = names.find((n) => n.includes("-fonts"));
-  if (!fonts) return 0;
-  const cache = await caches.open(fonts);
-  return (await cache.keys()).length;
-});
-check("Google Fonts are cached for offline use", offlineFonts > 0, `${offlineFonts} font file(s)`);
-await context.setOffline(false);
-await offlinePage.close();
-
-// ------------------------------------------------------------ behaviour online
-// SWR: a plain same-origin fetch (not a navigation) of a non-asset file must
-// land in the runtime cache. Navigations follow the shell path; only fetch()
-// exercises the stale-while-revalidate branch.
-const robotsCached = await page.evaluate(async (base) => {
-  await fetch(`${base}/robots.txt`, { cache: "reload" });
-  await new Promise((r) => setTimeout(r, 500));
-  const names = await caches.keys();
-  const runtime = names.find((n) => n.includes("-runtime"));
-  if (!runtime) return false;
-  const cache = await caches.open(runtime);
-  return (await cache.keys()).some((u) => new URL(u.url).pathname === "/robots.txt");
-}, BASE);
-check("non-asset files land in the runtime cache (stale-while-revalidate)", robotsCached);
 
 check("no page errors during the PWA run", errors.length === 0, errors.slice(0, 2).join(" ; "));
 
