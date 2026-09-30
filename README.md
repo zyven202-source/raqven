@@ -139,32 +139,40 @@ verified file and the shipped file cannot be different files.
 
 ### The PWA layer
 
-RAVQEN is an installable, offline-tolerant app, because a till that dies with
-the network is not a till.
+RAVQEN is an installable, **online-first** app. The network is always the
+first answer — every navigation, asset, font and icon is fetched fresh when
+the network is up — and the cache exists only as a failure fallback, so a
+customer's till shows what the server says right now, never a page it served
+last week.
 
 - **`public/sw.js`** — the service worker, plain JavaScript on purpose: it
   ships verbatim from `public/`, never transpiled, reviewable by anyone who
-  wants to know what runs on their phone. It precaches the app shell and the
-  hashed assets, serves fonts cache-first from their own bucket, and answers
-  same-origin miscellany stale-while-revalidate. Two lines it will not cross:
-  **Supabase responses are never served from cache** — a number that cannot
-  tell "old" from "wrong" has no place in a ledger — and only an HTML
-  navigation may replace the cached shell (a `robots.txt` navigation stored as
-  `/index.html` would clobber it).
+  wants to know what runs on their phone. There is no install-time precache:
+  the cache starts empty and only ever holds a response the network itself
+  returned. Everything is network-first with cache-on-failure — navigations
+  (which also refresh the cached shell, HTML documents only), hashed assets,
+  fonts in their own bucket, same-origin miscellany in the runtime bucket.
+  Two lines it will not cross: **Supabase responses are never served from
+  cache and never stored** — a number that cannot tell "old" from "wrong" has
+  no place in a ledger — and only an HTML navigation may replace the cached
+  shell (a `robots.txt` navigation stored as `/index.html` would clobber it).
 - **Registration** is production-only (`useServiceWorker`): a worker on the
   dev server is pure HMR friction, and no shop ever runs the dev server. An
   update never swaps itself in underneath a half-entered sale — a waiting
   worker raises a banner and the owner applies it.
 - **`ConnectivityBar.tsx`** — the offline banner (rendered only while actually
-  offline, saying plainly that saved screens are shown and numbers may be out
-  of date) and the update banner.
+  offline, saying plainly that some things won't load until the network
+  returns) and the update banner.
 - **`manifest.webmanifest`** — id, standalone display, portrait orientation,
   `#032F25` theme, 192/512 icons plus a maskable entry.
 
 `scripts/verify-pwa.mjs` proves the behaviour rather than the files: the
-worker activates and controls the page, the shell and hashed assets really
-land in the caches, a cold offline navigation still renders the app, fonts
-survive offline, and the manifest meets Chrome's installability criteria.
+worker activates and controls the page with no precache, the cached shell
+matches the bytes the server serves now (network-first, not a stale copy),
+assets/fonts/runtime files cache from successful network responses, an
+offline navigation still renders the shell (the fallback path), the only
+cross-origin responses in any cache are Google Fonts, and the manifest meets
+Chrome's installability criteria.
 
 ### The glass material, in three levels
 

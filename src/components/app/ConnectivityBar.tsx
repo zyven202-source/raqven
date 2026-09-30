@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 /**
  * Two slivers of truth, one place.
  *
- * `OfflineBanner` — the network is gone. The app keeps working (the shell is
- * cached), but reads and writes that need Supabase will fail until it returns,
- * and pretending otherwise would be a lie with a ledger's worth of damage.
- * Rendered only while actually offline, out of the way, above the content.
+ * `OfflineBanner` — the network is gone. RAVQEN is online-first: pages you
+ * have already opened may still render, but reads and writes that need
+ * Supabase will fail until it returns, and pretending otherwise would be a
+ * lie with a ledger's worth of damage. Rendered only while actually offline,
+ * out of the way, above the content.
  *
  * `UpdateBanner` — a new version has been downloaded and is waiting. The user
  * chooses when to apply it; nothing reloads underneath a half-entered sale.
@@ -22,7 +23,7 @@ export function OfflineBanner() {
     >
       <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-caution/40 bg-caution-soft px-3.5 py-1.5 text-xs font-medium text-caution shadow-sm">
         <WifiOff className="size-3.5" aria-hidden />
-        <span>Offline — showing saved screens. Numbers may be out of date.</span>
+        <span>Offline — some things won't load until the network returns.</span>
       </div>
     </div>
   );

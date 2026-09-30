@@ -39,9 +39,13 @@ Pick an Android packaging route. The repo is agnostic; both are legitimate:
 1. **Trusted Web Activity (TWA / Bubblewrap)** — lowest effort. Requires the
    site to keep passing PWA baselines and a `assetlinks.json` at
    `https://ravqen.freebuff.app/.well-known/assetlinks.json` signed with the
-   upload key. The offline-tolerance bar is now met: the app ships a service
-   worker (`public/sw.js`, precached shell + offline navigation fallback,
-   verified by `scripts/verify-pwa.mjs`, 18/18) and an installable manifest.
+   upload key. The worker bar is met: the app ships an installable manifest
+   and an online-first service worker (`public/sw.js`, v2 — network-first for
+   everything, cache only as an offline fallback for already-fetched shell
+   and assets, verified by `scripts/verify-pwa.mjs`). Chrome's TWA baseline
+   wants the offline navigation to resolve to something other than a browser
+   error, which the shell fallback satisfies; a reviewer who launches the app
+   with no connectivity sees the last-fetched shell rather than a blank page.
    What remains for TWA is the `assetlinks.json` hosting decision and the
    wrapper build itself.
 2. **Capacitor (or Tauri mobile)** — a real WebView shell: camera permission

@@ -1,50 +1,56 @@
 /**
  * RAVQEN's service worker.
  *
- * What it is for: a shop does not stop because the network did. The app shell
- * (the prerendered HTML, the hashed JS and CSS, the fonts, the icons) is
- * precached at install, so a phone that has opened RAVQEN before can open it
- * again with no connectivity — the screens render, and the parts of a till
- * that are pure interface keep working. Business data is never faked here:
- * Supabase requests are answered from the network first and the cache only as
- * a same-session fallback, clearly marked so no stale number can masquerade
- * as a live one.
+ * What it is for: speed and continuity — never authority. RAVQEN is an
+ * online-first app: every request tries the network first, and only a failed
+ * attempt may touch the cache. The network is the source of truth for every
+ * number a shop sees; a cached page must never be what a customer's till
+ * shows when a fresher one was one request away.
  *
- * Versioning: bump SERVICE_WORKER_VERSION whenever the shell changes shape.
- * The old caches are deleted on activate. The byte-identical build does not
- * need a bump — hashed asset names change on their own.
+ * What the cache is allowed to do, in the order the fetch handler decides:
+ *
+ *   - Navigations: network first. A successful HTML response replaces the
+ *     cached shell (only text/html is ever stored at /index.html — a
+ *     navigation to robots.txt or the manifest must not clobber the shell
+ *     with it). When the network is gone, the cached shell renders so the
+ *     user sees the app instead of a browser error, and the ConnectivityBar
+ *     banner says the truth about what will and will not load.
+ *   - Hashed build assets (/assets/*): network first, cache on failure. The
+ *     names are immutable, but freshness is cheap and correctness is not
+ *     negotiable.
+ *   - Fonts (Google's CDN): network first, cache on failure, in their own
+ *     bucket. Checked before the same-origin gate, because these are the one
+ *     cross-origin response this worker is allowed to store.
+ *   - Other same-origin miscellany (manifest, icons, robots.txt): network
+ *     first, cache on failure, in the runtime bucket.
+ *   - Everything else cross-origin — Supabase above all — is the network's
+ *     business, full stop. The worker never answers for it and never stores
+ *     it: a number that cannot tell "old" from "wrong" has no place in a
+ *     ledger. Offline, those requests simply fail, and the UI says so.
+ *
+ * There is no install-time precache. The cache starts empty and fills only
+ * from successful network responses, so nothing can ever be served from a
+ * cache the network has not already confirmed the shape of.
+ *
+ * Versioning: bump SERVICE_WORKER_VERSION whenever the caching strategy
+ * changes shape — clients holding the old strategy must refresh. The old
+ * caches are deleted on activate. The byte-identical build does not need a
+ * bump — hashed asset names change on their own.
  *
  * Plain JavaScript on purpose: it ships from `public/` verbatim, it must
  * never be transpiled or code-split, and it must stay reviewable by anyone
  * who audits what runs on their phone with no build between them and it.
  */
 
-const SERVICE_WORKER_VERSION = "ravqen-pwa-v1";
+const SERVICE_WORKER_VERSION = "ravqen-pwa-v2";
 const SHELL_CACHE = `${SERVICE_WORKER_VERSION}-shell`;
 const RUNTIME_CACHE = `${SERVICE_WORKER_VERSION}-runtime`;
 const FONT_CACHE = `${SERVICE_WORKER_VERSION}-fonts`;
 
-/** The app shell: small, stable, and everything offline needs it. */
-const PRECACHE_URLS = [
-  "/",
-  "/index.html",
-  "/manifest.webmanifest",
-  "/favicon.ico",
-  "/icon-192.png",
-  "/icon-512.png",
-  "/robots.txt",
-];
-
-self.addEventListener("install", (event) => {
-  event.waitUntil(
-    (async () => {
-      const cache = await caches.open(SHELL_CACHE);
-      // addAll is atomic: one failure rolls the whole install back, so a
-      // half-precached worker never takes control of the app.
-      await cache.addAll(PRECACHE_URLS);
-      await self.skipWaiting();
-    })(),
-  );
+self.addEventListener("install", () => {
+  // Nothing to precache: the cache starts empty and only ever holds what a
+  // successful network response has put there.
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
@@ -69,20 +75,23 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
 
-  // Fonts from Google's CDN: cache-first in their own bucket, so typography
-  // survives offline too. Checked before the same-origin gate, because these
-  // are the one cross-origin response this worker is allowed to store.
+  // Fonts from Google's CDN: network first, cached on success in their own
+  // bucket so typography still renders when the network later fails. Checked
+  // before the same-origin gate, because these are the one cross-origin
+  // response this worker is allowed to store.
   if (url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com") {
     event.respondWith(
       (async () => {
-        const cache = await caches.open(FONT_CACHE);
-        const hit = await cache.match(request);
-        if (hit) return hit;
         try {
           const fresh = await fetch(request);
-          if (fresh.ok) cache.put(request, fresh.clone());
+          if (fresh.ok) {
+            const cache = await caches.open(FONT_CACHE);
+            cache.put(request, fresh.clone());
+          }
           return fresh;
         } catch {
+          const cache = await caches.open(FONT_CACHE);
+          const hit = await cache.match(request);
           return hit ?? Response.error();
         }
       })(),
@@ -92,13 +101,12 @@ self.addEventListener("fetch", (event) => {
 
   // Everything else cross-origin — Supabase above all — is the network's
   // business. A shop's numbers must not be served from a cache that cannot
-  // tell "old" from "wrong", so no worker here ever answers for them.
+  // tell "old" from "wrong", so no worker here ever answers for them, online
+  // or off.
   if (url.origin !== self.location.origin) return;
 
-  // Navigations: cache-first, because the shell is the same prerendered
-  // document for every route (the SPA router does the rest client-side).
-  // Falling back to the cached shell when the network is gone is what makes
-  // a cold offline open work at all.
+  // Navigations: network first. The cache is only what a shop sees when the
+  // network itself is gone — never a substitute for a fresh document.
   if (request.mode === "navigate") {
     event.respondWith(
       (async () => {
@@ -124,33 +132,45 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Hashed build assets: immutable, so cache-first is not a staleness risk.
+  // Hashed build assets: network first, cache on failure. Serving a stale
+  // asset from cache while a fresh one exists would defeat the point of
+  // shipping updates at all.
   if (url.pathname.startsWith("/assets/")) {
     event.respondWith(
       (async () => {
-        const cache = await caches.open(SHELL_CACHE);
-        const hit = await cache.match(request);
-        if (hit) return hit;
-        const fresh = await fetch(request);
-        if (fresh.ok) cache.put(request, fresh.clone());
-        return fresh;
+        try {
+          const fresh = await fetch(request);
+          if (fresh.ok) {
+            const cache = await caches.open(SHELL_CACHE);
+            cache.put(request, fresh.clone());
+          }
+          return fresh;
+        } catch {
+          const cache = await caches.open(SHELL_CACHE);
+          const hit = await cache.match(request);
+          return hit ?? Response.error();
+        }
       })(),
     );
     return;
   }
 
-  // Everything else same-origin (icons, manifest, robots): stale-while-revalidate.
+  // Everything else same-origin (icons, manifest, robots): network first,
+  // cache on failure, in the runtime bucket.
   event.respondWith(
     (async () => {
-      const cache = await caches.open(RUNTIME_CACHE);
-      const hit = await cache.match(request);
-      const refresh = fetch(request)
-        .then((fresh) => {
-          if (fresh.ok) cache.put(request, fresh.clone());
-          return fresh;
-        })
-        .catch(() => hit);
-      return hit ?? (await refresh);
+      try {
+        const fresh = await fetch(request);
+        if (fresh.ok) {
+          const cache = await caches.open(RUNTIME_CACHE);
+          cache.put(request, fresh.clone());
+        }
+        return fresh;
+      } catch {
+        const cache = await caches.open(RUNTIME_CACHE);
+        const hit = await cache.match(request);
+        return hit ?? Response.error();
+      }
     })(),
   );
 });
