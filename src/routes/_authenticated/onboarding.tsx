@@ -56,7 +56,7 @@ function OnboardingPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background/30">
       <header className="px-5 py-5">
         <Logo showTagline />
       </header>

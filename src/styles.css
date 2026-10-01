@@ -118,47 +118,55 @@
 :root {
   --radius: 0.625rem;
 
-  /* Brand */
-  --ink: oklch(0.378 0.073 168.9); /* Emerald Ink #064E3B */
+  /*
+   * Brand, retuned for the dark emerald ground. The names keep their place in
+   * the vocabulary, the values invert: `ink` is now the luminous accent that
+   * text and active states are drawn in, `ink-soft` is the glowing mid emerald
+   * for icon accents and glows, and `ink-deep` is unchanged — it was always
+   * the darkest stop of the ramp, and now it is the page itself.
+   */
+  --ink: oklch(0.91 0.045 167); /* Pale Mint — luminous accent on the dark ground */
   --ink-deep: oklch(0.273 0.05 173.3); /* Deep Emerald #032F25 */
-  --ink-soft: oklch(0.471 0.091 169); /* Soft Emerald #0B6B52 */
+  --ink-soft: oklch(0.72 0.095 166); /* Luminous Emerald — the glowing mid stop */
   --champagne: oklch(0.934 0.044 81.9); /* Champagne #F8E7C9 */
   --champagne-deep: oklch(0.51 0.071 82.3);
   --cream: oklch(0.962 0.014 84.6); /* Soft Cream #F7F2E8 */
 
-  /* Surfaces stay near-neutral; the green lives in ink, not in every panel. */
-  --background: oklch(0.992 0.007 80.7); /* Warm White #FFFCF7 */
-  --foreground: oklch(0.234 0.014 172.7); /* Charcoal #17201D */
-  --card: oklch(1 0 0);
+  /* The page IS the emerald: one deep ground, with hairlines and glass above it. */
+  --background: oklch(0.25 0.042 172.5); /* Deep Emerald ground */
+  --foreground: oklch(0.93 0.025 166); /* Pale Mint text */
+  --card: oklch(0.3 0.04 172 / 0.85);
   --card-foreground: var(--foreground);
-  --popover: oklch(1 0 0);
+  --popover: oklch(0.27 0.038 172 / 0.94);
   --popover-foreground: var(--foreground);
-  --sunken: oklch(0.968 0.008 84.6);
+  --sunken: oklch(0.17 0.03 172 / 0.55);
 
   --primary: var(--ink);
-  --primary-foreground: oklch(0.985 0.006 80.7);
-  --secondary: var(--cream);
-  --secondary-foreground: var(--ink-deep);
-  --muted: oklch(0.962 0.014 84.6);
-  --muted-foreground: oklch(0.5 0.014 166.8); /* Muted #68736E */
+  --primary-foreground: oklch(0.24 0.05 172); /* Deep Emerald on a pale control */
+  --secondary: oklch(0.32 0.04 171 / 0.75);
+  --secondary-foreground: var(--foreground);
+  --muted: oklch(0.32 0.036 171 / 0.6);
+  --muted-foreground: oklch(0.75 0.03 168);
   --accent: var(--champagne);
   --accent-foreground: var(--ink-deep);
-  --destructive: oklch(0.5 0.182 29.5);
+  --destructive: oklch(0.62 0.19 27);
   --destructive-foreground: oklch(0.985 0.006 80.7);
 
-  /* Status. Tuned for sunlight legibility: dark text on a pale wash. */
-  --positive: oklch(0.42 0.09 168);
-  --positive-soft: oklch(0.94 0.035 168);
-  --caution: oklch(0.47 0.11 68);
-  --caution-soft: oklch(0.95 0.05 82);
-  --negative: oklch(0.48 0.17 28);
-  --negative-soft: oklch(0.955 0.025 30);
-  --info: oklch(0.45 0.09 245);
-  --info-soft: oklch(0.95 0.03 245);
+  /* Status. Luminous hues on the dark ground; the softs are translucent
+     washes of the same hue, so chips and notices read without painting a
+     panel pale. */
+  --positive: oklch(0.78 0.13 165);
+  --positive-soft: oklch(0.34 0.06 168 / 0.55);
+  --caution: oklch(0.82 0.13 85);
+  --caution-soft: oklch(0.36 0.06 82 / 0.55);
+  --negative: oklch(0.72 0.16 26);
+  --negative-soft: oklch(0.35 0.07 26 / 0.55);
+  --info: oklch(0.76 0.1 245);
+  --info-soft: oklch(0.34 0.05 245 / 0.55);
 
-  --border: oklch(0.905 0.014 84.6);
-  --line-strong: oklch(0.86 0.016 84.6);
-  --input: oklch(0.885 0.014 84.6);
+  --border: oklch(1 0 0 / 13%);
+  --line-strong: oklch(1 0 0 / 24%);
+  --input: oklch(1 0 0 / 18%);
   --ring: var(--ink-soft);
 
   --sidebar: oklch(0.273 0.05 173.3);
@@ -192,20 +200,20 @@
    * L3 being the *most* opaque is deliberate and slightly counter-intuitive.
    * Opacity is a legibility tool here, not a status symbol.
    */
-  --glass-1: oklch(1 0 0 / 0.72);
-  --glass-1-line: oklch(1 0 0 / 0.85);
-  --glass-1-sheen: oklch(1 0 0 / 0.5);
+  --glass-1: oklch(0.31 0.04 172 / 0.76);
+  --glass-1-line: oklch(1 0 0 / 0.14);
+  --glass-1-sheen: oklch(1 0 0 / 0.1);
 
-  --glass-2: oklch(1 0 0 / 0.5);
-  --glass-2-line: oklch(1 0 0 / 0.7);
-  --glass-2-sheen: oklch(1 0 0 / 0.35);
+  --glass-2: oklch(0.3 0.036 172 / 0.5);
+  --glass-2-line: oklch(1 0 0 / 0.12);
+  --glass-2-sheen: oklch(1 0 0 / 0.07);
 
-  --glass-3: oklch(1 0 0 / 0.88);
-  --glass-3-line: oklch(1 0 0 / 0.95);
-  --glass-3-sheen: oklch(1 0 0 / 0.6);
+  --glass-3: oklch(0.28 0.034 172 / 0.93);
+  --glass-3-line: oklch(1 0 0 / 0.18);
+  --glass-3-sheen: oklch(1 0 0 / 0.1);
 
   /** The border colour a hovered surface takes. A step up, never a jump. */
-  --hover-line: oklch(0.62 0.09 169 / 0.45);
+  --hover-line: oklch(0.78 0.1 166 / 0.5);
 
   /*
    * Depth, in three steps, and deliberately small.
@@ -220,71 +228,79 @@
    * `@theme`, because nothing generates a Tailwind utility from them — they are
    * only ever referenced by the glass utilities, and a plain custom property
    * has an ordinary, predictable cascade.
+   *
+   * On the dark ground the shadows are pure black — a coloured shadow is
+   * invisible on a coloured page, and black is what actually separates a pane
+   * from the glass behind it.
    */
-  --depth-1: 0 1px 1px oklch(0.27 0.05 173 / 0.04), 0 6px 18px -12px oklch(0.27 0.05 173 / 0.18);
-  --depth-2: 0 1px 1px oklch(0.27 0.05 173 / 0.05), 0 3px 10px -8px oklch(0.27 0.05 173 / 0.16);
-  --depth-3: 0 2px 4px oklch(0.27 0.05 173 / 0.05), 0 14px 34px -18px oklch(0.27 0.05 173 / 0.3);
-  --depth-hover:
-    0 2px 4px oklch(0.27 0.05 173 / 0.06), 0 12px 26px -14px oklch(0.27 0.05 173 / 0.26);
+  --depth-1: 0 1px 1px oklch(0 0 0 / 0.25), 0 6px 18px -12px oklch(0 0 0 / 0.4);
+  --depth-2: 0 1px 1px oklch(0 0 0 / 0.24), 0 3px 10px -8px oklch(0 0 0 / 0.35);
+  --depth-3: 0 2px 4px oklch(0 0 0 / 0.3), 0 14px 34px -18px oklch(0 0 0 / 0.5);
+  --depth-hover: 0 2px 4px oklch(0 0 0 / 0.35), 0 12px 26px -14px oklch(0 0 0 / 0.45);
 
   /*
    * The glass palette. Each surface is a translucent tint of the page itself
    * plus a light-catching top edge, so the navigation picks up whatever is
    * scrolling underneath it instead of hiding it behind an opaque slab.
    */
-  --glass: oklch(1 0 0 / 0.58);
-  --glass-strong: oklch(1 0 0 / 0.86);
-  --glass-line: oklch(1 0 0 / 0.75);
-  --glass-sheen: oklch(1 0 0 / 0.55);
-  --glass-tile: oklch(1 0 0 / 0.62);
-  --glass-tile-line: oklch(1 0 0 / 0.9);
-  --glass-sunk: oklch(0.97 0.008 84.6 / 0.7);
+  --glass: oklch(0.3 0.038 172 / 0.6);
+  --glass-strong: oklch(0.27 0.036 172 / 0.9);
+  --glass-line: oklch(1 0 0 / 0.13);
+  --glass-sheen: oklch(1 0 0 / 0.1);
+  --glass-tile: oklch(1 0 0 / 0.12);
+  --glass-tile-line: oklch(1 0 0 / 0.22);
+  --glass-sunk: oklch(0.19 0.03 172 / 0.6);
 }
 
+/*
+ * Dark mode. The default theme is now itself dark — a deep emerald ground
+ * with pale mint text — so `.dark` only goes a step deeper and colder, keeping
+ * the same hue family. Nothing here needs to "invert" anymore; it shades.
+ */
 .dark {
-  --background: oklch(0.19 0.02 172.7);
-  --foreground: oklch(0.962 0.014 84.6);
-  --card: oklch(0.25 0.025 172.7);
-  --card-foreground: oklch(0.962 0.014 84.6);
-  --popover: oklch(0.25 0.025 172.7);
-  --popover-foreground: oklch(0.962 0.014 84.6);
-  --sunken: oklch(0.22 0.02 172.7);
-  --primary: oklch(0.934 0.044 81.9);
-  --primary-foreground: oklch(0.19 0.02 172.7);
-  --secondary: oklch(0.3 0.03 172);
-  --secondary-foreground: oklch(0.962 0.014 84.6);
-  --muted: oklch(0.3 0.03 172);
-  --muted-foreground: oklch(0.74 0.015 166);
-  --accent: oklch(0.378 0.073 168.9);
-  --accent-foreground: oklch(0.962 0.014 84.6);
-  --destructive: oklch(0.62 0.18 29.5);
-  --destructive-foreground: oklch(0.19 0.02 172.7);
-  --positive: oklch(0.75 0.12 168);
-  --positive-soft: oklch(0.32 0.05 168);
-  --caution: oklch(0.8 0.12 82);
-  --caution-soft: oklch(0.34 0.05 82);
-  --negative: oklch(0.7 0.16 28);
-  --negative-soft: oklch(0.33 0.06 28);
-  --info: oklch(0.75 0.1 245);
-  --info-soft: oklch(0.32 0.05 245);
-  --border: oklch(1 0 0 / 13%);
-  --line-strong: oklch(1 0 0 / 22%);
-  --input: oklch(1 0 0 / 18%);
-  --ring: oklch(0.6 0.1 169);
+  --background: oklch(0.22 0.038 172.5);
+  --foreground: oklch(0.95 0.02 166);
+  --card: oklch(0.27 0.038 172 / 0.88);
+  --card-foreground: oklch(0.95 0.02 166);
+  --popover: oklch(0.25 0.036 172 / 0.96);
+  --popover-foreground: oklch(0.95 0.02 166);
+  --sunken: oklch(0.15 0.028 172 / 0.55);
+  --primary: var(--ink);
+  --primary-foreground: oklch(0.22 0.042 172);
+  --secondary: oklch(0.29 0.038 171 / 0.75);
+  --secondary-foreground: oklch(0.95 0.02 166);
+  --muted: oklch(0.29 0.034 171 / 0.6);
+  --muted-foreground: oklch(0.78 0.028 168);
+  --accent: oklch(0.32 0.05 168);
+  --accent-foreground: oklch(0.95 0.02 166);
+  --destructive: oklch(0.68 0.18 27);
+  --destructive-foreground: oklch(0.2 0.03 172);
+  --positive: oklch(0.82 0.13 165);
+  --positive-soft: oklch(0.3 0.055 168 / 0.55);
+  --caution: oklch(0.85 0.12 85);
+  --caution-soft: oklch(0.32 0.055 82 / 0.55);
+  --negative: oklch(0.75 0.15 26);
+  --negative-soft: oklch(0.31 0.065 26 / 0.55);
+  --info: oklch(0.78 0.1 245);
+  --info-soft: oklch(0.3 0.05 245 / 0.55);
+  --border: oklch(1 0 0 / 15%);
+  --line-strong: oklch(1 0 0 / 26%);
+  --input: oklch(1 0 0 / 20%);
+  --ring: oklch(0.75 0.1 166);
 
-  --glass-1: oklch(0.3 0.024 172.7 / 0.6);
+  --glass-1: oklch(0.28 0.038 172 / 0.72);
   --glass-1-line: oklch(1 0 0 / 0.16);
-  --glass-1-sheen: oklch(1 0 0 / 0.1);
+  --glass-1-sheen: oklch(1 0 0 / 0.12);
 
-  --glass-2: oklch(0.28 0.02 172.7 / 0.42);
-  --glass-2-line: oklch(1 0 0 / 0.12);
-  --glass-2-sheen: oklch(1 0 0 / 0.06);
+  --glass-2: oklch(0.27 0.034 172 / 0.46);
+  --glass-2-line: oklch(1 0 0 / 0.13);
+  --glass-2-sheen: oklch(1 0 0 / 0.08);
 
-  --glass-3: oklch(0.25 0.022 172.7 / 0.9);
+  --glass-3: oklch(0.25 0.032 172 / 0.94);
   --glass-3-line: oklch(1 0 0 / 0.2);
   --glass-3-sheen: oklch(1 0 0 / 0.12);
 
-  --hover-line: oklch(0.75 0.12 169 / 0.4);
+  --hover-line: oklch(0.8 0.11 166 / 0.45);
 
   /*
    * Depth in the dark theme has to be pure black and a good deal stronger.
@@ -298,13 +314,13 @@
   --depth-3: 0 2px 4px oklch(0 0 0 / 0.35), 0 14px 34px -18px oklch(0 0 0 / 0.55);
   --depth-hover: 0 2px 4px oklch(0 0 0 / 0.4), 0 12px 26px -14px oklch(0 0 0 / 0.5);
 
-  --glass: oklch(0.32 0.024 172.7 / 0.56);
-  --glass-strong: oklch(0.27 0.024 172.7 / 0.88);
-  --glass-line: oklch(1 0 0 / 0.14);
+  --glass: oklch(0.28 0.036 172 / 0.58);
+  --glass-strong: oklch(0.25 0.034 172 / 0.92);
+  --glass-line: oklch(1 0 0 / 0.15);
   --glass-sheen: oklch(1 0 0 / 0.12);
-  --glass-tile: oklch(1 0 0 / 0.1);
-  --glass-tile-line: oklch(1 0 0 / 0.2);
-  --glass-sunk: oklch(0.22 0.02 172.7 / 0.6);
+  --glass-tile: oklch(1 0 0 / 0.13);
+  --glass-tile-line: oklch(1 0 0 / 0.24);
+  --glass-sunk: oklch(0.17 0.028 172 / 0.6);
 }
 
 @layer base {
@@ -318,12 +334,16 @@
   }
 
   body {
-    background-color: var(--color-background);
     color: var(--color-foreground);
     font-family: var(--font-sans);
     font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
     overscroll-behavior-y: none;
+    /*
+     * The page ground is the deep emerald itself, so overscroll glows the
+     * brand colour instead of the browser's grey.
+     */
+    background-color: var(--ink-deep);
   }
 
   /* Money and quantities must not reflow as they change. */
@@ -365,15 +385,18 @@
 
 /** A contained surface. Used only where grouping genuinely aids comprehension. */
 /**
- * The R tile's fill: the same emerald ramp the app icon renders. Only the
- * image — pair it with a real background-colour so the letter always has its
- * dark ground even where images do not paint.
+ * The R tile's fill: the same dark emerald ramp the app icon renders, lit
+ * from the upper left. The lit corner mixes the luminous emerald into the
+ * deep ground so the champagne R keeps its contrast — the tile stays dark
+ * even though `--ink-soft` now glows. Only the image — pair it with a real
+ * background-colour so the letter always has its dark ground even where
+ * images do not paint.
  */
 @utility gradient-ink {
+  background-color: var(--ink-deep);
   background-image: linear-gradient(
     145deg,
-    var(--ink-soft) 0%,
-    var(--ink) 55%,
+    color-mix(in oklab, var(--ink-soft) 35%, var(--ink-deep)) 0%,
     var(--ink-deep) 100%
   );
 }

@@ -48,7 +48,7 @@ function DashboardPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background/30">
       <header className="border-b border-border px-4 py-3.5">
         <div className="mx-auto flex w-full max-w-2xl items-center justify-between">
           <Logo />

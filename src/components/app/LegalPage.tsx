@@ -33,7 +33,7 @@ export function LegalPage({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex min-h-dvh flex-col bg-background">
+    <div className="flex min-h-dvh flex-col bg-background/30">
       <header className="border-b border-border">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-5 py-3.5">
           <Link to="/" aria-label="RAVQEN home">

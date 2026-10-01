@@ -79,19 +79,21 @@ All colour, radius, shadow and font values are tokens in `src/styles.css`.
 Components use semantic classes (`bg-primary`, `text-muted-foreground`,
 `surface-panel`, `gradient-ink`) — never hardcoded hex or `text-white`.
 
-| Token        | Value     | Use                      |
-| ------------ | --------- | ------------------------ |
-| Emerald Ink  | `#064E3B` | `--primary`, `--ink`     |
-| Deep Emerald | `#032F25` | `--ink-deep`, sidebar    |
-| Soft Emerald | `#0B6B52` | `--ink-soft`, focus ring |
-| Champagne    | `#F8E7C9` | `--accent`, highlights   |
-| Warm White   | `#FFFCF7` | `--background`           |
-| Soft Cream   | `#F7F2E8` | `--secondary`, `--muted` |
-| Charcoal     | `#17201D` | `--foreground`           |
-| Muted        | `#68736E` | `--muted-foreground`     |
+| Token            | Value     | Use                          |
+| ---------------- | --------- | ---------------------------- |
+| Deep Emerald     | `#032F25` | `--ink-deep`, `--background` |
+| Luminous Emerald | —         | `--ink-soft`, focus ring     |
+| Pale Mint        | —         | `--ink`, `--foreground`      |
+| Champagne        | `#F8E7C9` | `--accent`, highlights       |
 
-Type: **Fraunces** for headings, **Manrope** for body. Surfaces stay neutral;
-emerald and champagne are used as accents, not as page backgrounds.
+The palette is **dark emerald end to end**: the page itself is the deep
+emerald ground, text is pale mint, and glass surfaces are translucent emerald
+with white hairlines. `--ink` and `--ink-soft` keep their names but now carry
+luminous values, so `text-ink` and `bg-ink` invert correctly on the dark
+ground. The values live as oklch tokens in `src/styles.css`; the hexes here
+are anchors only.
+
+Type: **Fraunces** for headings, **Manrope** for body.
 
 ### The mark
 

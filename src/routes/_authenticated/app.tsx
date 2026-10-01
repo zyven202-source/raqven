@@ -68,7 +68,7 @@ function AppShell({
   }
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-background/30">
       {/*
         The skip link. The app is a single-column list of links, so a keyboard
         user tabbing in lands on the shop bar and has to traverse the whole
@@ -189,7 +189,7 @@ function ShopBar({
  */
 function NoShopState() {
   return (
-    <div className="flex min-h-screen flex-col bg-background">
+    <div className="flex min-h-screen flex-col bg-background/30">
       <header className="px-5 py-4">
         <Logo showTagline />
       </header>
