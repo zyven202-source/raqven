@@ -21,6 +21,7 @@ import {
   SITE_URL,
 } from "@/lib/seo";
 import appCss from "../styles.css?url";
+import { SEARCH_CONSOLE_VERIFICATION_TOKEN } from "@/lib/store-links";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
 function NotFoundComponent() {
@@ -91,6 +92,17 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: SEO_TITLE },
       { name: "description", content: SEO_DESCRIPTION },
       { name: "author", content: SITE_NAME },
+      // Every route is crawlable unless it says otherwise; the authenticated
+      // app redirects signed-out crawlers to /auth, so there is nothing to
+      // hide. Without this the per-page `robots` meta on the landing page
+      // disagrees with pages that carry none at all.
+      { name: "robots", content: "index, follow" },
+      // Search Console's HTML-tag verification, emitted on every route. The
+      // token is empty until it is pasted from the Search Console console,
+      // and an empty value renders no tag at all.
+      ...(SEARCH_CONSOLE_VERIFICATION_TOKEN
+        ? [{ name: "google-site-verification", content: SEARCH_CONSOLE_VERIFICATION_TOKEN }]
+        : []),
       /*
         The fallback social card for every route. The home page overrides
         these with its own set, but a shared link to `/auth/login` or `/app/pos`

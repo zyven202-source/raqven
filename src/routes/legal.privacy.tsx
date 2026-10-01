@@ -1,6 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 
-import { ConfigValue, LegalPage, LegalSection, LegalSubhead } from "@/components/app/LegalPage";
+import {
+  ConfigValue,
+  LegalAnchor,
+  LegalPage,
+  LegalSection,
+  LegalSubhead,
+} from "@/components/app/LegalPage";
 import {
   BUSINESS_DETAILS,
   CONTACT_MAPS_URL,
@@ -11,6 +17,17 @@ import {
   RETENTION_ROWS,
 } from "@/config/legal";
 import { SITE_URL } from "@/lib/seo";
+import { ACCOUNT_DELETION_URL } from "@/lib/store-links";
+
+/*
+ * The Play Console data-deletion form is filled with ACCOUNT_DELETION_URL,
+ * which ends in this page's #delete-my-account anchor. If the id on the
+ * section below ever changes, this breaks at compile time rather than turning
+ * into a dead link a Play reviewer finds.
+ */
+const _playAnchorCheck: typeof ACCOUNT_DELETION_URL extends `${string}#delete-my-account`
+  ? true
+  : never = true;
 
 export const Route = createFileRoute("/legal/privacy")({
   head: () => ({
@@ -34,6 +51,47 @@ function PrivacyPage() {
       title="Privacy policy"
       intro="This says what RAVQEN actually does with information — not what a policy template says it could do. It is written for a shopkeeper, not a lawyer. If a sentence here is unclear to you, that is a defect in this page; please tell us."
     >
+      {/* ------------------------------------------------- delete my account */}
+      {/*
+        The account-deletion disclosure Google Play requires. The Play
+        Console's data-deletion form takes this page's URL with this anchor
+        (`#delete-my-account`, kept in sync with `src/lib/store-links.ts`), and
+        a reviewer fetches it signed-out — so this section is the web
+        counterpart of the in-app flow, not a copy of it.
+      */}
+      <LegalSection id="delete-my-account" title="Delete my account">
+        <p>
+          This page is the account-deletion link RAVQEN publishes. You have two ways to have your
+          account deleted, and they remove the same data:
+        </p>
+        <ol>
+          <li>
+            <strong>In the app (fastest).</strong> Sign in, open Settings › Data &amp; privacy and
+            tap <em>Delete my account</em>. Your profile and your team memberships are removed
+            immediately, and the app tells you on the spot what it keeps and why.
+          </li>
+          <li>
+            <strong>Without the app.</strong> Email{" "}
+            <a
+              className="font-medium text-ink underline underline-offset-4"
+              href={`mailto:${BUSINESS_DETAILS.supportEmail}?subject=Delete%20my%20account`}
+            >
+              {BUSINESS_DETAILS.supportEmail}
+            </a>{" "}
+            with the subject <em>Delete my account</em>, from the address on the account. We reply
+            to that address to confirm the request is yours, delete the account, and confirm the
+            deletion in a final email.
+          </li>
+        </ol>
+        <p>
+          What deletion removes, and what it deliberately keeps (the shop&rsquo;s own accounting
+          record outlives any one member), is described in{" "}
+          <LegalAnchor href="#deletion-limits">what deletion does not remove, and why</LegalAnchor>,
+          and the retention windows are in{" "}
+          <LegalAnchor href="#retention">how long it is kept</LegalAnchor>.
+        </p>
+      </LegalSection>
+
       {/* ------------------------------------------------------- the basics */}
       <LegalSection id="who-we-are" title="Who is publishing this">
         <p>

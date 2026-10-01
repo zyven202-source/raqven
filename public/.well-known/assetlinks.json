@@ -1,0 +1,14 @@
+{
+  "_comment": "Digital Asset Links statement for the RAVQEN Android app (TWA / Play Store). Before publishing: 1) set package_name to the applicationId you registered on Google Play (suggested: ke.ravqen.app); 2) replace the placeholder fingerprint with your app's SHA-256 — from Google Play Console > Release > Setup > App signing (the one Play signs releases with), or locally with: keytool -list -printcert -jarfile app-release.apk. Google's crawler fetches this exact URL from the live site, so this file must be deployed before you submit the Play listing.",
+  "_format_note": "Deploy this array with ONE statement per signing key: Play App Signing gives you TWO (upload + release). Delete this _comment and _format_note keys before shipping — assetlinks.json parsers accept only the standard fields.",
+  "statements": [
+    {
+      "relation": ["delegate_permission/common.handle_all_urls"],
+      "target": {
+        "namespace": "android_app",
+        "package_name": "TODO_play_application_id",
+        "sha256_cert_fingerprints": ["TODO:AA:BB:...:FF"]
+      }
+    }
+  ]
+}
