@@ -56,7 +56,7 @@ export const Route = createFileRoute("/")({
  */
 function Landing() {
   return (
-    <div className="min-h-dvh bg-background">
+    <div className="min-h-dvh bg-background/30">
       <header className="border-b border-border">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-5 py-3.5">
           <Logo />

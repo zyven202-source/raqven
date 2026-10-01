@@ -38,7 +38,7 @@ export function UpdateBanner({ onUpdate }: { onUpdate: () => void }) {
       aria-live="polite"
       className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-3 pt-2"
     >
-      <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-border bg-background px-3.5 py-1.5 text-xs font-medium text-foreground shadow-sm">
+      <div className="glass-3 pointer-events-auto flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium text-foreground shadow-sm backdrop-blur-xl">
         <Download className="size-3.5" aria-hidden />
         <span>A new version is ready</span>
         <Button size="sm" variant="outline" className="h-6 px-2 text-xs" onClick={onUpdate}>

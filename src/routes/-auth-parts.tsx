@@ -10,7 +10,7 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
   const storageAvailable = useStorageAvailable();
 
   return (
-    <div className="flex min-h-dvh flex-col bg-background">
+    <div className="flex min-h-dvh flex-col bg-background/30">
       <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-5 pb-10 pt-14">
         <Link to="/" className="mx-auto" aria-label="RAVQEN home">
           <Logo markSize="size-12" />
