@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  The sitemap Google Search Console is submitted against. Only URLs a signed-out
+  visitor can actually load are listed: the landing page, the two auth entry
+  points and the three public policies. Everything under /app and /dashboard
+  requires a session and redirects, so indexing them would only produce
+  "Page with redirect" noise in the report.
+-->
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url>
+    <loc>https://ravqen.freebuff.app/</loc>
+    <lastmod>2026-10-01</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>1.0</priority>
+  </url>
+  <url>
+    <loc>https://ravqen.freebuff.app/auth/login</loc>
+    <lastmod>2026-10-01</lastmod>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://ravqen.freebuff.app/auth/signup</loc>
+    <lastmod>2026-10-01</lastmod>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://ravqen.freebuff.app/legal/privacy</loc>
+    <lastmod>2026-10-01</lastmod>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://ravqen.freebuff.app/legal/terms</loc>
+    <lastmod>2026-10-01</lastmod>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://ravqen.freebuff.app/legal/refunds</loc>
+    <lastmod>2026-10-01</lastmod>
+    <priority>0.5</priority>
+  </url>
+</urlset>
