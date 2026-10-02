@@ -58,10 +58,10 @@ export type Database = {
           method: Database["public"]["Enums"]["payment_method"]
           note: string | null
           paid_at: string
-          recorded_by: string | null
           reference: string | null
           sale_id: string | null
           shop_id: string
+          user_id: string | null
         }
         Insert: {
           amount: number
@@ -71,10 +71,10 @@ export type Database = {
           method?: Database["public"]["Enums"]["payment_method"]
           note?: string | null
           paid_at?: string
-          recorded_by?: string | null
           reference?: string | null
           sale_id?: string | null
           shop_id: string
+          user_id?: string | null
         }
         Update: {
           amount?: number
@@ -84,10 +84,10 @@ export type Database = {
           method?: Database["public"]["Enums"]["payment_method"]
           note?: string | null
           paid_at?: string
-          recorded_by?: string | null
           reference?: string | null
           sale_id?: string | null
           shop_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -115,7 +115,6 @@ export type Database = {
       }
       debtors: {
         Row: {
-          balance: number
           created_at: string
           credit_limit: number | null
           email: string | null
@@ -124,10 +123,10 @@ export type Database = {
           notes: string | null
           phone: string | null
           shop_id: string
+          total_owed: number
           updated_at: string
         }
         Insert: {
-          balance?: number
           created_at?: string
           credit_limit?: number | null
           email?: string | null
@@ -136,10 +135,10 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           shop_id: string
+          total_owed?: number
           updated_at?: string
         }
         Update: {
-          balance?: number
           created_at?: string
           credit_limit?: number | null
           email?: string | null
@@ -148,6 +147,7 @@ export type Database = {
           notes?: string | null
           phone?: string | null
           shop_id?: string
+          total_owed?: number
           updated_at?: string
         }
         Relationships: [
@@ -226,10 +226,10 @@ export type Database = {
           id: string
           method: Database["public"]["Enums"]["payment_method"]
           receipt_url: string | null
-          recorded_by: string | null
           shop_id: string
           spent_at: string
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           amount: number
@@ -239,10 +239,10 @@ export type Database = {
           id?: string
           method?: Database["public"]["Enums"]["payment_method"]
           receipt_url?: string | null
-          recorded_by?: string | null
           shop_id: string
           spent_at?: string
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           amount?: number
@@ -252,10 +252,10 @@ export type Database = {
           id?: string
           method?: Database["public"]["Enums"]["payment_method"]
           receipt_url?: string | null
-          recorded_by?: string | null
           shop_id?: string
           spent_at?: string
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -271,44 +271,44 @@ export type Database = {
         Row: {
           balance_after: number | null
           created_at: string
-          created_by: string | null
           id: string
-          note: string | null
+          movement_type: Database["public"]["Enums"]["movement_type"]
+          notes: string | null
           product_id: string
           quantity: number
           reference_id: string | null
           reference_type: string | null
           shop_id: string
-          type: Database["public"]["Enums"]["movement_type"]
           unit_cost: number | null
+          user_id: string | null
         }
         Insert: {
           balance_after?: number | null
           created_at?: string
-          created_by?: string | null
           id?: string
-          note?: string | null
+          movement_type: Database["public"]["Enums"]["movement_type"]
+          notes?: string | null
           product_id: string
           quantity: number
           reference_id?: string | null
           reference_type?: string | null
           shop_id: string
-          type: Database["public"]["Enums"]["movement_type"]
           unit_cost?: number | null
+          user_id?: string | null
         }
         Update: {
           balance_after?: number | null
           created_at?: string
-          created_by?: string | null
           id?: string
-          note?: string | null
+          movement_type?: Database["public"]["Enums"]["movement_type"]
+          notes?: string | null
           product_id?: string
           quantity?: number
           reference_id?: string | null
           reference_type?: string | null
           shop_id?: string
-          type?: Database["public"]["Enums"]["movement_type"]
           unit_cost?: number | null
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -335,10 +335,10 @@ export type Database = {
           method: Database["public"]["Enums"]["payment_method"]
           note: string | null
           paid_at: string
-          recorded_by: string | null
           reference: string | null
           sale_id: string | null
           shop_id: string
+          user_id: string | null
         }
         Insert: {
           amount: number
@@ -347,10 +347,10 @@ export type Database = {
           method?: Database["public"]["Enums"]["payment_method"]
           note?: string | null
           paid_at?: string
-          recorded_by?: string | null
           reference?: string | null
           sale_id?: string | null
           shop_id: string
+          user_id?: string | null
         }
         Update: {
           amount?: number
@@ -359,10 +359,10 @@ export type Database = {
           method?: Database["public"]["Enums"]["payment_method"]
           note?: string | null
           paid_at?: string
-          recorded_by?: string | null
           reference?: string | null
           sale_id?: string | null
           shop_id?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -384,52 +384,52 @@ export type Database = {
       products: {
         Row: {
           barcode: string | null
+          buying_price: number
           category_id: string | null
-          cost_price: number
           created_at: string
           id: string
           image_url: string | null
           is_active: boolean
           low_stock_threshold: number
           name: string
+          quantity: number
           selling_price: number
           shop_id: string
           sku: string | null
-          stock_quantity: number
           unit: string
           updated_at: string
         }
         Insert: {
           barcode?: string | null
+          buying_price?: number
           category_id?: string | null
-          cost_price?: number
           created_at?: string
           id?: string
           image_url?: string | null
           is_active?: boolean
           low_stock_threshold?: number
           name: string
+          quantity?: number
           selling_price?: number
           shop_id: string
           sku?: string | null
-          stock_quantity?: number
           unit?: string
           updated_at?: string
         }
         Update: {
           barcode?: string | null
+          buying_price?: number
           category_id?: string | null
-          cost_price?: number
           created_at?: string
           id?: string
           image_url?: string | null
           is_active?: boolean
           low_stock_threshold?: number
           name?: string
+          quantity?: number
           selling_price?: number
           shop_id?: string
           sku?: string | null
-          stock_quantity?: number
           unit?: string
           updated_at?: string
         }
@@ -602,12 +602,12 @@ export type Database = {
           created_at: string
           id: string
           reason: string | null
-          requested_by: string | null
           sale_id: string
           shop_id: string
           status: Database["public"]["Enums"]["refund_status"]
           total_amount: number
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           approved_at?: string | null
@@ -615,12 +615,12 @@ export type Database = {
           created_at?: string
           id?: string
           reason?: string | null
-          requested_by?: string | null
           sale_id: string
           shop_id: string
           status?: Database["public"]["Enums"]["refund_status"]
           total_amount: number
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           approved_at?: string | null
@@ -628,12 +628,12 @@ export type Database = {
           created_at?: string
           id?: string
           reason?: string | null
-          requested_by?: string | null
           sale_id?: string
           shop_id?: string
           status?: Database["public"]["Enums"]["refund_status"]
           total_amount?: number
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -654,42 +654,42 @@ export type Database = {
       }
       sale_items: {
         Row: {
+          buying_price: number
           created_at: string
           discount_amount: number
           id: string
-          line_total: number
           product_id: string | null
           product_name: string
           quantity: number
           sale_id: string
           shop_id: string
-          unit_cost: number
+          subtotal: number
           unit_price: number
         }
         Insert: {
+          buying_price?: number
           created_at?: string
           discount_amount?: number
           id?: string
-          line_total: number
           product_id?: string | null
           product_name: string
           quantity: number
           sale_id: string
           shop_id: string
-          unit_cost?: number
+          subtotal: number
           unit_price: number
         }
         Update: {
+          buying_price?: number
           created_at?: string
           discount_amount?: number
           id?: string
-          line_total?: number
           product_id?: string | null
           product_name?: string
           quantity?: number
           sale_id?: string
           shop_id?: string
-          unit_cost?: number
+          subtotal?: number
           unit_price?: number
         }
         Relationships: [
@@ -730,12 +730,12 @@ export type Database = {
           receipt_number: string
           shop_id: string
           sold_at: string
-          sold_by: string | null
           status: Database["public"]["Enums"]["sale_status"]
           subtotal: number
           tax_amount: number
           total_amount: number
           updated_at: string
+          user_id: string | null
         }
         Insert: {
           amount_paid?: number
@@ -750,12 +750,12 @@ export type Database = {
           receipt_number: string
           shop_id: string
           sold_at?: string
-          sold_by?: string | null
           status?: Database["public"]["Enums"]["sale_status"]
           subtotal?: number
           tax_amount?: number
           total_amount?: number
           updated_at?: string
+          user_id?: string | null
         }
         Update: {
           amount_paid?: number
@@ -770,12 +770,12 @@ export type Database = {
           receipt_number?: string
           shop_id?: string
           sold_at?: string
-          sold_by?: string | null
           status?: Database["public"]["Enums"]["sale_status"]
           subtotal?: number
           tax_amount?: number
           total_amount?: number
           updated_at?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -840,6 +840,7 @@ export type Database = {
       }
       shops: {
         Row: {
+          accepts_refunds: boolean
           address: string | null
           business_type: string | null
           city: string | null
@@ -849,6 +850,7 @@ export type Database = {
           id: string
           is_active: boolean
           kra_pin: string | null
+          location: string | null
           logo_url: string | null
           name: string
           owner_id: string
@@ -857,6 +859,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          accepts_refunds?: boolean
           address?: string | null
           business_type?: string | null
           city?: string | null
@@ -866,6 +869,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           kra_pin?: string | null
+          location?: string | null
           logo_url?: string | null
           name: string
           owner_id: string
@@ -874,6 +878,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          accepts_refunds?: boolean
           address?: string | null
           business_type?: string | null
           city?: string | null
@@ -883,6 +888,7 @@ export type Database = {
           id?: string
           is_active?: boolean
           kra_pin?: string | null
+          location?: string | null
           logo_url?: string | null
           name?: string
           owner_id?: string
@@ -911,7 +917,7 @@ export type Database = {
     Enums: {
       member_status: "active" | "suspended" | "removed"
       movement_type:
-        | "purchase"
+        | "stock_in"
         | "sale"
         | "adjustment"
         | "refund"
@@ -921,7 +927,7 @@ export type Database = {
       payment_method: "cash" | "mpesa" | "card" | "bank" | "credit"
       refund_status: "pending" | "approved" | "rejected"
       sale_status: "completed" | "partial" | "pending" | "cancelled"
-      shop_role: "owner" | "manager" | "cashier"
+      shop_role: "owner" | "employee"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -1051,7 +1057,7 @@ export const Constants = {
     Enums: {
       member_status: ["active", "suspended", "removed"],
       movement_type: [
-        "purchase",
+        "stock_in",
         "sale",
         "adjustment",
         "refund",
@@ -1062,7 +1068,7 @@ export const Constants = {
       payment_method: ["cash", "mpesa", "card", "bank", "credit"],
       refund_status: ["pending", "approved", "rejected"],
       sale_status: ["completed", "partial", "pending", "cancelled"],
-      shop_role: ["owner", "manager", "cashier"],
+      shop_role: ["owner", "employee"],
     },
   },
 } as const
