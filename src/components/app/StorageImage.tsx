@@ -51,5 +51,13 @@ export function StorageImage({
     return <div className={cn("animate-pulse rounded-lg bg-secondary", className)} aria-hidden />;
   }
 
-  return <img src={url} alt={alt} className={cn("rounded-lg object-cover", className)} />;
+  return (
+    <img
+      src={url}
+      alt={alt}
+      loading="lazy"
+      decoding="async"
+      className={cn("rounded-lg object-cover", className)}
+    />
+  );
 }

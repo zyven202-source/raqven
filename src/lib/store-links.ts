@@ -9,8 +9,10 @@ import { SITE_URL } from "@/lib/seo";
  * content string below, redeploy, and click Verify — the tag is emitted for
  * every route from the root head. Google also accepts the DNS `TXT` method,
  * which needs no code change at all.
+ *
+ * Value: Google's HTML-tag `content` token, provided by the site owner.
  */
-export const SEARCH_CONSOLE_VERIFICATION_TOKEN = "";
+export const SEARCH_CONSOLE_VERIFICATION_TOKEN = "SixuvE-EGJeNyHq9UQyg4gh_BOQwX6zmyqIsiNzylmE";
 
 /**
  * # Google Play: the data-deletion disclosure
@@ -37,7 +39,7 @@ export const ACCOUNT_DELETION_URL = `${SITE_URL}/legal/privacy#delete-my-account
  */
 export const PLAY_LISTING = {
   /** 30 characters max on Play. */
-  appName: "RAVQEN — Shop POS Kenya",
+  appName: "SAVO — Shop POS Kenya",
   /** 80 characters max on Play. */
   shortDescription:
     "Sales, stock, M-Pesa, debtors and expenses for Kenyan shops — offline-tolerant.",

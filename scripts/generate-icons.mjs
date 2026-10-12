@@ -1,13 +1,10 @@
 #!/usr/bin/env node
-// Render RAVQEN's raster icons from the brand SVG through headless Chromium.
+// Render SAVO's raster icons from the brand SVG through headless Chromium.
 //
-// The R is typography, not paths, so the PNGs must be rasterized from real
-// pixels with the real Fraunces letterform. Chromium is already in the
-// workspace (the browser suites run on it), so the generator loads the same
-// composition AppIcon.tsx draws, waits for Fraunces to arrive from Google
-// Fonts, and screenshots the SVG node with Playwright -- which returns a PNG
-// buffer directly, so there is no image code here at all beyond the ICO
-// wrapper.
+// The mark is a stroked path, not typography, so there is no font to wait for:
+// the generator loads the same composition AppIcon.tsx draws and screenshots
+// the SVG node with Playwright -- which returns a PNG buffer directly, so
+// there is no image code here at all beyond the ICO wrapper.
 //
 // Run after changing src/components/brand/AppIcon.tsx:
 //
@@ -23,7 +20,7 @@ const { chromium } = await import(
 
 // The same numbers the React AppIcon renders. The .ts extension is required
 // for Node's type stripping, and is how the previous generator did it too.
-const { BRAND, CONTAINER, R_GLYPH, VIEW_BOX } =
+const { BRAND, CONTAINER, MARK, VIEW_BOX } =
   await import("../src/components/brand/mark-geometry.ts");
 
 // The same composition AppIcon.tsx draws, composed from the same data.
@@ -51,7 +48,7 @@ function artSvg(size) {
     `<rect ${rect} fill="url(#shell)"/>`,
     `<rect ${rect} fill="url(#gloss)"/>`,
     `<rect ${rect} fill="none" stroke="url(#rim)" stroke-width="0.55"/>`,
-    `<text x="${R_GLYPH.baseline[0]}" y="${R_GLYPH.baseline[1]}" text-anchor="middle" font-family="${R_GLYPH.family}" font-size="${R_GLYPH.size}" font-weight="600" fill="${BRAND.letter}">R</text>`,
+    `<path d="${MARK.path}" fill="none" stroke="${BRAND.letter}" stroke-width="${MARK.stroke}" stroke-linecap="${MARK.linecap}"/>`,
     "</svg>",
   ].join("");
 }
@@ -60,7 +57,7 @@ function artSvg(size) {
 function encodeIco(pngs) {
   const header = Buffer.alloc(6);
   header.writeUInt16LE(1, 2); // type: icon
-  header.writeUInt16LE(pngs.length, 4);
+  header.writeUInt16LE(pngs.length, 4); // count
   const entries = [];
   const frames = [];
   let offset = 6 + 16 * pngs.length;
@@ -87,29 +84,16 @@ const browser = await chromium.launch({
 });
 const page = await browser.newPage();
 
-// One page holds one SVG per size, stacked; fonts load once for all of them.
+// One page holds one SVG per size, stacked.
 const body = sizes.map((s) => artSvg(s)).join("");
 await page.setContent(
   "<!doctype html><html><head>" +
-    '<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600&display=block">' +
     "<style>html,body{margin:0;padding:0;background:transparent}svg{display:block}</style>" +
     "</head><body>" +
     body +
     "</body></html>",
-  { waitUntil: "networkidle" },
+  { waitUntil: "load" },
 );
-
-// Fraunces must actually be loaded before the R is drawn, or the raster falls
-// back to Georgia and the icons ship with the wrong letterform.
-await page.evaluate(() =>
-  document.fonts.load('600 20px "Fraunces"', "R").then(() => document.fonts.ready),
-);
-const loaded = await page.evaluate(() => document.fonts.check('600 20px "Fraunces"'));
-if (!loaded) {
-  console.error("Fraunces did not load; refusing to write icons with a fallback letterform.");
-  await browser.close();
-  process.exit(1);
-}
 
 const svgs = page.locator("svg");
 const pngs = new Map();

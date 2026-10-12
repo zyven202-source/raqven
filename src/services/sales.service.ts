@@ -18,7 +18,7 @@ import type {
   SaleItem,
   SaleStatus,
   Shop,
-} from "@/types/ravqen";
+} from "@/types/savo";
 
 export interface CartLineInput {
   productId: string;
@@ -237,8 +237,11 @@ export interface ReceiptPayload {
   sale: Sale;
   items: SaleItem[];
   payments: Payment[];
+  refunds: Refund[];
   debtor: Debtor | null;
   shop: Shop;
+  /** The member who rang the sale up, when the directory can name them. */
+  cashierName: string | null;
   settings: {
     footer_text: string | null;
     header_text: string | null;
@@ -270,12 +273,28 @@ export async function getReceiptPayload(saleId: string): Promise<ReceiptPayload>
     .maybeSingle();
   if (settingsError) throw settingsError;
 
+  /*
+   * The cashier line is a nicety, not a load-bearing fact: if the member
+   * directory refuses or the seller has since left, the receipt still prints
+   * without a name rather than failing the whole sale's receipt.
+   */
+  let cashierName: string | null = null;
+  if (detail.sale.user_id) {
+    const { data: members } = await supabase.rpc("shop_member_directory", {
+      p_shop_id: detail.sale.shop_id,
+    });
+    const match = (members ?? []).find((member) => member.user_id === detail.sale.user_id);
+    cashierName = match?.display_name || null;
+  }
+
   return {
     sale: detail.sale,
     items: detail.items,
     payments: detail.payments,
+    refunds: detail.refunds,
     debtor: detail.debtor,
     shop,
+    cashierName,
     settings,
   };
 }

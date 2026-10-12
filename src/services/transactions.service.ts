@@ -1,7 +1,7 @@
 /**
  * The transaction ledger.
  *
- * RAVQEN keeps money and stock in separate, purpose-built tables — that is what
+ * SAVO keeps money and stock in separate, purpose-built tables — that is what
  * makes the balances verifiable. The ledger is a read model over them: one row
  * per business event, newest first, each one traceable back to the row that
  * produced it.
@@ -12,7 +12,7 @@
  * rather than being added to a cash total and double-counted.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { MovementType, PaymentMethod, SaleStatus } from "@/types/ravqen";
+import type { MovementType, PaymentMethod, SaleStatus } from "@/types/savo";
 
 export type TransactionKind =
   "sale" | "payment" | "expense" | "stock_in" | "stock_adjustment" | "refund" | "debt_payment";

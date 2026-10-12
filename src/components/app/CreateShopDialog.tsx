@@ -26,7 +26,7 @@ import { useCreateShop } from "@/hooks/useShops";
 import { updateReceiptSettings } from "@/services/receipts.service";
 import { BUSINESS_TYPES, suggestAccessCode, updateShop } from "@/services/shops.service";
 import { uploadImage } from "@/services/storage.service";
-import { STORAGE_BUCKETS, type Shop } from "@/types/ravqen";
+import { STORAGE_BUCKETS, type Shop } from "@/types/savo";
 
 /**
  * Creates a shop and configures it in one pass.
@@ -49,7 +49,7 @@ export function CreateShopDialog({ children }: { children: ReactNode }) {
   const [acceptsRefunds, setAcceptsRefunds] = useState(false);
   const [showLogo, setShowLogo] = useState(true);
   const [footerText, setFooterText] = useState("");
-  const [receiptPrefix, setReceiptPrefix] = useState("RV");
+  const [receiptPrefix, setReceiptPrefix] = useState("SV");
   const [accessCode, setAccessCode] = useState(() => suggestAccessCode());
   const [generateCode, setGenerateCode] = useState(true);
   const [logoFile, setLogoFile] = useState<File | null>(null);
@@ -67,7 +67,7 @@ export function CreateShopDialog({ children }: { children: ReactNode }) {
     setAcceptsRefunds(false);
     setShowLogo(true);
     setFooterText("");
-    setReceiptPrefix("RV");
+    setReceiptPrefix("SV");
     setAccessCode(suggestAccessCode());
     setGenerateCode(true);
     setLogoFile(null);
@@ -98,7 +98,7 @@ export function CreateShopDialog({ children }: { children: ReactNode }) {
         receipt: {
           footerText: footerText.trim() || null,
           showLogo: showLogo && Boolean(logoFile),
-          receiptPrefix: receiptPrefix.trim() || "RV",
+          receiptPrefix: receiptPrefix.trim() || "SV",
         },
         employeeAccessCode: generateCode ? accessCode : null,
       });
@@ -270,7 +270,7 @@ export function CreateShopDialog({ children }: { children: ReactNode }) {
 
               <Field
                 label="Receipt numbers start with"
-                hint={`Your receipts will read ${(receiptPrefix || "RV").toUpperCase()}-00001, ${(receiptPrefix || "RV").toUpperCase()}-00002, and so on.`}
+                hint={`Your receipts will read ${(receiptPrefix || "SV").toUpperCase()}-00001, ${(receiptPrefix || "SV").toUpperCase()}-00002, and so on.`}
                 htmlFor="shop-prefix"
               >
                 <Input

@@ -21,10 +21,10 @@ import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { useProducts } from "@/hooks/useProducts";
 import { findProductByBarcode } from "@/services/products.service";
 import { formatMoney } from "@/lib/format";
-import type { Product } from "@/types/ravqen";
+import type { Product } from "@/types/savo";
 
 export const Route = createFileRoute("/_authenticated/app/restock")({
-  head: () => ({ meta: [{ title: "Receive stock — RAVQEN" }] }),
+  head: () => ({ meta: [{ title: "SAVO — Receive stock" }] }),
   component: RestockPage,
 });
 

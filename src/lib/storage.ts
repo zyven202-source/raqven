@@ -11,7 +11,7 @@
 export function isBrowserStorageAvailable(): boolean {
   if (typeof window === "undefined") return false;
   try {
-    const probe = "__ravqen_storage_probe__";
+    const probe = "__savo_storage_probe__";
     window.localStorage.setItem(probe, "1");
     window.localStorage.removeItem(probe);
     return true;
@@ -21,5 +21,5 @@ export function isBrowserStorageAvailable(): boolean {
 }
 
 export const STORAGE_BLOCKED_MESSAGE =
-  "This browser is blocking website storage, so RAVQEN cannot keep you signed in. " +
-  "Open RAVQEN in a normal browser tab (not inside an embedded preview) and sign in again.";
+  "This browser is blocking website storage, so SAVO cannot keep you signed in. " +
+  "Open SAVO in a normal browser tab (not inside an embedded preview) and sign in again.";

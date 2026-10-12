@@ -1,12 +1,12 @@
 /**
- * Debtors — RAVQEN records credit, not a customer CRM.
+ * Debtors — SAVO records credit, not a customer CRM.
  *
  * A debtor row exists only because a credit sale created one. Repayments go
  * through the `record_debtor_payment` RPC, which moves the debtor balance and
  * the sale's own balance in one transaction and refuses overpayment.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { Debtor, DebtorPayment, DebtorUpdate, PaymentMethod, Sale } from "@/types/ravqen";
+import type { Debtor, DebtorPayment, DebtorUpdate, PaymentMethod, Sale } from "@/types/savo";
 
 export async function listDebtors(shopId: string, includeSettled = false): Promise<Debtor[]> {
   let query = supabase

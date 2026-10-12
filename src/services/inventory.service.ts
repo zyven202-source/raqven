@@ -6,7 +6,7 @@
  * the UI is allowed to update `products.quantity` directly.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { InventoryMovement, MovementType, Product } from "@/types/ravqen";
+import type { InventoryMovement, MovementType, Product } from "@/types/savo";
 
 export interface ListMovementsOptions {
   shopId: string;

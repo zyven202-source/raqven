@@ -8,7 +8,7 @@
  *
  * Three things are deliberately absent:
  *
- *  * **No cookie or tracking consent.** RAVQEN runs no analytics, no pixels and
+ *  * **No cookie or tracking consent.** SAVO runs no analytics, no pixels and
  *    no behavioural SDK (§4 of the readiness pass). A consent toggle for
  *    technology that does not exist is theatre. The only consent recorded is
  *    the terms/privacy acceptance at sign-up and an optional product-updates
@@ -23,7 +23,7 @@
  */
 import { supabase } from "@/integrations/supabase/client";
 import { POLICY_VERSION } from "@/config/legal";
-import type { AuditLogEntry, ConsentRecord, DataRequest, ShopWithRole } from "@/types/ravqen";
+import type { AuditLogEntry, ConsentRecord, DataRequest, ShopWithRole } from "@/types/savo";
 
 export type ConsentType = "terms" | "privacy_policy" | "product_updates";
 export type DataRequestType = "access" | "correction" | "deletion" | "privacy_contact";
@@ -141,7 +141,7 @@ export async function deleteAccount(): Promise<DeletionOutcome> {
 
 export interface PersonalDataExport {
   exported_at: string;
-  format: "ravqen-personal-data-export";
+  format: "savo-personal-data-export";
   policy_version: string;
   account: Record<string, unknown>;
   shops: { id: string; name: string; role: string; joined_at: string }[];
@@ -153,7 +153,7 @@ export interface PersonalDataExport {
 }
 
 /**
- * Builds the complete copy of what RAVQEN holds about the signed-in person.
+ * Builds the complete copy of what SAVO holds about the signed-in person.
  *
  * Scope: the account, its profile, the shops it belongs to, its memberships,
  * its consent history and its own requests. It deliberately does **not** dump
@@ -226,7 +226,7 @@ function assemble(
 
   return {
     exported_at: new Date().toISOString(),
-    format: "ravqen-personal-data-export",
+    format: "savo-personal-data-export",
     policy_version: POLICY_VERSION,
     account: {
       id: userId,
@@ -248,7 +248,7 @@ function assemble(
     consent,
     data_requests: requests,
     not_included: [
-      "Your password. It is hashed by the authentication service and is never readable by RAVQEN.",
+      "Your password. It is hashed by the authentication service and is never readable by SAVO.",
       "The sales, stock, expense and debtor records of the shops you belong to. Those are the shop's business records, not your personal data — the shop's owner exports them as CSV from the Reports screen.",
       "Files uploaded to a shop (logos, product images, expense receipts). Those belong to the shop.",
       "Records of shops you were removed from. You no longer have access to them.",

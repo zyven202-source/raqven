@@ -10,10 +10,10 @@ import { chromium } from "playwright";
  * distinct from one another, and — the one that matters most — that text on
  * glass is still readable.
  *
- *   CHROMIUM_PATH=... bun scripts/verify-glass-ui.mjs https://ravqen.freebuff.app
+ *   CHROMIUM_PATH=... bun scripts/verify-glass-ui.mjs https://savo.freebuff.app
  */
 
-const BASE = process.argv[2] ?? "https://ravqen.freebuff.app";
+const BASE = process.argv[2] ?? "https://savo.freebuff.app";
 const stamp = Date.now();
 const EMAIL = `glass${stamp}@example.com`;
 const PASSWORD = "Sup3rSecret!23";
@@ -76,7 +76,7 @@ try {
   await page.click('button[type="submit"]');
   await page.waitForURL(/onboarding|dashboard/, { timeout: 40_000 }).catch(() => {});
   await page
-    .getByRole("heading", { name: /How will you use RAVQEN/i })
+    .getByRole("heading", { name: /How will you use SAVO/i })
     .waitFor({ timeout: 30_000 })
     .catch(() => {});
   await page.getByRole("button", { name: /I own a shop/i }).click();

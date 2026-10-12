@@ -6,7 +6,7 @@
  * is off, but that is a courtesy — a direct API call is refused too.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { Refund, RefundItem } from "@/types/ravqen";
+import type { Refund, RefundItem } from "@/types/savo";
 
 export async function listRefunds(shopId: string, limit = 100): Promise<Refund[]> {
   const { data, error } = await supabase

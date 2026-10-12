@@ -13,10 +13,10 @@ import { AuthHeading, AuthSwitchLink, SubmitButton } from "./-auth-parts";
 export const Route = createFileRoute("/auth/login")({
   head: () => ({
     meta: [
-      { title: "Sign in — RAVQEN" },
+      { title: "SAVO — Sign in" },
       {
         name: "description",
-        content: "Sign in to RAVQEN to manage your shop's sales, stock and daily numbers.",
+        content: "Sign in to SAVO to manage your shop's sales, stock and daily numbers.",
       },
     ],
   }),
@@ -125,7 +125,7 @@ function LoginPage() {
         ) : null}
       </form>
 
-      <AuthSwitchLink leading="New to RAVQEN?" to="/auth/signup" linkLabel="Create an account" />
+      <AuthSwitchLink leading="New to SAVO?" to="/auth/signup" linkLabel="Create an account" />
     </>
   );
 }

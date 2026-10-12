@@ -1,4 +1,4 @@
-# RAVQEN final readiness report
+# SAVO final readiness report
 
 Date: 30 September 2026. Scope: the full 26-part production, design, privacy and
 Google-Play readiness pass. Evidence is named next to every claim: a `PASS`

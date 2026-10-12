@@ -3,7 +3,7 @@
  * the RLS policies enforce exactly that split.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { ReceiptSettings, ReceiptSettingsUpdate } from "@/types/ravqen";
+import type { ReceiptSettings, ReceiptSettingsUpdate } from "@/types/savo";
 
 export const RECEIPT_SETTINGS_COLUMNS =
   "id, shop_id, header_text, footer_text, show_logo, logo_url, show_tax, tax_rate, receipt_prefix, paper_width_mm, created_at, updated_at";

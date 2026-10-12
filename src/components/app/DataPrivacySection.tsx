@@ -35,14 +35,14 @@ import { signOut } from "@/services/auth.service";
  *
  * The section is split into four things a person actually wants:
  *
- *   1. **See it** — download everything RAVQEN holds about them, right now.
+ *   1. **See it** — download everything SAVO holds about them, right now.
  *   2. **Fix it** — the fields they can correct themselves, and where.
  *   3. **Ask for it** — a request form that files a dated record.
  *   4. **Delete it** — with the boundary explained before the button, not after.
  *
  * Plus two smaller things that belong in the same place: the optional
  * product-updates consent, and a checklist of the business/legal values that
- * still need to be filled in before RAVQEN launches publicly.
+ * still need to be filled in before SAVO launches publicly.
  */
 export function DataPrivacySection() {
   const { activeShop } = useActiveShop();
@@ -79,7 +79,7 @@ export function DataPrivacySection() {
       await record.mutateAsync({ type: "product_updates", granted });
       toast.success(granted ? "Product updates switched on" : "Product updates switched off", {
         description: granted
-          ? "We will email you about changes to RAVQEN. Every email has a one-tap unsubscribe."
+          ? "We will email you about changes to SAVO. Every email has a one-tap unsubscribe."
           : "You will not get product-update emails. Nothing about the app changes.",
       });
     } catch (error) {
@@ -175,8 +175,8 @@ export function DataPrivacySection() {
       {/* ---------------------------------------------------------- correct */}
       <Block icon={<FileDown className="size-4" aria-hidden />} title="Correct something">
         <p className="text-sm leading-relaxed text-muted-foreground">
-          Most of what RAVQEN holds about you, you can fix yourself, and fixing it yourself is
-          faster than asking.
+          Most of what SAVO holds about you, you can fix yourself, and fixing it yourself is faster
+          than asking.
         </p>
         <ul className="mt-2 space-y-1.5 text-sm leading-relaxed text-muted-foreground">
           <li>
@@ -206,7 +206,7 @@ export function DataPrivacySection() {
             <div className="glass-2 rounded-xl backdrop-blur-md backdrop-saturate-150 px-4">
               <ToggleRow
                 title="Product updates"
-                description="News about RAVQEN itself — new features, changes, the occasional notice. Off unless you turn it on. Every email carries a one-tap unsubscribe, and turning this off never affects the app."
+                description="News about SAVO itself — new features, changes, the occasional notice. Off unless you turn it on. Every email carries a one-tap unsubscribe, and turning this off never affects the app."
                 checked={consent.state.product_updates}
                 onCheckedChange={(next) => void handleToggleUpdates(next)}
                 disabled={record.isPending}
@@ -216,7 +216,7 @@ export function DataPrivacySection() {
               <span className="font-medium text-foreground">
                 No analytics switch, because there is no analytics.
               </span>{" "}
-              RAVQEN sets no tracking cookies, runs no analytics SDK and no advertising pixel, so
+              SAVO sets no tracking cookies, runs no analytics SDK and no advertising pixel, so
               there is nothing to consent to. If that ever changes, it will ship switched off and
               you will be asked first.{" "}
               <span className="font-medium text-foreground">Account emails</span> — password resets,
@@ -366,7 +366,7 @@ export function DataPrivacySection() {
           </Button>
         ) : (
           <div className="mt-3 rounded-lg border border-negative/30 bg-negative-soft/50 p-3.5">
-            <p className="text-sm font-medium text-negative">Delete your RAVQEN account?</p>
+            <p className="text-sm font-medium text-negative">Delete your SAVO account?</p>
             <ul className="mt-2 space-y-1 text-xs leading-relaxed text-muted-foreground">
               <li>Your profile, memberships and minted access codes are deleted.</li>
               <li>Your consent record is kept, with your name removed.</li>
@@ -398,9 +398,9 @@ export function DataPrivacySection() {
       {/* -------------------------------------------------------- retention */}
       <Block title="How long things are kept">
         <p className="text-sm leading-relaxed text-muted-foreground">
-          These are RAVQEN&rsquo;s own rules, not a claim about what the law requires. The windows
-          for accounting records are set by Kenyan tax and accounting practice, and a qualified
-          Kenyan lawyer should confirm them before commercial launch.
+          These are SAVO&rsquo;s own rules, not a claim about what the law requires. The windows for
+          accounting records are set by Kenyan tax and accounting practice, and a qualified Kenyan
+          lawyer should confirm them before commercial launch.
         </p>
         {/*
           Deliberately not a `<table>`.
@@ -432,7 +432,7 @@ export function DataPrivacySection() {
       {/* ----------------------------------------------------------- policy */}
       <Block title="The policies themselves">
         <p className="text-sm leading-relaxed text-muted-foreground">
-          RAVQEN&rsquo;s own terms, at version {POLICY_VERSION}.
+          SAVO&rsquo;s own terms, at version {POLICY_VERSION}.
         </p>
         <nav className="mt-2 flex flex-wrap gap-x-5 gap-y-2 text-sm">
           <Link to="/legal/privacy" className="font-medium text-ink hover:underline">
@@ -453,7 +453,7 @@ export function DataPrivacySection() {
           <NoticeState
             tone="danger"
             title={`${UNCONFIGURED_FIELDS.length} business detail${UNCONFIGURED_FIELDS.length === 1 ? "" : "s"} still to fill in`}
-            description="These are placeholders in the code, marked TODO_. They are not real values, and the public policy pages show them as unconfigured. RAVQEN should not be offered commercially until they are set."
+            description="These are placeholders in the code, marked TODO_. They are not real values, and the public policy pages show them as unconfigured. SAVO should not be offered commercially until they are set."
           />
           <ul className="mt-3 space-y-1 text-xs text-muted-foreground">
             {UNCONFIGURED_FIELDS.map((field) => (
@@ -481,7 +481,7 @@ export function DataPrivacySection() {
             await navigate({ to: "/auth/login", replace: true });
           }}
         >
-          <LogOut className="size-4" aria-hidden /> Sign out of RAVQEN
+          <LogOut className="size-4" aria-hidden /> Sign out of SAVO
         </Button>
         <p className="mt-2 text-center text-xs text-muted-foreground">
           Signing out clears this device&rsquo;s session. Your data is untouched.

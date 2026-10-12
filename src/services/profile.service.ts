@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Profile, ProfileInput } from "@/types/ravqen";
+import type { Profile, ProfileInput } from "@/types/savo";
 
 export async function getMyProfile(): Promise<Profile | null> {
   const { data: auth } = await supabase.auth.getUser();

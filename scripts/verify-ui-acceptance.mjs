@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Browser acceptance run for RAVQEN.
+ * Browser acceptance run for SAVO.
  *
  * `verify-business-engine.mjs` proves the *database* is correct through the
  * public API. This proves the *screens* are wired to it: it drives the real
@@ -16,7 +16,7 @@
  *   with the access code and sees only that shop -> no cross-shop leakage
  *
  * Usage:  bun scripts/verify-ui-acceptance.mjs [baseUrl]
- * Default base URL: https://ravqen.freebuff.app
+ * Default base URL: https://savo.freebuff.app
  *
  * Exits non-zero if any expectation fails. Screenshots go to /tmp. The
  * throwaway accounts are deleted at the end through the management API.
@@ -25,18 +25,17 @@
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
 
-const BASE = (
-  process.argv[2] ||
-  process.env.ACCEPTANCE_URL ||
-  "https://ravqen.freebuff.app"
-).replace(/\/$/, "");
+const BASE = (process.argv[2] || process.env.ACCEPTANCE_URL || "https://savo.freebuff.app").replace(
+  /\/$/,
+  "",
+);
 const ACCESS_TOKEN = process.env.SUPABASE_ACCESS_TOKEN;
 const URL_BASE = process.env.VITE_SUPABASE_URL ?? process.env.SUPABASE_URL;
 
 const stamp = Date.now();
-const EMAIL = `ravqen-ui-${stamp}@example.com`;
-const STAFF_EMAIL = `ravqen-ui-staff-${stamp}@example.com`;
-const PASSWORD = `Ui-${stamp}-ravqen`;
+const EMAIL = `savo-ui-${stamp}@example.com`;
+const STAFF_EMAIL = `savo-ui-staff-${stamp}@example.com`;
+const PASSWORD = `Ui-${stamp}-savo`;
 const SHOP = `Duka UI ${stamp}`;
 const SHOP_B = `Duka B ${stamp}`;
 const BARCODE = String(6000000000000 + (stamp % 9999));
@@ -58,8 +57,70 @@ function check(name, ok, detail = "") {
   return ok;
 }
 
+/**
+ * QA runs under a 180-second terminal cap on this host, and the suite's fixed
+ * waits alone total over three minutes. SLEEP_SCALE shortens every fixed wait
+ * so one run fits. Default is 1 — the original timing — and only the waits are
+ * scaled; selector-driven waits and every assertion keep their full timeouts
+ * and their exact wording.
+ */
+const SLEEP_SCALE = Number(process.env.SLEEP_SCALE ?? 1);
+function fastPage(pageObject) {
+  // Trace every failed HTTP response and network error, minus query strings,
+  // so a mid-run failure can be told apart from a throttled backend.
+  const where = (url) => {
+    try {
+      const parsed = new URL(url);
+      return `${parsed.host}${parsed.pathname}`;
+    } catch {
+      return "(url)";
+    }
+  };
+  pageObject.on("response", (res) => {
+    if (res.status() >= 400) console.log(`HTTP ${res.status()} ${where(res.url())}`);
+  });
+  pageObject.on("requestfailed", (req) => {
+    console.log(`NETFAIL ${req.failure()?.errorText ?? ""} ${where(req.url())}`);
+  });
+  // After every navigation, settle on the browser's own readiness signal —
+  // no requests in flight for 500ms — before any scaled wait or assertion runs.
+  // This keeps assertions honest at a compressed SLEEP_SCALE: the page is
+  // quiescent, not merely old enough.
+  const originalGoto = pageObject.goto.bind(pageObject);
+  pageObject.goto = async (...args) => {
+    const result = await originalGoto(...args);
+    const settleStart = Date.now();
+    await pageObject.waitForLoadState("networkidle", { timeout: 15_000 }).catch(() => {});
+    const settle = Date.now() - settleStart;
+    // A settle that eats seconds is invisible in the totals; surface it.
+    if (settle >= 2500) console.log(`SETTLE ${settle}ms ${where(args[0])}`);
+    return result;
+  };
+  if (!(SLEEP_SCALE > 0 && SLEEP_SCALE < 1)) return pageObject;
+  const original = pageObject.waitForTimeout.bind(pageObject);
+  pageObject.waitForTimeout = (ms) => original(Math.max(0, Math.round(ms * SLEEP_SCALE)));
+  return pageObject;
+}
+
+let stopPending = false;
+let sectionStarted = Date.now();
 function section(title) {
+  // Per-section wall time makes a cap-killed run readable: it shows which
+  // sections consumed the budget rather than leaving one total to guess from.
+  const elapsed = Math.round((Date.now() - sectionStarted) / 1000);
+  if (sectionStarted > 0) console.log(`--- section took ${elapsed}s`);
+  sectionStarted = Date.now();
   console.log(`\n=== ${title} ===`);
+  // STOP_AFTER="<section>" ends the run when the section *after* the named one
+  // begins, so a single section can be iterated on inside the terminal budget.
+  if (stopPending) {
+    console.log(`\nstopped after section: previous`);
+    console.log(`${passed}/${passed + failures.length} checks passed`);
+    if (failures.length) console.log(`failed: ${failures.join(" | ")}`);
+    process.exit(failures.length ? 1 : 0);
+  }
+  const stopAfter = process.env.STOP_AFTER;
+  if (stopAfter && title === stopAfter) stopPending = true;
 }
 
 async function bodyText(page) {
@@ -186,12 +247,20 @@ const context = await browser.newContext({
   isMobile: true,
   hasTouch: true,
 });
-const page = await context.newPage();
+const page = fastPage(await context.newPage());
 
 const consoleErrors = [];
 const pageErrors = [];
 page.on("console", (m) => {
-  if (m.type() === "error") consoleErrors.push(m.text());
+  if (m.type() === "error") {
+    // Keep the page URL and console location with each error so a duplicate-key
+    // or render warning can be traced back to the screen that produced it.
+    const loc = m.location();
+    const where = `${page.url().replace(BASE, "")} @ ${String(loc?.url ?? "?")
+      .split("/")
+      .pop()}:${loc?.lineNumber ?? "?"}`;
+    consoleErrors.push(`${m.text()} [${where}]`);
+  }
 });
 page.on("pageerror", (e) => pageErrors.push(String(e)));
 
@@ -219,11 +288,11 @@ try {
   // The route changes before React has painted the new screen, so wait for the
   // actual question rather than sampling the page mid-transition.
   await page
-    .getByRole("heading", { name: /How will you use RAVQEN/i })
+    .getByRole("heading", { name: /How will you use SAVO/i })
     .waitFor({ timeout: 30_000 })
     .catch(() => {});
   const setup = await bodyText(page);
-  check("setup asks how RAVQEN will be used", /own a shop/i.test(setup), setup.slice(0, 140));
+  check("setup asks how SAVO will be used", /own a shop/i.test(setup), setup.slice(0, 140));
   check("setup offers the staff path too", /access code/i.test(setup));
 
   // ------------------------------------------------------ create + configure
@@ -329,7 +398,7 @@ try {
     "Debtors",
     "Sales history",
     "Receive stock",
-    "Activity log",
+    "Stock movements",
     "Reports",
     "Employees",
     "Shop settings",
@@ -343,11 +412,31 @@ try {
   await page.waitForTimeout(1000);
 
   // Tapping outside the sheet must dismiss it, not leave it stuck open.
+  // The sheet assembles with a staggered entrance, so wait until it is really
+  // open before tapping, and poll for the dismissal instead of betting on one
+  // fixed delay — a scaled wait must not decide this assertion.
   await page.getByRole("button", { name: /^More$/ }).click();
-  await page.waitForTimeout(1000);
+  const openSheet = page.locator('[role="dialog"]');
+  await openSheet
+    .first()
+    .waitFor({ state: "visible", timeout: 8000 })
+    .catch(() => {});
+  const hit = await page.evaluate(() => {
+    const el = document.elementFromPoint(6, 6);
+    return el ? `${el.tagName}.${String(el.className).slice(0, 60)}` : "none";
+  });
   await page.mouse.click(6, 6);
-  await page.waitForTimeout(900);
-  check("More dismisses on an outside tap", (await page.locator('[role="dialog"]').count()) === 0);
+  let dialogCount = await openSheet.count();
+  for (let i = 0; dialogCount > 0 && i < 40; i += 1) {
+    await page.waitForTimeout(100);
+    dialogCount = await openSheet.count();
+  }
+  const dialogVisible = dialogCount > 0 ? await openSheet.first().isVisible() : false;
+  check(
+    "More dismisses on an outside tap",
+    dialogCount === 0,
+    `dialogs=${dialogCount} visible=${dialogVisible} hit@6,6=${hit}`,
+  );
 
   // ---------------------------------------------------------------- product
   section("Add a product with opening stock");
@@ -552,6 +641,13 @@ try {
   await page.waitForTimeout(2500);
   const sheet = page.locator('[role="dialog"]');
   const refundQty = sheet.locator('input[type="number"]').first();
+  // The sheet draws its refundable lines asynchronously, so wait for the
+  // control itself instead of counting after a fixed sleep. The question this
+  // check asks is whether the control exists, not whether it existed within
+  // N milliseconds — and the very next line already waits for the same
+  // element, so a count-early assertion could only ever disagree with the
+  // operation it precedes.
+  await refundQty.waitFor({ state: "visible", timeout: 15_000 }).catch(() => {});
   check("the sale detail offers refundable lines", (await refundQty.count()) > 0);
   await refundQty.fill("1");
   await page.fill("#refund-reason", "Damaged goods");
@@ -641,7 +737,7 @@ try {
   const suggested = download.suggestedFilename();
   check(
     "the download is a named CSV file",
-    suggested.endsWith(".csv") && suggested.startsWith("ravqen-") && !suggested.includes(" "),
+    suggested.endsWith(".csv") && suggested.startsWith("savo-") && !suggested.includes(" "),
     suggested,
   );
 
@@ -719,7 +815,7 @@ try {
     isMobile: true,
     hasTouch: true,
   });
-  const staffPage = await staffContext.newPage();
+  const staffPage = fastPage(await staffContext.newPage());
   try {
     await staffPage.goto(`${BASE}/auth/signup`, { waitUntil: "domcontentloaded" });
     await staffPage.waitForTimeout(3000);
@@ -730,7 +826,7 @@ try {
     await staffPage.click('button[type="submit"]');
     await staffPage.waitForURL(/onboarding/, { timeout: 40_000 }).catch(() => {});
     await staffPage
-      .getByRole("heading", { name: /How will you use RAVQEN/i })
+      .getByRole("heading", { name: /How will you use SAVO/i })
       .waitFor({ timeout: 30_000 })
       .catch(() => {});
     await staffPage.waitForTimeout(1000);
@@ -905,7 +1001,7 @@ try {
   );
 
   const seoContext = await browser.newContext({ viewport: { width: 412, height: 915 } });
-  const seoPage = await seoContext.newPage();
+  const seoPage = fastPage(await seoContext.newPage());
   const seoErrors = [];
   seoPage.on("pageerror", (error) => seoErrors.push(String(error).split("\n")[0].slice(0, 160)));
   await seoPage.goto(`${BASE}/`, { waitUntil: "domcontentloaded" });
@@ -1003,7 +1099,7 @@ try {
   check("og:title is set", Boolean(doc.og.title));
   check("og:description is set", Boolean(doc.og.description));
   check("og:type is website", doc.og.type === "website", doc.og.type ?? "(missing)");
-  check("og:site_name is set", doc.og.siteName === "RAVQEN", doc.og.siteName ?? "(missing)");
+  check("og:site_name is set", doc.og.siteName === "SAVO", doc.og.siteName ?? "(missing)");
   check(
     "og:url is the absolute home page URL",
     /^https:\/\/[^/]+\/$/.test(doc.og.url ?? ""),
@@ -1045,7 +1141,7 @@ try {
     schema?.["@type"] ?? "",
   );
   check("it is schema.org vocabulary", schema?.["@context"] === "https://schema.org");
-  check("it names the application", schema?.name === "RAVQEN", schema?.name ?? "");
+  check("it names the application", schema?.name === "SAVO", schema?.name ?? "");
   check(
     "it states the operating system",
     typeof schema?.operatingSystem === "string" && schema.operatingSystem.length > 0,

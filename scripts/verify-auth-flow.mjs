@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * End-to-end verification of the RAVQEN auth + RLS foundation against the
+ * End-to-end verification of the SAVO auth + RLS foundation against the
  * linked Supabase project, using only the public API (the same path the app
  * uses) plus one privileged cleanup call at the end.
  *
@@ -32,8 +32,8 @@ function check(name, ok, detail = "") {
 }
 
 const stamp = Date.now();
-const email = `ravqen-verify-${stamp}@example.com`;
-const password = `Verify-${stamp}-ravqen`;
+const email = `savo-verify-${stamp}@example.com`;
+const password = `Verify-${stamp}-savo`;
 
 const authHeaders = { apikey: PUBLISHABLE_KEY, "Content-Type": "application/json" };
 

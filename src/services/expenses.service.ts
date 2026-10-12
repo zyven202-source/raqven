@@ -6,7 +6,7 @@
  * invalid category is impossible rather than merely unlikely.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { Expense, ExpenseUpdate, PaymentMethod } from "@/types/ravqen";
+import type { Expense, ExpenseUpdate, PaymentMethod } from "@/types/savo";
 
 export const EXPENSE_CATEGORIES = [
   { value: "lunch", label: "Lunch" },

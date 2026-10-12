@@ -105,7 +105,7 @@ export function LoadingState({
       role="status"
       aria-live="polite"
     >
-      <AppIcon className="size-11" title="RAVQEN" />
+      <AppIcon className="size-11" title="SAVO" />
       <div className="flex items-center gap-2">
         <Loader2 className="size-4 animate-spin" aria-hidden />
         <p className="text-sm">{label}</p>
@@ -157,7 +157,7 @@ export function StateBlock({
           {icon}
         </span>
       ) : null}
-      {illustrated ? <AppIcon className="size-10" title="RAVQEN" /> : null}
+      {illustrated ? <AppIcon className="size-10" title="SAVO" /> : null}
       {/*
         The rule under the mark is the only thing that tells a reader whether
         the state is ordinary or a failure — the symbol itself is the same in

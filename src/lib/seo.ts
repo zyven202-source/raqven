@@ -19,17 +19,26 @@
  */
 
 /** Absolute origin. Open Graph and JSON-LD both reject relative URLs. */
-export const SITE_URL = "https://ravqen.freebuff.app";
+/**
+ * The canonical origin.
+ *
+ * This was `ravqen.freebuff.app` — the old app's host, which now answers 404.
+ * Every absolute URL the product publishes (canonical link, Open Graph,
+ * JSON-LD `url`, the sitemap, the robots entry, and the Play listing's privacy
+ * and account-deletion links) is built from this one constant, so leaving the
+ * dead host here meant all of them pointed at a page that does not exist.
+ */
+export const SITE_URL = "https://savo.freebuff.app";
 
 /** The one term a shop owner in Kenya would actually type to find this. */
 export const PRIMARY_KEYWORD = "Kenyan shop POS";
 
-export const SITE_NAME = "RAVQEN";
+export const SITE_NAME = "SAVO";
 
 export const SITE_TAGLINE = "Every sale. Every stock. Every number.";
 
-/** 54 characters — inside the ~60 a search result will show in full. */
-export const SEO_TITLE = "RAVQEN — Kenyan Shop POS with Stock, Debtors & M-Pesa";
+/** 51 characters — inside the ~60 a search result will show in full. */
+export const SEO_TITLE = "SAVO — Kenyan Shop POS with Stock, Debtors & M-Pesa";
 
 /** 147 characters — inside the ~150 a search result will show before truncating. */
 export const SEO_DESCRIPTION =
@@ -44,7 +53,7 @@ export const HOME_HEADLINE = "The Kenyan shop POS that keeps every sale, stock a
 
 /** The square app icon, which is the only large image the product ships. */
 export const OG_IMAGE_URL = `${SITE_URL}/icon-512.png`;
-export const OG_IMAGE_ALT = "The RAVQEN app icon: a champagne letter R on a deep emerald tile.";
+export const OG_IMAGE_ALT = "The SAVO app icon: the champagne Savo mark on a deep emerald tile.";
 
 /** Every meta descriptor the home page needs, in the order crawlers read them. */
 export const HOME_META = [

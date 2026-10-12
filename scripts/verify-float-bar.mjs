@@ -11,7 +11,7 @@ import { chromium } from "playwright";
  * is covered by verify-ui-acceptance.mjs.
  */
 
-const BASE = process.argv[2] ?? "https://ravqen.freebuff.app";
+const BASE = process.argv[2] ?? "https://savo.freebuff.app";
 const stamp = Date.now();
 const EMAIL = `float${stamp}@example.com`;
 const PASSWORD = "Sup3rSecret!23";
@@ -57,7 +57,7 @@ try {
   await page.waitForURL(/onboarding|dashboard/, { timeout: 40_000 }).catch(() => {});
 
   await page
-    .getByRole("heading", { name: /How will you use RAVQEN/i })
+    .getByRole("heading", { name: /How will you use SAVO/i })
     .waitFor({ timeout: 30_000 })
     .catch(() => {});
   await page.getByRole("button", { name: /I own a shop/i }).click();

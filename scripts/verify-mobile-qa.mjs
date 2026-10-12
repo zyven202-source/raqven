@@ -40,8 +40,8 @@ try {
 }
 
 const stamp = Date.now();
-const EMAIL = `ravqen-mq-${stamp}@example.com`;
-const PASSWORD = `Mq-${stamp}-ravqen`;
+const EMAIL = `savo-mq-${stamp}@example.com`;
+const PASSWORD = `Mq-${stamp}-savo`;
 const SHOP = `Duka QA ${stamp}`;
 const ACCESS_CODE = String(100000 + (stamp % 900000));
 
@@ -122,6 +122,15 @@ async function overflowVerdict(page) {
 
 /** The floating nav slab's box, so it can be checked against the viewport. */
 async function navBox(page) {
+  /*
+   * Wait for the shell rather than reading it on a fixed clock. A full page
+   * load re-runs the session gate, and for a moment the document is on the way
+   * back from the sign-in redirect — reading the box at that instant returns
+   * "nav not found" and blames a viewport for a race. The timeout is long and
+   * the failure is unchanged: if the nav genuinely never renders, this still
+   * returns null and the check still fails.
+   */
+  await page.waitForSelector('nav[aria-label="Main"]', { timeout: 15000 }).catch(() => {});
   return page.evaluate(() => {
     const nav = document.querySelector('nav[aria-label="Main"]');
     if (!nav) return null;
@@ -189,7 +198,7 @@ try {
   await page.click('button[type="submit"]');
   await page.waitForURL(/onboarding|dashboard/, { timeout: 40_000 }).catch(() => {});
   await page
-    .getByRole("heading", { name: /How will you use RAVQEN/i })
+    .getByRole("heading", { name: /How will you use SAVO/i })
     .waitFor({ timeout: 30_000 })
     .catch(() => {});
   await page.getByRole("button", { name: /I own a shop/i }).click();

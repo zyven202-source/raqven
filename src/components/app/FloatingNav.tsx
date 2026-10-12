@@ -4,6 +4,7 @@ import {
   BarChart3,
   Boxes,
   HandCoins,
+  History,
   House,
   LogOut,
   MoreHorizontal,
@@ -123,7 +124,7 @@ const OWNER_MORE: MoreGroup[] = [
       { to: "/app/restock", label: "Receive stock", icon: PackagePlus },
       {
         to: "/app/stock",
-        label: "Activity log",
+        label: "Stock movements",
         note: "Every movement, and who made it",
         icon: ScrollText,
       },
@@ -148,6 +149,12 @@ const OWNER_MORE: MoreGroup[] = [
         icon: ReceiptText,
       },
       { to: "/app/settings", hash: "refunds", label: "Refund settings", icon: HandCoins },
+      // The audit trail is an owner destination in its own right: it is the
+      // screen that answers "who did this, and when", and burying it one
+      // scroll below the receipt settings made it a destination nobody could
+      // find. Same icon the log itself renders under, so the row and the
+      // section it opens agree.
+      { to: "/app/settings", hash: "activity", label: "Activity log", icon: History },
     ],
   },
 ];
@@ -180,7 +187,7 @@ const STAFF_MORE: MoreGroup[] = [
       { to: "/app/restock", label: "Receive stock", icon: PackagePlus },
       {
         to: "/app/stock",
-        label: "Activity log",
+        label: "Stock movements",
         note: "Every movement, and who made it",
         icon: ScrollText,
       },

@@ -18,7 +18,7 @@ import {
   type UpdateReceiptSettingsInput,
 } from "@/services/receipts.service";
 import { shopsQueryKey } from "@/hooks/useShops";
-import type { ShopUpdate } from "@/types/ravqen";
+import type { ShopUpdate } from "@/types/savo";
 
 export const adminKeys = {
   shop: (shopId: string) => ["shop", shopId] as const,

@@ -150,7 +150,7 @@ export function useReportExport() {
  * becomes a path.
  */
 function reportFilename(input: ReportExportInput): string {
-  const parts = ["ravqen", input.shopName, input.periodLabel, csvDate(input.to)];
+  const parts = ["savo", input.shopName, input.periodLabel, csvDate(input.to)];
   return `${parts
     .map((part) => slugify(part))
     .filter(Boolean)

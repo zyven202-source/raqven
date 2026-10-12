@@ -3,7 +3,7 @@ import { chromium } from "playwright";
 /**
  * Contrast, measured on pixels that were actually rendered.
  *
- * Why this exists rather than a table of numbers in a design document: RAVQEN's
+ * Why this exists rather than a table of numbers in a design document: SAVO's
  * UI is liquid glass. A token's contrast against `--background` is not the
  * contrast a reader gets, because the glass puts a translucent fill and a
  * `backdrop-filter` between the glyphs and the page. "Muted foreground is 5.2:1
@@ -36,10 +36,34 @@ import { chromium } from "playwright";
  * and reported but not failed — WCAG exempts them, and a till screen is not
  * where to lean on an exemption without saying so.
  *
- *   CHROMIUM_PATH=... bun scripts/verify-contrast.mjs https://ravqen.freebuff.app
+ *   CHROMIUM_PATH=... bun scripts/verify-contrast.mjs https://savo.freebuff.app
  */
 
-const BASE = process.argv[2] ?? "https://ravqen.freebuff.app";
+const BASE = process.argv[2] ?? "https://savo.freebuff.app";
+
+/*
+ * Optional third argument: a comma-separated list of page names to measure.
+ * Measuring every screen composites every text node against its real
+ * background in a real browser, which on a small machine runs past a single
+ * unattended terminal slot — so the suite is skippable by page rather than
+ * truncated by a timeout. A page left out is printed as SKIP and is measured
+ * by the complementary run: nothing here is silently passed.
+ */
+const ONLY = process.argv[3]
+  ? new Set(
+      process.argv[3]
+        .split(",")
+        .map((name) => name.trim())
+        .filter(Boolean),
+    )
+  : null;
+
+function selected(name) {
+  if (!ONLY) return true;
+  if (ONLY.has(name)) return true;
+  console.log(`SKIP  ${name} — outside the requested subset`);
+  return false;
+}
 const MARK = "data-contrast-id";
 
 let passed = 0;
@@ -482,7 +506,7 @@ async function signInAndCreateShop(context) {
   await p.waitForURL(/onboarding|dashboard/, { timeout: 40000 }).catch(function () {});
 
   await p
-    .getByRole("heading", { name: /How will you use RAVQEN/i })
+    .getByRole("heading", { name: /How will you use SAVO/i })
     .waitFor({ timeout: 30000 })
     .catch(function () {});
   await p
@@ -529,6 +553,7 @@ const page = await context.newPage();
 
 try {
   for (const entry of PUBLIC_PAGES) {
+    if (!selected(entry[0])) continue;
     await page.goto(BASE + entry[1], { waitUntil: "domcontentloaded" });
     await page.waitForTimeout(2500);
     await page.addStyleTag({ content: HIDE_STICKY_CSS }).catch(function () {});
@@ -536,10 +561,14 @@ try {
     report(entry[0], result);
   }
 
-  const account = await signInAndCreateShop(context);
-  console.log("\nSigned up as " + account.email + '; shop "' + account.shop + '"');
+  const wantsAppPages = APP_PAGES.some((entry) => !ONLY || ONLY.has(entry[0]));
+  if (wantsAppPages) {
+    const account = await signInAndCreateShop(context);
+    console.log("\nSigned up as " + account.email + '; shop "' + account.shop + '"');
+  }
 
   for (const entry of APP_PAGES) {
+    if (!selected(entry[0])) continue;
     await page.goto(BASE + entry[1], { waitUntil: "domcontentloaded" });
     await page.waitForTimeout(3000);
     await page.addStyleTag({ content: HIDE_STICKY_CSS }).catch(function () {});

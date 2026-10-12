@@ -16,10 +16,10 @@ import { useMovements } from "@/hooks/useInventory";
 import { useProducts } from "@/hooks/useProducts";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import type { MovementType } from "@/types/ravqen";
+import type { MovementType } from "@/types/savo";
 
 export const Route = createFileRoute("/_authenticated/app/stock")({
-  head: () => ({ meta: [{ title: "Stock movements — RAVQEN" }] }),
+  head: () => ({ meta: [{ title: "SAVO — Stock movements" }] }),
   component: StockLedgerPage,
 });
 

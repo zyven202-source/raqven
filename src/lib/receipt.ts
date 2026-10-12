@@ -5,23 +5,24 @@
  * can only ever print what was actually stored — there is no client-side
  * recomputation of totals that could disagree with the ledger.
  */
+import { MARK, VIEW_BOX } from "@/components/brand/mark-geometry";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import type { ReceiptPayload } from "@/services/sales.service";
 
 /**
- * RAVQEN's mark, for the receipt header.
+ * SAVO's mark, for the receipt header.
  *
- * The identity is the letter itself, so the receipt carries a plain R — set in
- * a serif every print stack already has, in the one ink a thermal head cannot
- * lose. No image and no webfont: a receipt has to print from a phone with no
- * network, so the mark is typography, not a file.
+ * The mark is a stroked path, not a font glyph, so the receipt carries the
+ * exact same symbol the app icon draws — in black, the one ink a thermal head
+ * cannot lose. No image and no webfont: a receipt has to print from a phone
+ * with no network, so the mark is inline SVG, not a file.
  */
-function receiptMark(size = 26) {
+function receiptMark(size = 22) {
   return (
-    `<div class="mark" aria-hidden="true" ` +
-    `style="width:${size}px;height:${size}px;line-height:${size}px;` +
-    `font-family:Georgia,'Times New Roman',serif;font-weight:700;` +
-    `font-size:${Math.round(size * 0.72)}px;text-align:center;color:#000">R</div>`
+    `<svg class="mark" width="${size}" height="${size}" viewBox="0 0 ${VIEW_BOX} ${VIEW_BOX}" ` +
+    `fill="none" aria-hidden="true" xmlns="http://www.w3.org/2000/svg">` +
+    `<path d="${MARK.path}" stroke="#000" stroke-width="${MARK.stroke}" ` +
+    `stroke-linecap="${MARK.linecap}"/></svg>`
   );
 }
 
@@ -39,18 +40,25 @@ function rule(width = 42, char = "-") {
   return char.repeat(width);
 }
 
-/** Plain text, used for Share and for the downloaded .txt fallback. */
+/** Refunds recorded against this sale, oldest first, minus rejected ones. */
+function acceptedRefunds(payload: ReceiptPayload) {
+  return payload.refunds.filter((refund) => refund.status !== "rejected");
+}
+
+/** Plain text, used for Share, WhatsApp and the download fallback. */
 export function receiptText(payload: ReceiptPayload, currency = "KES") {
-  const { shop, sale, items, payments, debtor, settings } = payload;
+  const { shop, sale, items, payments, refunds, debtor, settings, cashierName } = payload;
   const lines: string[] = [];
 
   lines.push(centre(shop.name.toUpperCase()));
   if (settings?.header_text) lines.push(centre(settings.header_text));
   if (shop.location) lines.push(centre(shop.location));
   if (shop.phone) lines.push(centre(shop.phone));
+  lines.push(centre("Powered by SAVO"));
   lines.push(rule());
   lines.push(line("Receipt", sale.receipt_number));
   lines.push(line("Date", formatDateTime(sale.sold_at)));
+  if (cashierName) lines.push(line("Served by", cashierName));
   if (sale.customer_name) lines.push(line("Customer", sale.customer_name));
   lines.push(rule());
 
@@ -75,6 +83,9 @@ export function receiptText(payload: ReceiptPayload, currency = "KES") {
   for (const payment of payments) {
     lines.push(line(payment.method.toUpperCase(), formatMoney(payment.amount, currency)));
   }
+  if (Number(sale.amount_paid) > 0) {
+    lines.push(line("Paid", formatMoney(sale.amount_paid, currency)));
+  }
   if (Number(sale.balance_due) > 0) {
     lines.push(line("Balance owing", formatMoney(sale.balance_due, currency)));
     if (debtor) lines.push(line("Debtor", debtor.name));
@@ -85,9 +96,25 @@ export function receiptText(payload: ReceiptPayload, currency = "KES") {
     );
   }
 
+  const accepted = acceptedRefunds(payload);
+  if (accepted.length > 0) {
+    lines.push(rule());
+    lines.push(centre("REFUNDS"));
+    for (const refund of accepted) {
+      lines.push(
+        line(
+          `  ${formatDateTime(refund.created_at).split(",")[0]}`,
+          formatMoney(refund.total_amount, currency),
+        ),
+      );
+    }
+    const refunded = accepted.reduce((sum, refund) => sum + Number(refund.total_amount), 0);
+    lines.push(line("Refunded", formatMoney(refunded, currency)));
+  }
+
   lines.push(rule());
   lines.push(centre(settings?.footer_text || "Asante kwa biashara!"));
-  lines.push(centre("Powered by RAVQEN"));
+  lines.push(centre("Powered by SAVO"));
 
   return lines.join("\n");
 }
@@ -103,7 +130,7 @@ export function receiptHtml(
   options: { currency?: string; logoUrl?: string | null } = {},
 ) {
   const currency = options.currency ?? "KES";
-  const { shop, sale, items, payments, debtor, settings } = payload;
+  const { shop, sale, items, payments, refunds, debtor, settings, cashierName } = payload;
   const width = settings?.paper_width_mm ?? 58;
   const showLogo = settings?.show_logo !== false && Boolean(options.logoUrl);
 
@@ -147,6 +174,16 @@ export function receiptHtml(
 
   const change = Number(sale.amount_paid) - Number(sale.total_amount);
 
+  const accepted = acceptedRefunds(payload);
+  const refunded = accepted.reduce((sum, refund) => sum + Number(refund.total_amount), 0);
+  const refundRows = accepted
+    .map(
+      (refund) =>
+        `<tr><td>Refund ${esc(formatDateTime(refund.created_at))}</td>` +
+        `<td class="right" colspan="2">${esc(formatMoney(refund.total_amount, currency))}</td></tr>`,
+    )
+    .join("");
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -162,7 +199,7 @@ export function receiptHtml(
     font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
     font-size: 11px; line-height: 1.45; color: #000; background: #fff;
   }
-  h1 { font-size: 14px; margin: 0 0 2px; text-align: center; letter-spacing: .04em; }
+  h1 { font-size: 14px; margin: 2px 0 2px; text-align: center; letter-spacing: .04em; }
   .muted { color: #444; }
   .centre { text-align: center; }
   .right { text-align: right; }
@@ -187,6 +224,7 @@ export function receiptHtml(
   <table>
     <tr><td>Receipt</td><td class="right" colspan="2">${esc(sale.receipt_number)}</td></tr>
     <tr><td>Date</td><td class="right" colspan="2">${esc(formatDateTime(sale.sold_at))}</td></tr>
+    ${cashierName ? `<tr><td>Served by</td><td class="right" colspan="2">${esc(cashierName)}</td></tr>` : ""}
     ${sale.customer_name ? `<tr><td>Customer</td><td class="right" colspan="2">${esc(sale.customer_name)}</td></tr>` : ""}
   </table>
   <hr />
@@ -205,6 +243,11 @@ export function receiptHtml(
   <table>
     ${paymentRows}
     ${
+      Number(sale.amount_paid) > 0
+        ? `<tr><td>Paid</td><td class="right" colspan="2">${esc(formatMoney(sale.amount_paid, currency))}</td></tr>`
+        : ""
+    }
+    ${
       Number(sale.balance_due) > 0
         ? `<tr><td>Balance owing</td><td class="right" colspan="2">${esc(formatMoney(sale.balance_due, currency))}</td></tr>${
             debtor
@@ -215,10 +258,20 @@ export function receiptHtml(
     }
     ${change > 0 ? `<tr><td>Change</td><td class="right" colspan="2">${esc(formatMoney(change, currency))}</td></tr>` : ""}
   </table>
+  ${
+    accepted.length > 0
+      ? `<hr />
+  <table>
+    <tr><td class="name" colspan="3">REFUNDS</td></tr>
+    ${refundRows}
+    <tr><td>Refunded</td><td class="right" colspan="2">${esc(formatMoney(refunded, currency))}</td></tr>
+  </table>`
+      : ""
+  }
   <hr />
   <footer>
     <p>${esc(settings?.footer_text || "Asante kwa biashara!")}</p>
-    <p class="muted">Powered by RAVQEN</p>
+    <p class="muted">Powered by SAVO</p>
   </footer>
 </body>
 </html>`;
