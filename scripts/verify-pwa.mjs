@@ -3,7 +3,7 @@
 //
 // The rule the rest of this repo's suites follow applies double here: a PWA
 // that "has a manifest" but cannot prove what it serves is not a PWA, it is a
-// web page with a wish list. RAVQEN's worker is online-first — the network is
+// web page with a wish list. SAVO's worker is online-first — the network is
 // always the first answer, the cache only a failure fallback — so the checks
 // below assert that behaviour, not files:
 //
@@ -76,15 +76,35 @@ await page.waitForTimeout(1200);
 const cacheNames = await page.evaluate(async () => await caches.keys());
 check(
   "the worker's caches exist and are versioned",
-  cacheNames.length > 0 && cacheNames.every((n) => n.includes("ravqen-pwa-")),
+  cacheNames.length > 0 && cacheNames.every((n) => n.includes("savo-pwa-")),
   cacheNames.join(", "),
 );
 // Online-first means no install-time precache: until navigations have run,
 // the shell bucket holds no HTML of its own. Navigations since the reload may
 // legitimately have seeded /index.html, so the assertion is that whatever is
-// there came from a real network response — nothing else, and nothing stale
-// of the old strategy (the -v1 caches were deleted on activate).
-check("no legacy (v1) caches survived the activation", !cacheNames.some((n) => n.includes("v1")));
+// there came from a real network response — nothing else.
+//
+// What activation must prove is that nothing *other* than this worker's own
+// caches survived it. The names are read out of the served /sw.js rather than
+// restated here: the original assertion was "no cache contains -v1", written
+// when the old strategy's caches were the -v1 ones — and it can no longer pass,
+// because the worker now names its own caches `savo-pwa-v1-*`. A check that
+// fails on the correct file is worse than no check: it trains whoever reads the
+// next red run to distrust the suite.
+const swSource = await (await fetch(`${BASE}/sw.js`)).text();
+const workerVersion = swSource.match(/SERVICE_WORKER_VERSION\s*=\s*"([^"]+)"/)?.[1];
+const ownedCaches = workerVersion
+  ? [`${workerVersion}-shell`, `${workerVersion}-runtime`, `${workerVersion}-fonts`]
+  : [];
+const staleCaches = cacheNames.filter((name) => !ownedCaches.includes(name));
+check(
+  "only the caches this worker owns survived the activation",
+  ownedCaches.length === 3 &&
+    cacheNames.length > 0 &&
+    cacheNames.length <= ownedCaches.length &&
+    staleCaches.length === 0,
+  staleCaches.length > 0 ? `stale: ${staleCaches.join(", ")}` : cacheNames.join(", "),
+);
 
 // ------------------------------------------------------------ network-first
 // The static server answers with cache-control: no-store, so an

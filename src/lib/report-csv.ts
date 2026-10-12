@@ -76,7 +76,7 @@ export function buildReportCsv(input: ReportCsvInput): string {
 
   // --- who and when. Without this, a file called "report.csv" emailed three
   // weeks later is a rumour rather than a record.
-  lines.push(csvRow([csvText("RAVQEN report")]));
+  lines.push(csvRow([csvText("SAVO report")]));
   lines.push(csvRow([csvText("Shop"), csvText(input.shopName)]));
   lines.push(
     csvRow([

@@ -13,7 +13,7 @@ export const Route = createFileRoute("/auth/reset-password")({
     type: search["type"] === "recovery" ? ("recovery" as const) : undefined,
   }),
   head: () => ({
-    meta: [{ title: "Set a new password — RAVQEN" }],
+    meta: [{ title: "SAVO — Set a new password" }],
   }),
   component: ResetPasswordPage,
 });

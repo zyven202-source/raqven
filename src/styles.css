@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * RAVQEN design system.
+ * SAVO design system.
  *
  * Principles this file encodes:
  *   1. Structure is drawn with hairlines and rows, not with stacked rounded
@@ -659,11 +659,11 @@
    * moving anything across the retina, which is the whole point of the setting.
    */
   .animate-spin {
-    animation: ravqen-reduced-pulse 2.4s steps(1, end) infinite !important;
+    animation: savo-reduced-pulse 2.4s steps(1, end) infinite !important;
   }
 }
 
-@keyframes ravqen-reduced-pulse {
+@keyframes savo-reduced-pulse {
   0%,
   100% {
     opacity: 1;

@@ -10,8 +10,11 @@ import {
 import { useEffect, type ReactNode } from "react";
 
 import { OfflineBanner, UpdateBanner } from "@/components/app/ConnectivityBar";
+import { Logo } from "@/components/brand/Logo";
+import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { useServiceWorker } from "@/hooks/useServiceWorker";
+import { useSession } from "@/hooks/useSession";
 import {
   OG_IMAGE_ALT,
   OG_IMAGE_URL,
@@ -24,22 +27,45 @@ import appCss from "../styles.css?url";
 import { SEARCH_CONSOLE_VERIFICATION_TOKEN } from "@/lib/store-links";
 import { reportLovableError } from "../lib/lovable-error-reporting";
 
+/**
+ * The branded not-found page.
+ *
+ * Two things it has to get right. It must not look like a crash — a shopkeeper
+ * who tapped a stale link needs to see that the *page* is missing and their
+ * records are not. And "back" means somewhere different depending on who is
+ * asking: a signed-in owner wants their shop list, a visitor wants the landing
+ * page. Neither choice bypasses anything — `/dashboard` carries the same
+ * session gate as every other authenticated route, so a signed-out visitor who
+ * follows it is bounced to the sign-in screen with their return path kept.
+ */
 function NotFoundComponent() {
+  const { user, loading } = useSession();
+  const signedIn = !loading && user !== null;
+  const home = signedIn ? "/dashboard" : "/";
+
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4">
-      <div className="max-w-md text-center">
-        <h1 className="text-7xl font-bold text-foreground">404</h1>
-        <h2 className="mt-4 text-xl font-semibold text-foreground">Page not found</h2>
-        <p className="mt-2 text-sm text-muted-foreground">
-          The page you're looking for doesn't exist or has been moved.
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 py-14">
+      <div className="w-full max-w-md text-center">
+        <div className="flex justify-center">
+          <Logo />
+        </div>
+        <p className="mt-6 text-sm font-semibold uppercase tracking-[0.24em] text-muted-foreground">
+          Error 404
         </p>
-        <div className="mt-6">
-          <Link
-            to="/"
-            className="inline-flex items-center justify-center rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-          >
-            Go home
-          </Link>
+        <h1 className="mt-2 text-2xl leading-tight text-foreground">This page isn&rsquo;t here</h1>
+        <p className="mt-3 text-sm leading-relaxed text-muted-foreground">
+          The address may be wrong, or the page has moved. Nothing in your shop has changed — a
+          missing page never touches your records.
+        </p>
+        <div className="mt-7 flex flex-wrap justify-center gap-3">
+          <Button asChild className="h-11 px-5">
+            <Link to={home}>{signedIn ? "Go to my shops" : "Go home"}</Link>
+          </Button>
+          {signedIn ? (
+            <Button asChild variant="outline" className="h-11 px-5">
+              <Link to="/">SAVO home</Link>
+            </Button>
+          ) : null}
         </div>
       </div>
     </div>

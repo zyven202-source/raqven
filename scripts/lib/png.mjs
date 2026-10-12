@@ -1,7 +1,7 @@
 /**
  * A minimal PNG writer.
  *
- * RAVQEN's icon pipeline has no image dependency — not sharp, not pngjs, not
+ * SAVO's icon pipeline has no image dependency — not sharp, not pngjs, not
  * canvas. Everything the pipeline draws is rasterised by hand into an RGBA
  * buffer and encoded here. That is not asceticism: an icon generator that pulls
  * in a native image library is a generator that can break on a Node upgrade and

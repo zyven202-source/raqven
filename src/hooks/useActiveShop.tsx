@@ -13,13 +13,22 @@ import {
 import { LoadingState } from "@/components/app/AppChrome";
 import { useSession } from "@/hooks/useSession";
 import { useMyShops } from "@/hooks/useShops";
-import type { ShopRole, ShopWithRole } from "@/types/ravqen";
+import type { ShopRole, ShopWithRole } from "@/types/savo";
 
-const ACTIVE_SHOP_KEY = "ravqen.activeShopId";
+const ACTIVE_SHOP_KEY = "savo.activeShopId";
+/** The key the pre-rebrand build wrote; adopted once so the last-opened shop survives the rename. */
+const LEGACY_ACTIVE_SHOP_KEY = "ravqen.activeShopId";
 
 function readStoredShopId(): string | null {
   try {
-    return window.localStorage.getItem(ACTIVE_SHOP_KEY);
+    const stored = window.localStorage.getItem(ACTIVE_SHOP_KEY);
+    if (stored) return stored;
+    const legacy = window.localStorage.getItem(LEGACY_ACTIVE_SHOP_KEY);
+    if (legacy) {
+      window.localStorage.setItem(ACTIVE_SHOP_KEY, legacy);
+      window.localStorage.removeItem(LEGACY_ACTIVE_SHOP_KEY);
+    }
+    return legacy;
   } catch {
     return null;
   }

@@ -29,7 +29,7 @@ import {
 } from "@/services/transactions.service";
 
 export const Route = createFileRoute("/_authenticated/app/transactions")({
-  head: () => ({ meta: [{ title: "Sales & transactions — RAVQEN" }] }),
+  head: () => ({ meta: [{ title: "SAVO — Sales & transactions" }] }),
   component: TransactionsPage,
 });
 

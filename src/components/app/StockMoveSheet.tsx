@@ -7,7 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useRecordDamage, useRecordStockCount, useRecordStockIn } from "@/hooks/useInventory";
 import { formatMoney } from "@/lib/format";
-import type { Product } from "@/types/ravqen";
+import type { Product } from "@/types/savo";
 
 export type StockMoveMode = "in" | "count" | "damage";
 

@@ -13,4 +13,4 @@ Allow: /
 User-agent: *
 Allow: /
 
-Sitemap: https://ravqen.freebuff.app/sitemap.xml
+Sitemap: https://savo.freebuff.app/sitemap.xml

@@ -32,10 +32,10 @@ import { cartTotals, type CartLineInput } from "@/services/sales.service";
 import { findProductByBarcode } from "@/services/products.service";
 import { cn } from "@/lib/utils";
 import { formatMoney } from "@/lib/format";
-import type { PaymentMethod, Product } from "@/types/ravqen";
+import type { PaymentMethod, Product } from "@/types/savo";
 
 export const Route = createFileRoute("/_authenticated/app/pos")({
-  head: () => ({ meta: [{ title: "Sell — RAVQEN" }] }),
+  head: () => ({ meta: [{ title: "SAVO — Point of Sale" }] }),
   component: PosPage,
 });
 
@@ -546,7 +546,7 @@ function PosPage() {
                 />
                 {tendered.length === 0 ? (
                   <p className="text-xs text-muted-foreground">
-                    Type what the customer handed you and RAVQEN works out the change.
+                    Type what the customer handed you and SAVO works out the change.
                   </p>
                 ) : (
                   <p
@@ -602,7 +602,7 @@ function PosPage() {
                   collected, is the difference between a book the shop owns and a
                   list of people the shop was handed. It is not a consent box: it
                   is the shop telling its own customer why the shop is writing
-                  this down, which is the shop&rsquo;s obligation, not a click RAVQEN
+                  this down, which is the shop&rsquo;s obligation, not a click SAVO
                   can collect consent for on someone else&rsquo;s behalf.
                 */}
                 <p className="text-xs leading-relaxed text-muted-foreground">

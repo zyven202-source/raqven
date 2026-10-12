@@ -91,7 +91,7 @@ export function useExportMyData() {
     mutationFn: async () => {
       const payload = await buildPersonalDataExport();
       const stamp = new Date().toISOString().slice(0, 10);
-      downloadJsonFile(`ravqen-my-data-${stamp}.json`, payload);
+      downloadJsonFile(`savo-my-data-${stamp}.json`, payload);
       return payload;
     },
   });

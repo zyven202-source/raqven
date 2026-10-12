@@ -10,7 +10,7 @@
  * asks for a short-lived signed URL instead.
  */
 import { supabase } from "@/integrations/supabase/client";
-import { STORAGE_BUCKETS } from "@/types/ravqen";
+import { STORAGE_BUCKETS } from "@/types/savo";
 
 export type StorageBucket = (typeof STORAGE_BUCKETS)[keyof typeof STORAGE_BUCKETS];
 

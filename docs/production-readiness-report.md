@@ -1,4 +1,4 @@
-# RAVQEN — Production readiness, privacy & legal
+# SAVO — Production readiness, privacy & legal
 
 > **Superseded:** this was the earlier twenty-part pass. The current state of
 > the product is described in `final-readiness-report.md` (with
@@ -9,7 +9,7 @@ A twenty-part audit of the deployed application, run against the live code and
 the live database, not against a checklist.
 
 > **This is a technical compliance and readiness pass, not legal advice.**
-> Nothing in it makes RAVQEN's operators compliant with the Data Protection Act
+> Nothing in it makes SAVO's operators compliant with the Data Protection Act
 > 2019, and nothing in it is a claim that the company cannot be sued, cannot be
 > held liable, or is exempt from any law. Several clauses are marked as drafts
 > that a qualified Kenyan lawyer must settle — that marking _is_ the deliverable
@@ -239,7 +239,7 @@ These cannot be resolved in code. They are listed in `LEGAL_REVIEW_ITEMS` in
    the policy, and marked as _this product's policy, not a legal opinion_. The
    seven-year accounting window must be checked against Kenyan tax and
    accounting record-keeping rules.
-5. **Whether RAVQEN's operator is a data controller, a data processor, or both**
+5. **Whether SAVO's operator is a data controller, a data processor, or both**
    for shop data. For the account it decides what is collected; for the records
    inside a shop, the shop does. The contract that reflects that split does not
    exist yet.
@@ -391,7 +391,7 @@ Nothing on this list can be closed from inside the codebase.
    refund position. The page is marked as a draft and says so.
 2. **`src/config/legal.ts` is unconfigured.** Eight `TODO_` fields: legal name,
    contact email, support email, postal address, registration number, OPRC
-   registration, physical address. **RAVQEN should not be offered commercially
+   registration, physical address. **SAVO should not be offered commercially
    until they are set.** The site shows a ⚠ banner and Settings lists them.
 3. **Two leaked credentials need rotating.** Supabase management token and a
    `service_role` JWT from an earlier session.

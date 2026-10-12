@@ -1,28 +1,29 @@
 import { cn } from "@/lib/utils";
 
+import { MARK, VIEW_BOX } from "./mark-geometry";
+
 interface LogoProps {
   className?: string;
   tone?: "ink" | "light";
   showTagline?: boolean;
   compact?: boolean;
-  /** Kept so existing callers keep working; it sizes the R tile. */
+  /** Kept so existing callers keep working; it sizes the mark tile. */
   markSize?: string;
 }
 
 /**
- * RAVQEN's logo: a simple typographic R.
+ * SAVO's logo: the Savo mark beside the wordmark.
  *
- * The identity is the letter itself — the display face's R in champagne on the
- * deep-emerald tile — not a drawn symbol. Deliberately plain: at a glance it is
- * a letter, not a logo system, and that is what the owner asked for. The
- * wordmark is optional and only appears where there is room for it (splash,
- * sign-in, the pre-shop empty state); everywhere dense, the tile stands alone.
+ * The identity is the drawn mark — one continuous stroke over two tangent
+ * bowls — not a typeset letter and not a generic trade icon. The wordmark is
+ * optional and only appears where there is room for it (splash, sign-in, the
+ * pre-shop empty state); everywhere dense, the tile stands alone.
  *
- * `tone` selects the ground, because a dark mark on a dark bar is invisible and
- * a light mark on a white receipt is a smudge:
+ * `tone` selects the ground, because a dark mark on a dark bar is invisible
+ * and a light mark on a white receipt is a smudge:
  *
- *   - `ink` — the emerald tile with the champagne R.
- *   - `light` — a bare champagne R on nothing, for dark grounds.
+ *   - `ink` — the emerald tile with the champagne mark.
+ *   - `light` — the bare mark in champagne, for dark grounds.
  */
 export function Logo({
   className,
@@ -37,16 +38,28 @@ export function Logo({
   const tile = (
     <span
       className={cn(
-        "grid shrink-0 place-items-center rounded-xl font-display text-lg font-semibold",
+        "grid shrink-0 place-items-center rounded-xl",
         sizeClass,
-        // The colour sits under the gradient image so the R always has its
+        // The colour sits under the gradient image so the mark always has its
         // dark ground — including in print stylesheets and anywhere a
         // background image does not paint.
         bare ? "text-champagne" : "gradient-ink bg-ink-deep text-champagne",
       )}
       aria-hidden
     >
-      R
+      <svg
+        viewBox={`0 0 ${VIEW_BOX} ${VIEW_BOX}`}
+        className="size-full"
+        fill="none"
+        xmlns="http://www.w3.org/2000/svg"
+      >
+        <path
+          d={MARK.path}
+          stroke="currentColor"
+          strokeWidth={MARK.stroke}
+          strokeLinecap={MARK.linecap}
+        />
+      </svg>
     </span>
   );
 
@@ -62,7 +75,7 @@ export function Logo({
             bare ? "text-background" : "text-foreground",
           )}
         >
-          RAVQEN
+          SAVO
         </span>
         {showTagline ? (
           <span

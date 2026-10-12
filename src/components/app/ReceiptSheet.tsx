@@ -3,20 +3,27 @@ import { Download, Printer, Share2 } from "lucide-react";
 import { toast } from "sonner";
 
 import { ErrorState, LoadingState } from "@/components/app/AppChrome";
+import { WhatsAppIcon } from "@/components/app/primitives";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
+import { MARK, VIEW_BOX } from "@/components/brand/mark-geometry";
 import { useReceiptPayload } from "@/hooks/useSales";
 import { useStorageUrl } from "@/hooks/useStorageUrl";
 import { formatDateTime, formatMoney } from "@/lib/format";
 import { receiptHtml, receiptText } from "@/lib/receipt";
 
 /**
- * Shows a completed sale as a receipt and offers the four things a shopkeeper
- * actually needs: read it, print it, save it, send it.
+ * Shows a completed sale as a receipt and offers the five things a shopkeeper
+ * actually needs: read it, print it, save it, send it, or hand it to WhatsApp.
+ *
+ * The preview is styled as receipt paper — white stock, one ink, dashed rules —
+ * because it is standing in for the slip that comes out of the printer, not
+ * for a card in the app.
  *
  * Every action is built from the stored rows, and each one reports honestly
- * when the device cannot do it (no print dialog, no share target) instead of
- * appearing to succeed.
+ * when the device cannot do it (no print dialog, no share target, popups
+ * blocked) instead of appearing to succeed. Nothing ever sends anything on its
+ * own: WhatsApp opens with the text pre-filled and the shopkeeper presses send.
  */
 export function ReceiptSheet({
   saleId,
@@ -56,7 +63,7 @@ export function ReceiptSheet({
       frame.onload = () => {
         const win = frame.contentWindow;
         if (!win) {
-          toast.error("This browser would not open a print view. Use Download instead.");
+          toast.error("This browser would not open a print view. Use Save instead.");
           frame.remove();
           setBusy(null);
           return;
@@ -114,13 +121,30 @@ export function ReceiptSheet({
         toast.success("Receipt copied", { description: "Paste it into WhatsApp or SMS." });
         return;
       }
-      toast.error("This browser cannot share or copy. Use Download instead.");
+      toast.error("This browser cannot share or copy. Use Save instead.");
     } catch (error) {
       // A user cancelling the share sheet is not an error worth shouting about.
       if (error instanceof Error && error.name === "AbortError") return;
       toast.error(error instanceof Error ? error.message : "Could not share the receipt.");
     } finally {
       setBusy(null);
+    }
+  }
+
+  /**
+   * Opens WhatsApp with the receipt text pre-filled. WhatsApp picks the chat;
+   * the shopkeeper reads it and presses send. Nothing is sent from here, and a
+   * blocked popup is reported rather than swallowed.
+   */
+  function handleWhatsApp() {
+    if (!payload) return;
+    const text = receiptText(payload, currency);
+    const url = `https://wa.me/?text=${encodeURIComponent(text)}`;
+    const popup = window.open(url, "_blank", "noopener,noreferrer");
+    if (!popup) {
+      toast.error("WhatsApp could not be opened.", {
+        description: "Allow popups for this site, or use Share instead.",
+      });
     }
   }
 
@@ -140,21 +164,45 @@ export function ReceiptSheet({
           />
         ) : payload ? (
           <>
-            <div className="rounded-xl border border-dashed border-border bg-secondary/40 p-4 font-mono text-xs leading-relaxed">
-              <p className="text-center text-sm font-semibold uppercase tracking-wide">
+            {/* ------------------------------------------- the receipt paper */}
+            <div className="mx-auto w-full max-w-sm rounded-md bg-white px-4 py-4 font-mono text-[11px] leading-relaxed text-black shadow-[0_10px_30px_-12px_rgb(0_0_0/0.5)]">
+              <svg
+                viewBox={`0 0 ${VIEW_BOX} ${VIEW_BOX}`}
+                className="mx-auto size-6"
+                fill="none"
+                aria-hidden
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  d={MARK.path}
+                  stroke="#000"
+                  strokeWidth={MARK.stroke}
+                  strokeLinecap={MARK.linecap}
+                />
+              </svg>
+
+              {payload.settings?.show_logo !== false && logoUrl ? (
+                <img
+                  src={logoUrl}
+                  alt={`${payload.shop.name} logo`}
+                  className="mx-auto mb-1.5 max-h-12 max-w-[70%] object-contain"
+                />
+              ) : null}
+
+              <p className="text-center text-[13px] font-bold uppercase tracking-wide">
                 {payload.shop.name}
               </p>
               {payload.settings?.header_text ? (
-                <p className="text-center text-muted-foreground">{payload.settings.header_text}</p>
+                <p className="text-center text-neutral-600">{payload.settings.header_text}</p>
               ) : null}
               {payload.shop.location ? (
-                <p className="text-center text-muted-foreground">{payload.shop.location}</p>
+                <p className="text-center text-neutral-600">{payload.shop.location}</p>
               ) : null}
               {payload.shop.phone ? (
-                <p className="text-center text-muted-foreground">{payload.shop.phone}</p>
+                <p className="text-center text-neutral-600">{payload.shop.phone}</p>
               ) : null}
 
-              <div className="my-3 border-t border-dashed border-border" />
+              <div className="my-2.5 border-t border-dashed border-neutral-400" />
 
               <div className="flex justify-between">
                 <span>Receipt</span>
@@ -164,6 +212,12 @@ export function ReceiptSheet({
                 <span>Date</span>
                 <span>{formatDateTime(payload.sale.sold_at)}</span>
               </div>
+              {payload.cashierName ? (
+                <div className="flex justify-between">
+                  <span>Served by</span>
+                  <span>{payload.cashierName}</span>
+                </div>
+              ) : null}
               {payload.sale.customer_name ? (
                 <div className="flex justify-between">
                   <span>Customer</span>
@@ -171,21 +225,21 @@ export function ReceiptSheet({
                 </div>
               ) : null}
 
-              <div className="my-3 border-t border-dashed border-border" />
+              <div className="my-2.5 border-t border-dashed border-neutral-400" />
 
               {payload.items.map((item) => (
                 <div key={item.id} className="mb-1.5">
                   <p className="font-semibold">{item.product_name}</p>
-                  <div className="flex justify-between text-muted-foreground">
+                  <div className="flex justify-between text-neutral-600">
                     <span>
                       {Number(item.quantity)} × {formatMoney(item.unit_price, currency)}
                     </span>
-                    <span className="text-foreground">{formatMoney(item.subtotal, currency)}</span>
+                    <span className="text-black">{formatMoney(item.subtotal, currency)}</span>
                   </div>
                 </div>
               ))}
 
-              <div className="my-3 border-t border-dashed border-border" />
+              <div className="my-2.5 border-t border-dashed border-neutral-400" />
 
               <div className="flex justify-between">
                 <span>Subtotal</span>
@@ -197,12 +251,12 @@ export function ReceiptSheet({
                   <span>-{formatMoney(payload.sale.discount_amount, currency)}</span>
                 </div>
               ) : null}
-              <div className="flex justify-between text-sm font-bold">
+              <div className="flex justify-between text-[13px] font-bold">
                 <span>TOTAL</span>
                 <span>{formatMoney(payload.sale.total_amount, currency)}</span>
               </div>
 
-              <div className="my-3 border-t border-dashed border-border" />
+              <div className="my-2.5 border-t border-dashed border-neutral-400" />
 
               {payload.payments.map((payment) => (
                 <div key={payment.id} className="flex justify-between">
@@ -210,6 +264,12 @@ export function ReceiptSheet({
                   <span>{formatMoney(payment.amount, currency)}</span>
                 </div>
               ))}
+              {Number(payload.sale.amount_paid) > 0 ? (
+                <div className="flex justify-between">
+                  <span>Paid</span>
+                  <span>{formatMoney(payload.sale.amount_paid, currency)}</span>
+                </div>
+              ) : null}
               {Number(payload.sale.balance_due) > 0 ? (
                 <>
                   <div className="flex justify-between font-semibold">
@@ -217,7 +277,7 @@ export function ReceiptSheet({
                     <span>{formatMoney(payload.sale.balance_due, currency)}</span>
                   </div>
                   {payload.debtor ? (
-                    <div className="flex justify-between text-muted-foreground">
+                    <div className="flex justify-between text-neutral-600">
                       <span>Debtor</span>
                       <span>{payload.debtor.name}</span>
                     </div>
@@ -236,14 +296,30 @@ export function ReceiptSheet({
                 </div>
               ) : null}
 
-              <div className="my-3 border-t border-dashed border-border" />
-              <p className="text-center text-muted-foreground">
+              {payload.refunds.filter((refund) => refund.status !== "rejected").length > 0 ? (
+                <>
+                  <div className="my-2.5 border-t border-dashed border-neutral-400" />
+                  <p className="font-bold">REFUNDS</p>
+                  {payload.refunds
+                    .filter((refund) => refund.status !== "rejected")
+                    .map((refund) => (
+                      <div key={refund.id} className="flex justify-between">
+                        <span>Refund {formatDateTime(refund.created_at)}</span>
+                        <span>{formatMoney(refund.total_amount, currency)}</span>
+                      </div>
+                    ))}
+                </>
+              ) : null}
+
+              <div className="my-2.5 border-t border-dashed border-neutral-400" />
+              <p className="text-center text-neutral-600">
                 {payload.settings?.footer_text || "Asante kwa biashara!"}
               </p>
-              <p className="text-center text-muted-foreground">Powered by RAVQEN</p>
+              <p className="text-center text-neutral-600">Powered by SAVO</p>
             </div>
 
-            <div className="mt-4 grid grid-cols-3 gap-2">
+            {/* ----------------------------------------------------- actions */}
+            <div className="mt-4 grid grid-cols-2 gap-2">
               <Button
                 variant="outline"
                 className="h-12"
@@ -267,6 +343,9 @@ export function ReceiptSheet({
                 disabled={busy !== null}
               >
                 <Share2 /> {busy === "share" ? "Sharing…" : "Share"}
+              </Button>
+              <Button variant="outline" className="h-12" onClick={handleWhatsApp}>
+                <WhatsAppIcon /> Send on WhatsApp
               </Button>
             </div>
 

@@ -1,5 +1,5 @@
 /**
- * RAVQEN staff-access and security verification.
+ * SAVO staff-access and security verification.
  *
  * Walks the employee lifecycle the way the product now supports it — owner
  * mints a code, staff redeem it, staff work, owner closes the door — and proves
@@ -31,9 +31,9 @@ if (!SUPABASE_URL || !KEY) {
 }
 
 const stamp = Date.now();
-const ownerEmail = `ravqen-access-owner-${stamp}@example.com`;
-const staffEmail = `ravqen-access-staff-${stamp}@example.com`;
-const outsiderEmail = `ravqen-access-outsider-${stamp}@example.com`;
+const ownerEmail = `savo-access-owner-${stamp}@example.com`;
+const staffEmail = `savo-access-staff-${stamp}@example.com`;
+const outsiderEmail = `savo-access-outsider-${stamp}@example.com`;
 const password = "Access-Test-Passw0rd!";
 // A fixed code would collide with any other shop still holding it, and the
 // database now refuses ambiguous codes on purpose. Deriving it from the run
@@ -172,7 +172,7 @@ try {
   // `LIMIT 1`, which quietly enrolled the staff member into whichever shop the
   // planner returned first. Redemption must now refuse instead of guessing.
   {
-    const rival = await signUp(`ravqen-access-rival-${stamp}@example.com`);
+    const rival = await signUp(`savo-access-rival-${stamp}@example.com`);
     const { data: rivalShop, error: rivalError } = await rival
       .from("shops")
       .insert({
@@ -199,7 +199,7 @@ try {
       JSON.stringify(ambiguous?.[0]),
     );
 
-    const latecomer = await signUp(`ravqen-access-ambiguous-${stamp}@example.com`);
+    const latecomer = await signUp(`savo-access-ambiguous-${stamp}@example.com`);
     await fails(
       "a code shared by two shops is refused, not guessed",
       latecomer.rpc("redeem_employee_access_code", { p_code: CODE }),
@@ -538,7 +538,7 @@ try {
   });
   check("owner can close staff joining", !closeError, closeError?.message);
 
-  const secondStaff = await signUp(`ravqen-access-late-${stamp}@example.com`);
+  const secondStaff = await signUp(`savo-access-late-${stamp}@example.com`);
   await fails(
     "a valid code is refused once joining is closed",
     secondStaff.rpc("redeem_employee_access_code", { p_code: CODE }),

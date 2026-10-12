@@ -12,7 +12,7 @@ import type {
   ShopMemberUpdate,
   ShopUpdate,
   ShopWithRole,
-} from "@/types/ravqen";
+} from "@/types/savo";
 
 /**
  * The shop columns the app is allowed to see. Selected explicitly rather than
@@ -23,9 +23,18 @@ const SHOP_COLUMNS =
   "id, name, slug, owner_id, business_type, currency, phone, email, address, city, kra_pin, logo_url, location, is_active, accepts_refunds, employee_joining_enabled, created_at, updated_at" as const;
 
 export async function listMyShops(): Promise<ShopWithRole[]> {
+  // The owner may *see* every membership row of their shops (RLS), so without
+  // this filter the hub would render the same shop once per team member — one
+  // duplicate list entry per employee who has joined. Only my own memberships
+  // decide which shops are mine.
+  const { data: auth, error: authError } = await supabase.auth.getUser();
+  if (authError) throw authError;
+  if (!auth.user) return [];
+
   const { data, error } = await supabase
     .from("shop_members")
     .select(`role, shops:shop_id (${SHOP_COLUMNS})`)
+    .eq("user_id", auth.user.id)
     .eq("status", "active")
     .order("created_at", { ascending: true });
 

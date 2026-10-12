@@ -6,7 +6,7 @@
  * use; they are never the thing that protects the data.
  */
 import { supabase } from "@/integrations/supabase/client";
-import type { Category, Product, ProductUpdate } from "@/types/ravqen";
+import type { Category, Product, ProductUpdate } from "@/types/savo";
 
 /** Only the columns the list screens render — never `select("*")` on products. */
 const PRODUCT_COLUMNS =

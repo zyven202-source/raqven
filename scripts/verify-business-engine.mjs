@@ -1,5 +1,5 @@
 /**
- * RAVQEN business-engine verification.
+ * SAVO business-engine verification.
  *
  * Exercises the real Supabase project through the real client API — no mocks,
  * no test doubles. It walks the whole acceptance flow from the product spec:
@@ -27,9 +27,9 @@ if (!URL || !KEY) {
 }
 
 const stamp = Date.now();
-const ownerEmail = `ravqen-owner-${stamp}@example.com`;
-const staffEmail = `ravqen-staff-${stamp}@example.com`;
-const otherEmail = `ravqen-other-${stamp}@example.com`;
+const ownerEmail = `savo-owner-${stamp}@example.com`;
+const staffEmail = `savo-staff-${stamp}@example.com`;
+const otherEmail = `savo-other-${stamp}@example.com`;
 const password = "Engine-Test-Passw0rd!";
 
 const results = [];

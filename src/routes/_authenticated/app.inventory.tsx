@@ -51,10 +51,10 @@ import {
   useUpdateProduct,
 } from "@/hooks/useProducts";
 import { formatMoney } from "@/lib/format";
-import { STORAGE_BUCKETS, type Product } from "@/types/ravqen";
+import { STORAGE_BUCKETS, type Product } from "@/types/savo";
 
 export const Route = createFileRoute("/_authenticated/app/inventory")({
-  head: () => ({ meta: [{ title: "Stock — RAVQEN" }] }),
+  head: () => ({ meta: [{ title: "SAVO — Inventory" }] }),
   component: InventoryPage,
 });
 
@@ -302,6 +302,11 @@ function InventoryPage() {
                         <StatusBadge tone={tone}>
                           {stockStatusLabel(quantity, threshold)}
                         </StatusBadge>
+                        {tone === "caution" ? (
+                          <span className="tnum text-[11px] text-muted-foreground">
+                            Threshold: {threshold}
+                          </span>
+                        ) : null}
                         <Button
                           size="sm"
                           className="h-8"

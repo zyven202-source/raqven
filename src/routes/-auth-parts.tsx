@@ -12,13 +12,13 @@ export function AuthLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col bg-background/30">
       <div className="mx-auto flex w-full max-w-sm flex-1 flex-col justify-center px-5 pb-10 pt-14">
-        <Link to="/" className="mx-auto" aria-label="RAVQEN home">
+        <Link to="/" className="mx-auto" aria-label="SAVO home">
           <Logo markSize="size-12" />
         </Link>
 
         {storageAvailable === false ? (
           <p className="mt-6 rounded-lg border border-caution/40 bg-caution-soft/60 px-3.5 py-2.5 text-center text-xs leading-relaxed text-caution">
-            This browser is blocking website storage, so signing in here will not stick. Open RAVQEN
+            This browser is blocking website storage, so signing in here will not stick. Open SAVO
             in its own tab instead of inside an embedded preview.
           </p>
         ) : null}

@@ -1,4 +1,4 @@
-# RAVQEN — Implementation report
+# SAVO — Implementation report
 
 Thirteen points, covering what was audited, what was broken and fixed, the security
 model, the brand symbol and app icon, the navigation rebuild, the design system,
@@ -464,7 +464,7 @@ passes while the subject is wrong.
 
 |             | Value                                                                                                                                                 | Chars |
 | ----------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- | ----: |
-| `<title>`   | `RAVQEN — Kenyan Shop POS with Stock, Debtors & M-Pesa`                                                                                               |    53 |
+| `<title>`   | `SAVO — Kenyan Shop POS with Stock, Debtors & M-Pesa`                                                                                               |    53 |
 | description | `Kenyan shop POS and stock book in one: record sales, take M-Pesa, track stock, chase debtors and log expenses from an Android phone at the counter.` |   147 |
 | `<h1>`      | `The Kenyan shop POS that keeps every sale, stock and number.`                                                                                        |    60 |
 | `og:image`  | `https://ravqen.freebuff.app/icon-512.png` — 512×512, with `og:image:alt`                                                                             |       |
@@ -489,8 +489,8 @@ The home page emits one `WebApplication`:
 {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  "name": "RAVQEN",
-  "alternateName": "RAVQEN Kenyan shop POS",
+  "name": "SAVO",
+  "alternateName": "SAVO Kenyan shop POS",
   "applicationCategory": "BusinessApplication",
   "applicationSubCategory": "Point of Sale",
   "operatingSystem": "Android, iOS, Web browser",
@@ -499,7 +499,7 @@ The home page emits one `WebApplication`:
   "url": "https://ravqen.freebuff.app/",
   "image": "https://ravqen.freebuff.app/icon-512.png",
   "featureList": ["…seven screens that exist…"],
-  "publisher": { "@type": "Organization", "name": "RAVQEN" }
+  "publisher": { "@type": "Organization", "name": "SAVO" }
 }
 ```
 
@@ -627,7 +627,7 @@ is the engineering record. The seven-part summary that goes with it is in
 [`production-readiness-report.md`](production-readiness-report.md).
 
 **This is a technical compliance and readiness pass, not legal advice.** Nothing
-below makes RAVQEN's operators compliant with the Data Protection Act 2019, and
+below makes SAVO's operators compliant with the Data Protection Act 2019, and
 nothing below is a claim that the company cannot be sued. Several clauses are
 marked as drafts that a qualified Kenyan lawyer must settle; that marking is the
 deliverable, not a disclaimer attached to finished work.

@@ -9,7 +9,7 @@ import { AuthHeading, AuthSwitchLink, SubmitButton } from "./-auth-parts";
 
 export const Route = createFileRoute("/auth/forgot-password")({
   head: () => ({
-    meta: [{ title: "Reset password — RAVQEN" }],
+    meta: [{ title: "SAVO — Reset password" }],
   }),
   component: ForgotPasswordPage,
 });

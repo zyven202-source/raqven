@@ -6,11 +6,11 @@ import { SITE_URL } from "@/lib/seo";
 export const Route = createFileRoute("/legal/refunds")({
   head: () => ({
     meta: [
-      { title: "Refund policy — RAVQEN" },
+      { title: "SAVO — Refund policy" },
       {
         name: "description",
         content:
-          "How refunds work in RAVQEN: each shop decides whether it accepts them, and what the app records when it does.",
+          "How refunds work in SAVO: each shop decides whether it accepts them, and what the app records when it does.",
       },
       { name: "robots", content: "index, follow" },
     ],
@@ -23,19 +23,19 @@ function RefundsPage() {
   return (
     <LegalPage
       title="Refund policy"
-      intro="RAVQEN does not sell your customer's goods and does not decide whether a return is allowed. Your shop does. This page explains how that switch works, what the app does when it is off, and what is recorded when it is on."
+      intro="SAVO does not sell your customer's goods and does not decide whether a return is allowed. Your shop does. This page explains how that switch works, what the app does when it is off, and what is recorded when it is on."
     >
-      <LegalSection id="who-decides" title="Your shop decides, not RAVQEN">
+      <LegalSection id="who-decides" title="Your shop decides, not SAVO">
         <p>
-          Every shop on RAVQEN has its own refund switch, off by default. Only the shop&rsquo;s
-          owner can change it, in <strong>Settings › Refunds</strong>. Until the owner turns it on,
-          that shop does not accept refunds.
+          Every shop on SAVO has its own refund switch, off by default. Only the shop&rsquo;s owner
+          can change it, in <strong>Settings › Refunds</strong>. Until the owner turns it on, that
+          shop does not accept refunds.
         </p>
         <p>
-          RAVQEN is the record book, not the merchant. A customer asking for their money back is
+          SAVO is the record book, not the merchant. A customer asking for their money back is
           dealing with the shop, under the shop&rsquo;s own policy and the law that applies to it.
-          RAVQEN&rsquo;s role is to make what the shop decided impossible to lose, dispute or
-          quietly reverse.
+          SAVO&rsquo;s role is to make what the shop decided impossible to lose, dispute or quietly
+          reverse.
         </p>
       </LegalSection>
 
@@ -72,7 +72,7 @@ function RefundsPage() {
 
       <LegalSection id="when-on" title="When refunds are switched on">
         <p>
-          A refund is a new record, never an edit to an old one. When staff take goods back, RAVQEN
+          A refund is a new record, never an edit to an old one. When staff take goods back, SAVO
           writes down:
         </p>
         <ul>
@@ -93,7 +93,7 @@ function RefundsPage() {
           </li>
           <li>
             <strong>Why</strong> — the staff member&rsquo;s reason, if they gave one. It is
-            optional; RAVQEN records whether a reason was given, not that a reason is mandatory.
+            optional; SAVO records whether a reason was given, not that a reason is mandatory.
           </li>
           <li>
             <strong>Whether stock went back.</strong> A return that goes on the shelf is recorded as
@@ -136,14 +136,14 @@ function RefundsPage() {
         </LegalSubhead>
       </LegalSection>
 
-      <LegalSection id="no-money" title="What RAVQEN does not do with refunds">
+      <LegalSection id="no-money" title="What SAVO does not do with refunds">
         <p>
-          RAVQEN never moves money. It records that a refund happened; it does not pay it. The shop
-          pays its customer — in cash, back to the M-Pesa account, or however it operates — and
-          RAVQEN has no connection to that money.
+          SAVO never moves money. It records that a refund happened; it does not pay it. The shop
+          pays its customer — in cash, back to the M-Pesa account, or however it operates — and SAVO
+          has no connection to that money.
         </p>
         <p>
-          RAVQEN makes no claim about your shop&rsquo;s legal obligation to accept a return, about
+          SAVO makes no claim about your shop&rsquo;s legal obligation to accept a return, about
           cooling-off rights, or about what a customer is entitled to. Those depend on the
           transaction, the goods, the payment method and the law that applies — not on which
           software kept the ledger. Where the law says a customer is entitled to something, the law
@@ -159,7 +159,7 @@ function RefundsPage() {
       <LegalSection id="questions" title="Questions">
         <p>
           About a refund in your own shop, ask the owner — they are the one who decides. About how
-          RAVQEN records refunds, write to <ConfigValue field="supportEmail" />. The product is
+          SAVO records refunds, write to <ConfigValue field="supportEmail" />. The product is
           published by <ConfigValue field="legalName" />, reachable at{" "}
           <ConfigValue field="contactEmail" />.
         </p>

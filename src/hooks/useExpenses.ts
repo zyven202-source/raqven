@@ -8,7 +8,7 @@ import {
   type ExpenseCategory,
   type ListExpensesOptions,
 } from "@/services/expenses.service";
-import type { PaymentMethod } from "@/types/ravqen";
+import type { PaymentMethod } from "@/types/savo";
 
 export const expenseKeys = {
   list: (shopId: string, filters: Record<string, unknown>) =>

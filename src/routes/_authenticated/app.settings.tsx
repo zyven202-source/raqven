@@ -29,10 +29,10 @@ import {
 } from "@/hooks/useShopAdmin";
 import { uploadImage } from "@/services/storage.service";
 import { BUSINESS_TYPES } from "@/services/shops.service";
-import { STORAGE_BUCKETS } from "@/types/ravqen";
+import { STORAGE_BUCKETS } from "@/types/savo";
 
 export const Route = createFileRoute("/_authenticated/app/settings")({
-  head: () => ({ meta: [{ title: "Settings — RAVQEN" }] }),
+  head: () => ({ meta: [{ title: "SAVO — Settings" }] }),
   component: () => (
     <OwnerOnly title="Settings">
       <SettingsPage />
@@ -67,7 +67,7 @@ function SettingsPage() {
   const [footerText, setFooterText] = useState("");
   const [headerText, setHeaderText] = useState("");
   const [showLogo, setShowLogo] = useState(true);
-  const [receiptPrefix, setReceiptPrefix] = useState("RV");
+  const [receiptPrefix, setReceiptPrefix] = useState("SV");
   const [paperWidth, setPaperWidth] = useState("58");
 
   /**

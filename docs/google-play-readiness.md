@@ -1,4 +1,4 @@
-# Google Play readiness — RAVQEN
+# Google Play readiness — SAVO
 
 Status as of 30 September 2026. Companion to `docs/final-readiness-report.md`.
 Nothing here claims Play approval. Items marked **MANUAL VERIFICATION REQUIRED**
@@ -6,7 +6,7 @@ cannot be proven from this repository.
 
 ## 1. The honest headline
 
-RAVQEN is a **web application**. This repository contains **no Android project,
+SAVO is a **web application**. This repository contains **no Android project,
 no Capacitor/Tauri wrapper, no Gradle configuration and no signing setup**
 (verified: no `android/` directory, no `*.gradle*` files, no
 `AndroidManifest.xml`, no `capacitor.config.*`, no `tauri.conf.*` anywhere in
@@ -64,7 +64,7 @@ Either way, when the wrapper exists, before any Play submission:
 
 ## 4. Store listing inputs (no fakes)
 
-- **App name:** RAVQEN
+- **App name:** SAVO
 - **Short description (≤80 chars):** "Sales, stock and cash records for Kenyan small businesses."
 - **Full description:** must be written by a human who can stand behind it; the
   web landing page's copy is the honest starting point.

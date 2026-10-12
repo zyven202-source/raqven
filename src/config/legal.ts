@@ -6,7 +6,7 @@
  * A Privacy Policy and a Terms of Service have to answer "who is publishing
  * this and how do I reach them". Answering that honestly needs facts about a
  * real business: a registered name, a postal address, a support inbox, a
- * registration number, a regulator. **RAVQEN's code cannot know any of those,
+ * registration number, a regulator. **SAVO's code cannot know any of those,
  * and inventing one is worse than admitting it is missing** — a fabricated
  * company number in a privacy policy is a false statement that binds nobody and
  * misleads everyone.
@@ -34,7 +34,7 @@ export const POLICY_VERSION = "2026-09-30";
 export const POLICY_EFFECTIVE_DATE = "30 September 2026";
 
 /** Shown in the footer and in the report, so a plain-language "who runs this". */
-export const PRODUCT_NAME = "RAVQEN";
+export const PRODUCT_NAME = "SAVO";
 
 /**
  * The business's public phone number and a map link to its premises. Both are
@@ -77,7 +77,7 @@ export interface BusinessDetails {
  */
 export const BUSINESS_DETAILS: BusinessDetails = {
   legalName: "TODO_registered_entity_name",
-  tradingName: "RAVQEN",
+  tradingName: "SAVO",
   contactEmail: "mahircade341@gmail.com",
   supportEmail: "mahircade341@gmail.com",
   postalAddress: "PRHR+J24, Chai Road Heights, Mweni Rd, Nairobi, Kenya",
@@ -245,8 +245,8 @@ export const PERSONAL_DATA_INVENTORY: DataInventoryRow[] = [
   },
   {
     what: "Your password",
-    why: "To prove you are you. It is hashed by the authentication service and never readable by RAVQEN.",
-    who: "Nobody at RAVQEN. The authentication service checks it, not us.",
+    why: "To prove you are you. It is hashed by the authentication service and never readable by SAVO.",
+    who: "Nobody at SAVO. The authentication service checks it, not us.",
     retention: "Not stored in a form we can read.",
   },
   {
@@ -289,12 +289,12 @@ export const PERSONAL_DATA_INVENTORY: DataInventoryRow[] = [
   },
 ];
 
-/** What RAVQEN deliberately does *not* collect. Rendered on the privacy page. */
+/** What SAVO deliberately does *not* collect. Rendered on the privacy page. */
 export const NOT_COLLECTED: string[] = [
   "No advertising or cross-site tracking pixels.",
   "No analytics SDK, no behavioural profiling, no session recording.",
   "No advertising cookies and no third-party cookies of any kind.",
-  "No date of birth, no age, and no children's data — RAVQEN has no feature that needs one.",
+  "No date of birth, no age, and no children's data — SAVO has no feature that needs one.",
   "No ID number, no KRA PIN, and no bank or M-Pesa credentials. M-Pesa payments are recorded as a payment method, not as a transaction.",
   "No contacts from your phone, no photos of your phone's gallery beyond images you pick for a product.",
 ];
@@ -336,6 +336,6 @@ export const LEGAL_REVIEW_ITEMS: string[] = [
   "The governing law and dispute resolution clause (currently: Kenya, courts of Kenya).",
   "The statement of lawful basis for processing under the Data Protection Act 2019.",
   "The retention windows listed above, against Kenyan tax and accounting record-keeping rules.",
-  "Whether RAVQEN's operator is a data controller, a data processor, or both for shop data.",
+  "Whether SAVO's operator is a data controller, a data processor, or both for shop data.",
   "The consumer refund position, given that each shop sets its own refund policy.",
 ];

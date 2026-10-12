@@ -32,10 +32,10 @@ import {
   type ExpenseCategory,
 } from "@/services/expenses.service";
 import { PAYMENT_METHODS } from "@/services/shops.service";
-import type { PaymentMethod } from "@/types/ravqen";
+import type { PaymentMethod } from "@/types/savo";
 
 export const Route = createFileRoute("/_authenticated/app/expenses")({
-  head: () => ({ meta: [{ title: "Expenses — RAVQEN" }] }),
+  head: () => ({ meta: [{ title: "SAVO — Expenses" }] }),
   component: ExpensesPage,
 });
 

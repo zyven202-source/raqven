@@ -1,5 +1,5 @@
 /**
- * RAVQEN owner shop-deletion verification.
+ * SAVO owner shop-deletion verification.
  *
  * Deleting a shop is the only thing in this product that destroys accounting
  * records, so it is the only operation verified from both sides: the guards are
@@ -43,9 +43,9 @@ if (!SUPABASE_URL || !KEY) {
 }
 
 const stamp = Date.now();
-const ownerEmail = `ravqen-closing-owner-${stamp}@example.com`;
-const staffEmail = `ravqen-closing-staff-${stamp}@example.com`;
-const strangerEmail = `ravqen-closing-stranger-${stamp}@example.com`;
+const ownerEmail = `savo-closing-owner-${stamp}@example.com`;
+const staffEmail = `savo-closing-staff-${stamp}@example.com`;
+const strangerEmail = `savo-closing-stranger-${stamp}@example.com`;
 const password = "Closing-Test-Passw0rd!";
 const SHOP_NAME = `Closing Shop ${stamp}`;
 

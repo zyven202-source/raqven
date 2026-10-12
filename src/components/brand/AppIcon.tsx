@@ -1,11 +1,11 @@
 import { cn } from "@/lib/utils";
 
-import { BRAND, CONTAINER, R_GLYPH, VIEW_BOX } from "./mark-geometry";
+import { BRAND, CONTAINER, MARK, VIEW_BOX } from "./mark-geometry";
 
 /**
- * The brand's R tile, without the wordmark.
+ * SAVO's mark tile, without the wordmark.
  *
- * One place draws the app-icon shape: the champagne R from the display face on
+ * One place draws the app-icon shape: the Savo mark stroked in champagne on
  * the deep-emerald tile. Every number it uses comes from `mark-geometry.ts`,
  * which `scripts/generate-icons.mjs` also reads, so the raster icons in
  * `public/` and this component cannot drift apart.
@@ -28,10 +28,10 @@ export function AppIcon({
   // `href="#id"`, and a generated id there breaks the reference at best and
   // breaks prerendering hydration at worst. Every instance defines the same
   // gradients, so a duplicate id resolves to the same gradient either way.
-  const shell = "ravqen-shell";
-  const gloss = "ravqen-gloss";
-  const rim = "ravqen-rim";
-  const shape = "ravqen-shape";
+  const shell = "savo-shell";
+  const gloss = "savo-gloss";
+  const rim = "savo-rim";
+  const shape = "savo-shape";
 
   const r = CONTAINER.cornerRadius;
 
@@ -79,18 +79,14 @@ export function AppIcon({
         </>
       ) : null}
 
-      {/* The R, kept plain so the tile stays a tile and the R stays a letter. */}
-      <text
-        x={R_GLYPH.baseline[0]}
-        y={R_GLYPH.baseline[1]}
-        textAnchor="middle"
-        fontFamily={R_GLYPH.family}
-        fontSize={R_GLYPH.size}
-        fontWeight="600"
-        fill={BRAND.letter}
-      >
-        R
-      </text>
+      {/* The mark: one continuous stroke, champagne on the tile. */}
+      <path
+        d={MARK.path}
+        fill="none"
+        stroke={BRAND.letter}
+        strokeWidth={MARK.stroke}
+        strokeLinecap={MARK.linecap}
+      />
     </svg>
   );
 }

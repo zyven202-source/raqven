@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { ActiveShopProvider, useActiveShop } from "@/hooks/useActiveShop";
 import { signOut } from "@/services/auth.service";
-import type { ShopWithRole } from "@/types/ravqen";
+import type { ShopWithRole } from "@/types/savo";
 
 export const Route = createFileRoute("/_authenticated/app")({
   validateSearch: (search: Record<string, unknown>) => ({

@@ -13,12 +13,12 @@ import { useSession } from "@/hooks/useSession";
 import { useMyShops } from "@/hooks/useShops";
 import { signOut } from "@/services/auth.service";
 import { businessTypeLabel } from "@/services/shops.service";
-import { STORAGE_BUCKETS } from "@/types/ravqen";
+import { STORAGE_BUCKETS } from "@/types/savo";
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Your shops — RAVQEN" },
+      { title: "SAVO — Your shops" },
       { name: "description", content: "Open a shop to manage its sales, stock and numbers." },
     ],
   }),

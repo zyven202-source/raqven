@@ -1,7 +1,7 @@
 /**
- * RAVQEN's service worker.
+ * SAVO's service worker.
  *
- * What it is for: speed and continuity — never authority. RAVQEN is an
+ * What it is for: speed and continuity — never authority. SAVO is an
  * online-first app: every request tries the network first, and only a failed
  * attempt may touch the cache. The network is the source of truth for every
  * number a shop sees; a cached page must never be what a customer's till
@@ -42,7 +42,7 @@
  * who audits what runs on their phone with no build between them and it.
  */
 
-const SERVICE_WORKER_VERSION = "ravqen-pwa-v2";
+const SERVICE_WORKER_VERSION = "savo-pwa-v1";
 const SHELL_CACHE = `${SERVICE_WORKER_VERSION}-shell`;
 const RUNTIME_CACHE = `${SERVICE_WORKER_VERSION}-runtime`;
 const FONT_CACHE = `${SERVICE_WORKER_VERSION}-fonts`;

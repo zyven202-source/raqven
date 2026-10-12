@@ -1,4 +1,4 @@
-# RAVQEN
+# SAVO
 
 **Every sale. Every stock. Every number.**
 
@@ -6,7 +6,7 @@
 > — the eleven-point summary of what was audited, fixed, built, and verified, plus
 > the two items that need the owner's own hands.
 
-RAVQEN is a sales, stock and cash record system built for Kenyan small businesses.
+SAVO is a sales, stock and cash record system built for Kenyan small businesses.
 
 **Phase 1 — the foundation:** brand and design system, Supabase backend, database
 schema, security policies, authentication and the shop workspace shell.
@@ -27,7 +27,7 @@ screen says so instead of showing invented data.
 ```text
 src/
   components/
-    brand/          RAVQEN brand primitives (Logo)
+    brand/          SAVO brand primitives (Logo)
     ui/             shadcn/ui primitives, themed via design tokens
     app/            App-shell components (states, dialogs, module pages)
   hooks/            React hooks — every query key carries the shop id, so
@@ -97,51 +97,52 @@ Type: **Fraunces** for headings, **Manrope** for body.
 
 ### The mark
 
-RAVQEN's identity is a **simple typographic R** — the display face's R in
-champagne on the deep-emerald tile. The owner chose the letter over a drawn
-symbol, and the choice is honoured everywhere the mark appears rather than
-mixed with alternatives.
+SAVO's identity is a **drawn symbol** — the Savo mark: one continuous stroke
+that sweeps over an upper bowl, through the centre and round a lower bowl,
+stroked in champagne on the deep-emerald tile. It is geometry, not typeset
+text: two tangent arcs, one ink, recognisable at sixteen pixels.
 
 `src/components/brand/` holds it:
 
-| File               | What it is                                                                                                            |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------- |
-| `mark-geometry.ts` | **The brand data.** The tile's geometry, the brand colours, and where the R sits — the numbers every renderer shares. |
-| `AppIcon.tsx`      | The R tile as an SVG: emerald ground, gloss and rim, the R in champagne.                                              |
-| `Logo.tsx`         | Identity: the R tile by default, tile + wordmark where there is room, a bare champagne R on dark grounds.             |
+| File               | What it is                                                                              |
+| ------------------ | --------------------------------------------------------------------------------------- |
+| `mark-geometry.ts` | **The brand data.** The tile's geometry, the brand colours, and the mark's path — the numbers every renderer shares. |
+| `AppIcon.tsx`      | The mark tile as an SVG: emerald ground, gloss and rim, the stroke in champagne.         |
+| `Logo.tsx`         | Identity: the mark tile by default, tile + wordmark where there is room, a bare champagne mark on dark grounds. |
 
-**Why a letter.** A drawn symbol has to be explained; a letter does not. The R
-is set in Fraunces — the same face every heading uses — so the logo and the
-typography are one system, and it needs no rasteriser of its own because the
-browser already has a type renderer.
+**Why a symbol.** The mark is a stroked path on the 24-unit grid, so it has no
+font dependency: it renders identically in the browser, in headless Chromium,
+and inside a receipt file printed from a phone with no network. The same path
+serves the 16-pixel favicon and the 512-pixel store icon without a second
+drawing, and it holds up in one ink, in monochrome, on light or dark ground.
 
-**One composition, every placement.** The R tile appears as: the splash and
+**One composition, every placement.** The mark tile appears as: the splash and
 sign-in screens (`Logo` with the wordmark), the navigation and dashboard header
-(`Logo compact`), the receipt header (plain serif R, inlined into the printable
+(`Logo compact`), the receipt header (the same path inlined into the printable
 file so it prints from a phone with no network), the empty, error and loading
 states, and the favicon and app icon.
 
 ### The app icon and favicon
 
 The raster files in `public/` are rendered from the same composition the React
-`AppIcon` draws: the emerald tile with its gloss and rim, the R set in real
-Fraunces. `scripts/generate-icons.mjs` launches headless Chromium, loads the
-Google-Fonts stylesheet, waits for the face to actually arrive (it refuses to
-write icons with a fallback letterform), and screenshots the SVG per size —
-PNG frames wrapped into `favicon.ico`. There is no image library and no
-geometry pipeline to drift: the pixels come from the browser's own renderer.
+`AppIcon` draws: the emerald tile with its gloss and rim, the stroke of the
+Savo mark in champagne. `scripts/generate-icons.mjs` launches headless
+Chromium and screenshots the SVG per size — there is no font to wait for,
+because the mark is a path — with PNG frames wrapped into `favicon.ico`.
+There is no image library and no geometry pipeline to drift: every renderer
+imports the same `mark-geometry.ts`.
 
 `verify-app-icon.mjs` decodes the served files through Chromium's own PNG
 decoder and asserts what must be true of any honest rendering: rounded corners
-are transparent, the letter is a substantial champagne population centred in a
+are transparent, the mark is a substantial champagne population centred in a
 dark-emerald tile, it reads taller than wide, and the 16px favicon frame still
-holds real letter pixels. The browser acceptance suite (`verify-ui-acceptance`)
+holds real mark pixels. The browser acceptance suite (`verify-ui-acceptance`)
 repeats the measurements against the bytes the server actually serves, so the
 verified file and the shipped file cannot be different files.
 
 ### The PWA layer
 
-RAVQEN is an installable, **online-first** app. The network is always the
+SAVO is an installable, **online-first** app. The network is always the
 first answer — every navigation, asset, font and icon is fetched fresh when
 the network is up — and the cache exists only as a failure fallback, so a
 customer's till shows what the server says right now, never a page it served
@@ -409,7 +410,7 @@ description and the one `<h1>`:
 
 | Tag                  | Value                                                                                                                                                 |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `<title>` (53 chars) | `RAVQEN — Kenyan Shop POS with Stock, Debtors & M-Pesa`                                                                                               |
+| `<title>` (53 chars) | `SAVO — Kenyan Shop POS with Stock, Debtors & M-Pesa`                                                                                               |
 | description (147)    | `Kenyan shop POS and stock book in one: record sales, take M-Pesa, track stock, chase debtors and log expenses from an Android phone at the counter.` |
 | `<h1>`               | `The Kenyan shop POS that keeps every sale, stock, and number.`                                                                                       |
 
@@ -428,7 +429,7 @@ head mechanism:
 {
   "@context": "https://schema.org",
   "@type": "WebApplication",
-  "name": "RAVQEN",
+  "name": "SAVO",
   "applicationCategory": "BusinessApplication",
   "operatingSystem": "Android, iOS, Web browser",
   "areaServed": { "@type": "Country", "name": "Kenya" },
@@ -831,7 +832,7 @@ The codebase is deliberately arranged so the hosting platform can change:
 - **All backend access is funnelled through `src/services/*`.** Swapping the
   backend means rewriting those files, not the UI.
 - **Generated Supabase code is quarantined** in `src/integrations/supabase/`, and
-  domain types in `src/types/ravqen.ts` alias it, so app code never imports
+  domain types in `src/types/savo.ts` alias it, so app code never imports
   generated files directly.
 - **The schema lives in SQL migrations**, so the database can be recreated on any
   Postgres/Supabase instance.

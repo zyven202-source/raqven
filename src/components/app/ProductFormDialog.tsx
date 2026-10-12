@@ -29,7 +29,7 @@ import {
   useUpdateProduct,
 } from "@/hooks/useProducts";
 import { uploadImage } from "@/services/storage.service";
-import { STORAGE_BUCKETS, type Product } from "@/types/ravqen";
+import { STORAGE_BUCKETS, type Product } from "@/types/savo";
 
 const UNITS = ["pc", "kg", "g", "ltr", "ml", "pack", "crate", "dozen", "metre"];
 

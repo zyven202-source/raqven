@@ -1,10 +1,10 @@
 #!/usr/bin/env node
-// Measures the generated R-tile icons through Chromium's own PNG decoder, so
-// the suite proves what the browser will actually show rather than what the
+// Measures the generated SAVO mark icons through Chromium's own PNG decoder,
+// so the suite proves what the browser will actually show rather than what the
 // generator intended.
 //
-// The identity is a simple typographic R: champagne letter, deep-emerald tile,
-// rounded corners. The assertions locate the letter from its colour — nothing
+// The identity is the drawn Savo mark: champagne stroke, deep-emerald tile,
+// rounded corners. The assertions locate the mark from its colour — nothing
 // samples a fixed point in the artwork, because a probe that names coordinates
 // keeps passing by measuring whatever moved underneath it. What must be true
 // of any honest rendering is asserted instead:
@@ -147,9 +147,9 @@ check(
   `centre ${big.letterCentre?.map((n) => Math.round(n)).join(", ") ?? "none"}`,
 );
 check(
-  "the letter reads as an R, taller than wide",
+  "the mark reads as the drawn symbol, taller than wide",
   big.letterBox !== null && big.letterBox.h > big.letterBox.w,
-  big.letterBox ? `${big.letterBox.w}x${big.letterBox.h}` : "no letter",
+  big.letterBox ? `${big.letterBox.w}x${big.letterBox.h}` : "no mark",
 );
 
 // ------------------------------------------------------------- icon-192.png

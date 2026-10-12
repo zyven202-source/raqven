@@ -4,7 +4,7 @@ import { History } from "lucide-react";
 import { EmptyState, ErrorState, LoadingState, NoticeState } from "@/components/app/AppChrome";
 import { Button } from "@/components/ui/button";
 import { useAuditLog, useMemberNames } from "@/hooks/usePrivacy";
-import type { AuditLogEntry } from "@/types/ravqen";
+import type { AuditLogEntry } from "@/types/savo";
 
 /**
  * The shop's activity log.
@@ -152,6 +152,7 @@ function describeAction(action: string): string {
       employee: "Employee",
       access_code: "Access code",
       shop: "Shop",
+      debtor: "Debtor",
     }[group ?? ""] ?? group;
   const verbLabel =
     {
@@ -159,6 +160,7 @@ function describeAction(action: string): string {
       updated: "updated",
       deleted: "deleted",
       moved: "moved",
+      payment_recorded: "payment recorded",
       amended: "amended",
       joined: "joined",
       removed: "removed",
@@ -177,7 +179,7 @@ function describeAction(action: string): string {
  * the honest label is "a member who has since left", not a stale name.
  */
 function actorLabel(actorId: string | null, names: Map<string, string> | undefined): string {
-  if (!actorId) return "By a member who has since left RAVQEN";
+  if (!actorId) return "By a member who has since left SAVO";
   const name = names?.get(actorId);
   return name ? `By ${name}` : "By a team member who has since left the shop";
 }
