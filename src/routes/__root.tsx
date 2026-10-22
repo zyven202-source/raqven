@@ -6,6 +6,7 @@ import {
   useRouter,
   HeadContent,
   Scripts,
+  type ErrorComponentProps,
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
@@ -72,7 +73,16 @@ function NotFoundComponent() {
   );
 }
 
-function ErrorComponent({ error, reset }: { error: Error; reset: () => void }) {
+/**
+ * The error boundary, typed against the router's own props.
+ *
+ * The router now hands `error` as `unknown` rather than `Error` — a thrown
+ * value is not necessarily an `Error`, and asserting otherwise would let a
+ * string or a null rejection through as if it were typed. Everything below
+ * only ever logs it or prints a fixed sentence, so nothing here needs it to be
+ * an `Error`.
+ */
+function ErrorComponent({ error, reset }: ErrorComponentProps) {
   console.error(error);
   const router = useRouter();
   useEffect(() => {
