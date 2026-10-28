@@ -172,7 +172,15 @@ last week.
   has failed — saying plainly that some things won't load until the network
   returns) and the update banner.
 - **`manifest.webmanifest`** — id, standalone display, portrait orientation,
-  `#032F25` theme, 192/512 icons plus a maskable entry.
+  `#032F25` theme, 192/512 icons plus a maskable entry, three Play listing
+  screenshots (two portrait, one wide), two app shortcuts (`/app/pos`,
+  `/app/overview`), a `launch_handler` (a till should reopen into the running
+  instance, not a second one), and `prefer_related_applications: false`
+  alongside a
+  `related_applications` entry pointing at the Play package — the "use your
+  PWA or your native app" field PWABuilder asks for: this app is the same
+  product in both places, so the web app stays preferred and the store entry
+  is declared rather than opted into.
 
 `scripts/verify-pwa.mjs` proves the behaviour rather than the files: the
 worker activates and controls the page with no precache, the cached shell
@@ -182,7 +190,39 @@ offline navigation still renders the shell (the fallback path), the offline
 banner is probe-confirmed — absent on a healthy network, present under a real
 offline probe, cleared the moment it answers — the only cross-origin
 responses in any cache are Google Fonts, and the manifest meets
-Chrome's installability criteria.
+Chrome's installability criteria. `scripts/make-store-screenshots.mjs`
+regenerates the manifest's screenshots from the running app itself —
+landing, the empty POS screen with the "Add a product" CTA, and a wide
+1920×1080 desktop shot — so the store images are real screens, never mockups.
+
+### Shipping to Google Play (TWA)
+
+The Android package is this same PWA wrapped as a Trusted Web Activity by
+[PWABuilder](https://www.pwabuilder.com) — one codebase, one deploy, the
+package name **`ke.savo.app`**.
+
+- **`public/.well-known/assetlinks.json`** — the Digital Asset Links
+  statement that lets the Play-installed package open this origin inside the
+  TWA. The `package_name` must stay in lockstep with the `id` PWABuilder is
+  configured with, and the `sha256_cert_fingerprints` array must list **every
+  signing-cert fingerprint**: when Play signs a new app with a new key (or a
+  key rotation lands), append the new fingerprint — removing the old one
+  breaks installs already on devices. The file is plain JSON, no comments —
+  Android's parser rejects anything else.
+- **Report-card action items** are covered from this repo: the manifest now
+  carries screenshots, the service worker is registered (production-only, so
+  the origin the card scans must be the deployed site), and the
+  PWA-or-native choice is declared via `prefer_related_applications`. If the
+  Service Worker indicator still shows red on a deployed scan, check that the
+  preview URL wasn't scanned — a dev server never registers the worker.
+- **Play listing copy** lives in `PLAY_LISTING` (`src/lib/store-links.ts`):
+  short/full description, category, privacy policy URL and the contact
+  identity, so the store form and the site cannot drift apart.
+- **Legal identity** is configured once in `src/config/legal.ts`
+  (`BUSINESS_DETAILS` — trader name, email, phone, address) and flows to the
+  privacy policy, terms and the Play developer-contact fields; the
+  `TODO_`-marked fields are the only placeholders left and Google rejects a
+  listing that ships them.
 
 ### The glass material, in three levels
 

@@ -11,7 +11,8 @@
     "routes:generate": "tsr generate",
     "lint": "eslint .",
     "format": "prettier --write .",
-    "concepts": "node scripts/evaluate-concepts.mjs && node scripts/concept-sheet.mjs && node scripts/verify-concept-sheet.mjs"
+    "concepts": "node scripts/evaluate-concepts.mjs && node scripts/concept-sheet.mjs && node scripts/verify-concept-sheet.mjs",
+    "store-screenshots": "node scripts/make-store-screenshots.mjs"
   },
   "overrides": {
     "rolldown": "1.2.1"

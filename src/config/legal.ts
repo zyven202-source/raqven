@@ -76,7 +76,7 @@ export interface BusinessDetails {
  * placeholder cannot be shipped by forgetting to update a boolean.
  */
 export const BUSINESS_DETAILS: BusinessDetails = {
-  legalName: "TODO_registered_entity_name",
+  legalName: "Abdirahman Hilowle Adan",
   tradingName: "SAVO",
   contactEmail: "mahircade341@gmail.com",
   supportEmail: "mahircade341@gmail.com",

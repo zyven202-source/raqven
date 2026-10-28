@@ -38,6 +38,12 @@ export const ACCOUNT_DELETION_URL = `${SITE_URL}/legal/privacy#delete-my-account
  * drift from what the web app claims.
  */
 export const PLAY_LISTING = {
+  /**
+   * The developer name shown on the Play listing and in Play Console —
+   * the natural person or registered entity behind the app, as Play's
+   * "Developer name" field asks for it.
+   */
+  developerName: "Abdirahman Hilowle Adan",
   /** 30 characters max on Play. */
   appName: "SAVO — Shop POS Kenya",
   /** 80 characters max on Play. */
