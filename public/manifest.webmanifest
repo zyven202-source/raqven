@@ -12,6 +12,52 @@
   "orientation": "portrait",
   "background_color": "#032F25",
   "theme_color": "#032F25",
+  "launch_handler": { "client_mode": ["navigate-existing", "auto"] },
+  "prefer_related_applications": false,
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=ke.savo.app",
+      "id": "ke.savo.app"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshots/savo-landing.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "SAVO — every sale, every stock, every number"
+    },
+    {
+      "src": "/screenshots/savo-pos.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Ring up a sale on the point-of-sale screen"
+    },
+    {
+      "src": "/screenshots/savo-wide.png",
+      "sizes": "1920x1080",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "SAVO in a desktop browser"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "New sale",
+      "short_name": "Sell",
+      "url": "/app/pos",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    },
+    {
+      "name": "Today's dashboard",
+      "short_name": "Today",
+      "url": "/app/overview",
+      "icons": [{ "src": "/icon-192.png", "sizes": "192x192", "type": "image/png" }]
+    }
+  ],
   "icons": [
     {
       "src": "/icon-192.png",
