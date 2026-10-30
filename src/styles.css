@@ -119,34 +119,38 @@
   --radius: 0.625rem;
 
   /*
-   * Brand, retuned for the dark emerald ground. The names keep their place in
-   * the vocabulary, the values invert: `ink` is now the luminous accent that
-   * text and active states are drawn in, `ink-soft` is the glowing mid emerald
-   * for icon accents and glows, and `ink-deep` is unchanged — it was always
-   * the darkest stop of the ramp, and now it is the page itself.
+   * Brand — the approved SAVO identity, emerald with a gold accent.
+   *
+   * The names keep their place in the vocabulary; the values are the approved
+   * palette: `ink` is the near-neutral pale text every heading is set in,
+   * `ink-soft` is the true emerald (#10B981) that active states and glows are
+   * drawn in, `ink-deep` is the deep emerald (#064E3B) that type sits on when
+   * a control goes light, and champagne is the gold accent (#F59E0B) — the
+   * one warm colour in an all-green product, which is exactly why it marks
+   * focus, selection and the brand's own highlights.
    */
-  --ink: oklch(0.91 0.045 167); /* Pale Mint — luminous accent on the dark ground */
-  --ink-deep: oklch(0.273 0.05 173.3); /* Deep Emerald #032F25 */
-  --ink-soft: oklch(0.72 0.095 166); /* Luminous Emerald — the glowing mid stop */
-  --champagne: oklch(0.934 0.044 81.9); /* Champagne #F8E7C9 */
-  --champagne-deep: oklch(0.51 0.071 82.3);
+  --ink: oklch(0.975 0.02 150); /* Primary text #F0FDF4 — pale, almost neutral */
+  --ink-deep: oklch(0.388 0.089 172); /* Deep Emerald #064E3B */
+  --ink-soft: oklch(0.758 0.154 163); /* Emerald #10B981 — the glowing mid stop */
+  --champagne: oklch(0.795 0.154 70); /* Gold Accent #F59E0B */
+  --champagne-deep: oklch(0.55 0.11 70); /* Gold, dark enough for type on pale */
   --cream: oklch(0.962 0.014 84.6); /* Soft Cream #F7F2E8 */
 
   /* The page IS the emerald: one deep ground, with hairlines and glass above it. */
-  --background: oklch(0.25 0.042 172.5); /* Deep Emerald ground */
-  --foreground: oklch(0.93 0.025 166); /* Pale Mint text */
-  --card: oklch(0.3 0.04 172 / 0.85);
+  --background: oklch(0.278 0.038 170); /* Deep Green ground #0B2E23 */
+  --foreground: oklch(0.975 0.018 148); /* Primary text #F0FDF4 */
+  --card: oklch(0.33 0.04 171 / 0.85);
   --card-foreground: var(--foreground);
-  --popover: oklch(0.27 0.038 172 / 0.94);
+  --popover: oklch(0.305 0.038 171 / 0.94);
   --popover-foreground: var(--foreground);
-  --sunken: oklch(0.17 0.03 172 / 0.55);
+  --sunken: oklch(0.2 0.03 172 / 0.55);
 
   --primary: var(--ink);
   --primary-foreground: oklch(0.24 0.05 172); /* Deep Emerald on a pale control */
-  --secondary: oklch(0.32 0.04 171 / 0.75);
+  --secondary: oklch(0.35 0.04 171 / 0.75);
   --secondary-foreground: var(--foreground);
-  --muted: oklch(0.32 0.036 171 / 0.6);
-  --muted-foreground: oklch(0.75 0.03 168);
+  --muted: oklch(0.35 0.036 171 / 0.6);
+  --muted-foreground: oklch(0.79 0.045 165); /* Secondary text #A7C4B5 */
   --accent: var(--champagne);
   --accent-foreground: var(--ink-deep);
   --destructive: oklch(0.62 0.19 27);
@@ -154,13 +158,18 @@
 
   /* Status. Luminous hues on the dark ground; the softs are translucent
      washes of the same hue, so chips and notices read without painting a
-     panel pale. */
-  --positive: oklch(0.78 0.13 165);
+     panel pale. `positive` IS the brand emerald (#10B981) and `caution` IS
+     the brand gold (#F59E0B) — in a money product, "good" and "the brand"
+     are the same colour, and the one warm hue is reserved for attention. */
+  --positive: oklch(0.758 0.154 163);
   --positive-soft: oklch(0.34 0.06 168 / 0.55);
-  --caution: oklch(0.82 0.13 85);
+  --caution: oklch(0.795 0.154 70);
   --caution-soft: oklch(0.36 0.06 82 / 0.55);
-  --negative: oklch(0.72 0.16 26);
   --negative-soft: oklch(0.35 0.07 26 / 0.55);
+  /* Destructive TEXT: at 0.72 the salmon measured 3.98:1 against the glass
+     button fill and the suite's crop caught it — 0.80 keeps the exact hue and
+     reads at ~4.9:1 while everything behind it stays a dark wash. */
+  --negative: oklch(0.8 0.16 26);
   --info: oklch(0.76 0.1 245);
   --info-soft: oklch(0.34 0.05 245 / 0.55);
 
@@ -169,14 +178,14 @@
   --input: oklch(1 0 0 / 18%);
   --ring: var(--ink-soft);
 
-  --sidebar: oklch(0.273 0.05 173.3);
+  --sidebar: oklch(0.24 0.045 171);
   --sidebar-foreground: oklch(0.962 0.014 84.6);
-  --sidebar-primary: oklch(0.934 0.044 81.9);
-  --sidebar-primary-foreground: oklch(0.273 0.05 173.3);
-  --sidebar-accent: oklch(0.378 0.073 168.9);
+  --sidebar-primary: oklch(0.795 0.154 70);
+  --sidebar-primary-foreground: oklch(0.24 0.05 172);
+  --sidebar-accent: oklch(0.4 0.073 168.9);
   --sidebar-accent-foreground: oklch(0.992 0.007 80.7);
-  --sidebar-border: oklch(0.378 0.073 168.9);
-  --sidebar-ring: oklch(0.934 0.044 81.9);
+  --sidebar-border: oklch(0.4 0.073 168.9);
+  --sidebar-ring: oklch(0.795 0.154 70);
 
   /*
    * THE GLASS MATERIAL, IN THREE LEVELS.
@@ -200,15 +209,15 @@
    * L3 being the *most* opaque is deliberate and slightly counter-intuitive.
    * Opacity is a legibility tool here, not a status symbol.
    */
-  --glass-1: oklch(0.31 0.04 172 / 0.76);
+  --glass-1: oklch(0.345 0.04 171 / 0.76);
   --glass-1-line: oklch(1 0 0 / 0.14);
   --glass-1-sheen: oklch(1 0 0 / 0.1);
 
-  --glass-2: oklch(0.3 0.036 172 / 0.5);
+  --glass-2: oklch(0.335 0.036 171 / 0.5);
   --glass-2-line: oklch(1 0 0 / 0.12);
   --glass-2-sheen: oklch(1 0 0 / 0.07);
 
-  --glass-3: oklch(0.28 0.034 172 / 0.93);
+  --glass-3: oklch(0.315 0.034 171 / 0.93);
   --glass-3-line: oklch(1 0 0 / 0.18);
   --glass-3-sheen: oklch(1 0 0 / 0.1);
 
@@ -243,13 +252,13 @@
    * plus a light-catching top edge, so the navigation picks up whatever is
    * scrolling underneath it instead of hiding it behind an opaque slab.
    */
-  --glass: oklch(0.3 0.038 172 / 0.6);
-  --glass-strong: oklch(0.27 0.036 172 / 0.9);
+  --glass: oklch(0.335 0.038 171 / 0.6);
+  --glass-strong: oklch(0.305 0.036 171 / 0.9);
   --glass-line: oklch(1 0 0 / 0.13);
   --glass-sheen: oklch(1 0 0 / 0.1);
   --glass-tile: oklch(1 0 0 / 0.12);
   --glass-tile-line: oklch(1 0 0 / 0.22);
-  --glass-sunk: oklch(0.19 0.03 172 / 0.6);
+  --glass-sunk: oklch(0.22 0.03 172 / 0.6);
 }
 
 /*
@@ -258,28 +267,29 @@
  * the same hue family. Nothing here needs to "invert" anymore; it shades.
  */
 .dark {
-  --background: oklch(0.22 0.038 172.5);
-  --foreground: oklch(0.95 0.02 166);
-  --card: oklch(0.27 0.038 172 / 0.88);
-  --card-foreground: oklch(0.95 0.02 166);
-  --popover: oklch(0.25 0.036 172 / 0.96);
-  --popover-foreground: oklch(0.95 0.02 166);
-  --sunken: oklch(0.15 0.028 172 / 0.55);
+  /* The darkest background of the identity: #061A14. */
+  --background: oklch(0.215 0.032 172);
+  --foreground: oklch(0.97 0.015 150);
+  --card: oklch(0.265 0.038 172 / 0.88);
+  --card-foreground: oklch(0.97 0.015 150);
+  --popover: oklch(0.245 0.036 172 / 0.96);
+  --popover-foreground: oklch(0.97 0.015 150);
+  --sunken: oklch(0.155 0.028 172 / 0.55);
   --primary: var(--ink);
   --primary-foreground: oklch(0.22 0.042 172);
   --secondary: oklch(0.29 0.038 171 / 0.75);
-  --secondary-foreground: oklch(0.95 0.02 166);
+  --secondary-foreground: oklch(0.97 0.015 150);
   --muted: oklch(0.29 0.034 171 / 0.6);
-  --muted-foreground: oklch(0.78 0.028 168);
-  --accent: oklch(0.32 0.05 168);
-  --accent-foreground: oklch(0.95 0.02 166);
+  --muted-foreground: oklch(0.81 0.04 165);
+  --accent: oklch(0.33 0.05 168);
+  --accent-foreground: oklch(0.97 0.015 150);
   --destructive: oklch(0.68 0.18 27);
   --destructive-foreground: oklch(0.2 0.03 172);
-  --positive: oklch(0.82 0.13 165);
+  --positive: oklch(0.79 0.15 163);
   --positive-soft: oklch(0.3 0.055 168 / 0.55);
-  --caution: oklch(0.85 0.12 85);
+  --caution: oklch(0.82 0.15 70);
   --caution-soft: oklch(0.32 0.055 82 / 0.55);
-  --negative: oklch(0.75 0.15 26);
+  --negative: oklch(0.82 0.15 26);
   --negative-soft: oklch(0.31 0.065 26 / 0.55);
   --info: oklch(0.78 0.1 245);
   --info-soft: oklch(0.3 0.05 245 / 0.55);
@@ -288,15 +298,15 @@
   --input: oklch(1 0 0 / 20%);
   --ring: oklch(0.75 0.1 166);
 
-  --glass-1: oklch(0.28 0.038 172 / 0.72);
+  --glass-1: oklch(0.315 0.038 171 / 0.72);
   --glass-1-line: oklch(1 0 0 / 0.16);
   --glass-1-sheen: oklch(1 0 0 / 0.12);
 
-  --glass-2: oklch(0.27 0.034 172 / 0.46);
+  --glass-2: oklch(0.305 0.034 171 / 0.46);
   --glass-2-line: oklch(1 0 0 / 0.13);
   --glass-2-sheen: oklch(1 0 0 / 0.08);
 
-  --glass-3: oklch(0.25 0.032 172 / 0.94);
+  --glass-3: oklch(0.285 0.032 171 / 0.94);
   --glass-3-line: oklch(1 0 0 / 0.2);
   --glass-3-sheen: oklch(1 0 0 / 0.12);
 
@@ -314,13 +324,13 @@
   --depth-3: 0 2px 4px oklch(0 0 0 / 0.35), 0 14px 34px -18px oklch(0 0 0 / 0.55);
   --depth-hover: 0 2px 4px oklch(0 0 0 / 0.4), 0 12px 26px -14px oklch(0 0 0 / 0.5);
 
-  --glass: oklch(0.28 0.036 172 / 0.58);
-  --glass-strong: oklch(0.25 0.034 172 / 0.92);
+  --glass: oklch(0.315 0.036 171 / 0.58);
+  --glass-strong: oklch(0.285 0.034 171 / 0.92);
   --glass-line: oklch(1 0 0 / 0.15);
   --glass-sheen: oklch(1 0 0 / 0.12);
   --glass-tile: oklch(1 0 0 / 0.13);
   --glass-tile-line: oklch(1 0 0 / 0.24);
-  --glass-sunk: oklch(0.17 0.028 172 / 0.6);
+  --glass-sunk: oklch(0.185 0.028 171 / 0.6);
 }
 
 @layer base {

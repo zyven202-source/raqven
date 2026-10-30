@@ -265,6 +265,25 @@ try {
   await page.keyboard.press("Escape");
   await page.waitForTimeout(700);
 
+  // -------------------------------------------------- narrow phone: 320px
+  // The floor the spec names. The same three heavy routes, plus the dock: a
+  // pill that no longer fits inside a 320px screen is a pill that covers
+  // something on the smallest phones people actually carry.
+  await page.setViewportSize({ width: 320, height: 693 });
+  await sweep(page, "320px", ["/app/overview", "/app/pos", "/app/inventory"]);
+  const navNarrow = await navBox(page);
+  check(
+    "floating nav sits fully inside the 320px viewport",
+    navNarrow !== null &&
+      navNarrow.bottom <= navNarrow.vh + 1 &&
+      navNarrow.right <= navNarrow.vw + 1 &&
+      navNarrow.left >= -1 &&
+      navNarrow.top >= -1,
+    navNarrow
+      ? `bottom ${navNarrow.bottom}/${navNarrow.vh}, right ${navNarrow.right}/${navNarrow.vw}`
+      : "nav not found",
+  );
+
   // -------------------------------------------- medium phone: the heavy routes
   await page.setViewportSize({ width: 412, height: 915 });
   await sweep(page, "412px", ["/app/overview", "/app/pos", "/app/transactions"]);

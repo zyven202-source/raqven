@@ -10,8 +10,8 @@
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
-  "background_color": "#032F25",
-  "theme_color": "#032F25",
+  "background_color": "#0B2E23",
+  "theme_color": "#0B2E23",
   "launch_handler": { "client_mode": ["navigate-existing", "auto"] },
   "prefer_related_applications": false,
   "related_applications": [

@@ -20,7 +20,7 @@ const { chromium } = await import(
 
 // The same numbers the React AppIcon renders. The .ts extension is required
 // for Node's type stripping, and is how the previous generator did it too.
-const { BRAND, CONTAINER, MARK, VIEW_BOX } =
+const { BRAND, CONTAINER, MARK, MARK_PAINT, VIEW_BOX } =
   await import("../src/components/brand/mark-geometry.ts");
 
 // The same composition AppIcon.tsx draws, composed from the same data.
@@ -44,11 +44,14 @@ function artSvg(size) {
     `<stop offset="45%" stop-color="${BRAND.mint}" stop-opacity="0.12"/>`,
     `<stop offset="100%" stop-color="${BRAND.white}" stop-opacity="0.22"/>`,
     "</linearGradient>",
+    `<linearGradient id="letter" x1="${MARK_PAINT.x1}" y1="${MARK_PAINT.y1}" x2="${MARK_PAINT.x2}" y2="${MARK_PAINT.y2}">`,
+    ...MARK_PAINT.stops.map((s) => `<stop offset="${s.offset}" stop-color="${s.color}"/>`),
+    "</linearGradient>",
     "</defs>",
     `<rect ${rect} fill="url(#shell)"/>`,
     `<rect ${rect} fill="url(#gloss)"/>`,
     `<rect ${rect} fill="none" stroke="url(#rim)" stroke-width="0.55"/>`,
-    `<path d="${MARK.path}" fill="none" stroke="${BRAND.letter}" stroke-width="${MARK.stroke}" stroke-linecap="${MARK.linecap}"/>`,
+    `<path d="${MARK.path}" fill="none" stroke="url(#letter)" stroke-width="${MARK.stroke}" stroke-linecap="${MARK.linecap}"/>`,
     "</svg>",
   ].join("");
 }

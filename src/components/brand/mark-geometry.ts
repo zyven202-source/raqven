@@ -26,22 +26,50 @@ export const CONTAINER = {
   cornerRadius: 5.4,
 } as const;
 
-/** The brand colours, by name, for anything that cannot read CSS variables. */
+/**
+ * The brand colours, by name, for anything that cannot read CSS variables.
+ *
+ * The approved identity: a dark-to-medium green tile with a glowing rim, the
+ * mark stroked in vivid emerald (#10B981) and a gold highlight (#F59E0B)
+ * banded across the centre fold — the one warm note in an all-green mark.
+ */
 export const BRAND = {
   /** The deep emerald the tile is filled with. */
-  deep: "oklch(0.273 0.05 173.3)",
+  deep: "#064E3B",
   /** The mid emerald of the lit tile. */
-  ink: "oklch(0.378 0.073 168.9)",
+  ink: "#0A5E48",
   /** The near-black foot of the tile's gradient. */
-  night: "#021A14",
-  /** The highlight green of the lit edge. */
-  mint: "#7DD3B4",
+  night: "#061A14",
+  /** The highlight green of the lit edge — pale enough to never read as ink. */
+  mint: "#A7F3D0",
   /** The warm highlight at the gradient's origin. */
-  glow: "#0E6B51",
-  /** The champagne the mark is drawn in. */
-  letter: "#F8E7C9",
+  glow: "#0E7A5C",
+  /** The emerald the mark is drawn in (#10B981). */
+  letter: "#10B981",
+  /** The gold band across the centre fold (#F59E0B). */
+  gold: "#F59E0B",
   /** Pure white, for the gloss stops. */
   white: "#FFFFFF",
+} as const;
+
+/**
+ * How the mark's stroke is painted when detail is on: emerald, lifting to gold
+ * across the centre fold (y 4 → 20 on the 24-unit grid, gold peaking at the
+ * tangency, y 12) and back. The same stops feed AppIcon, Logo and the raster
+ * generator so the gold band lands on the fold in every rendering.
+ */
+export const MARK_PAINT = {
+  x1: 12,
+  y1: 4,
+  x2: 12,
+  y2: 20,
+  stops: [
+    { offset: "0%", color: BRAND.letter },
+    { offset: "38%", color: BRAND.letter },
+    { offset: "50%", color: BRAND.gold },
+    { offset: "62%", color: BRAND.letter },
+    { offset: "100%", color: BRAND.letter },
+  ],
 } as const;
 
 /**

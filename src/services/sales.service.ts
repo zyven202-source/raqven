@@ -39,6 +39,14 @@ export interface CreateSaleInput {
   debtorName?: string | null;
   debtorPhone?: string | null;
   note?: string | null;
+  /**
+   * The offline outbox's identity for this checkout: one UUID per attempt.
+   * Sent as `p_client_tx_id`, where a unique index makes a retry of the same
+   * attempt return the original sale rather than record a duplicate. Omitted
+   * (NULL) for callers that predate the outbox, so their behaviour is
+   * unchanged.
+   */
+  clientTxId?: string | null;
 }
 
 export interface CreateSaleResult {
@@ -85,6 +93,7 @@ export async function createSale(input: CreateSaleInput): Promise<CreateSaleResu
     p_debtor_name?: string;
     p_debtor_phone?: string;
     p_note?: string;
+    p_client_tx_id?: string;
   } = {
     p_shop_id: input.shopId,
     p_items: input.lines.map((line) => ({
@@ -101,6 +110,7 @@ export async function createSale(input: CreateSaleInput): Promise<CreateSaleResu
   if (input.debtorName) args.p_debtor_name = input.debtorName;
   if (input.debtorPhone) args.p_debtor_phone = input.debtorPhone;
   if (input.note) args.p_note = input.note;
+  if (input.clientTxId) args.p_client_tx_id = input.clientTxId;
 
   const { data, error } = await supabase.rpc("create_sale", args);
   if (error) throw error;
@@ -116,6 +126,8 @@ export async function createSale(input: CreateSaleInput): Promise<CreateSaleResu
     change_due: number;
     status: SaleStatus;
     debtor_id: string | null;
+    /** Present when the server recognised a replayed operation id. */
+    deduplicated?: boolean;
   };
 
   return {

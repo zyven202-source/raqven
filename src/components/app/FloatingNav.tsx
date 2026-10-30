@@ -1,4 +1,4 @@
-import { Link, useRouterState } from "@tanstack/react-router";
+import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "framer-motion";
 import {
   BarChart3,
@@ -10,13 +10,14 @@ import {
   MoreHorizontal,
   PackagePlus,
   ReceiptText,
+  RefreshCw,
   ScanLine,
   ScrollText,
   Store,
   Users,
   Wallet,
 } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 import { JoinShopSheet } from "@/components/app/JoinShopSheet";
 import { Button } from "@/components/ui/button";
@@ -57,6 +58,7 @@ type AppPath =
   | "/app/debtors"
   | "/app/employees"
   | "/app/settings"
+  | "/app/sync"
   | "/dashboard";
 
 type NavItem = {
@@ -74,26 +76,42 @@ type NavItem = {
  * A destination that earns a permanent tab. Always inside the workspace, so it
  * carries the shop deep-link like the rest of the workspace does.
  */
-type TabItem = Omit<NavItem, "to"> & { to: Exclude<AppPath, "/dashboard"> };
+type TabItem = Omit<NavItem, "to"> & {
+  to: Exclude<AppPath, "/dashboard">;
+  /**
+   * The centre of the dock: the sketch's larger middle button, which is the
+   * POS. Rendered as a raised emerald puck between the left and right pairs.
+   */
+  center?: boolean;
+};
 
 /**
  * The destinations that earn a permanent place, in the order a shop uses them.
  *
+ * The arrangement follows the supplied navigation sketch — two compact
+ * destinations, the prominent POS in the centre, then two more — for five
+ * targets in total. Seven was the sketch's other reading (three + POS +
+ * three); at 320–360px it would leave ~47px per target, which is under the
+ * 44px floor once labels are counted, so the secondary screens live behind
+ * More instead of shrinking every tap.
+ *
  * Expenses is here rather than behind More because recording what the shop
  * spent is a daily job, not an occasional one — and the counter needs it as
  * much as the owner does. Only the Dashboard is owner-only: it reads the
- * owner's own figures, which the database will not serve to staff at all.
+ * owner's own figures, which the database will not serve to staff at all —
+ * staff get Sales as their leftmost destination instead.
  */
 const STAFF_TABS: TabItem[] = [
-  { to: "/app/pos", label: "POS", icon: ScanLine },
+  { to: "/app/transactions", label: "Sales", icon: ReceiptText },
   { to: "/app/inventory", label: "Inventory", icon: Boxes },
+  { to: "/app/pos", label: "POS", icon: ScanLine, center: true },
   { to: "/app/expenses", label: "Expenses", icon: Wallet },
 ];
 
 const OWNER_TABS: TabItem[] = [
   { to: "/app/overview", label: "Dashboard", icon: House },
-  { to: "/app/pos", label: "POS", icon: ScanLine },
   { to: "/app/inventory", label: "Inventory", icon: Boxes },
+  { to: "/app/pos", label: "POS", icon: ScanLine, center: true },
   { to: "/app/expenses", label: "Expenses", icon: Wallet },
 ];
 
@@ -139,6 +157,17 @@ const OWNER_MORE: MoreGroup[] = [
     ],
   },
   {
+    heading: "This device",
+    items: [
+      {
+        to: "/app/sync",
+        label: "Sync & offline",
+        note: "Queued sales, last sync, retry",
+        icon: RefreshCw,
+      },
+    ],
+  },
+  {
     heading: "Settings",
     items: [
       { to: "/app/settings", hash: "shop", label: "Shop settings", icon: Store },
@@ -173,12 +202,9 @@ const STAFF_MORE: MoreGroup[] = [
         note: "Credit customers and repayments",
         icon: HandCoins,
       },
-      {
-        to: "/app/transactions",
-        label: "Sales history",
-        note: "Every sale, payment and refund",
-        icon: ReceiptText,
-      },
+      // Sales history is deliberately absent: it earned a permanent tab on
+      // this role's dock, and a destination listed twice reads as two
+      // different screens.
     ],
   },
   {
@@ -196,6 +222,17 @@ const STAFF_MORE: MoreGroup[] = [
   {
     heading: "Shop",
     items: [{ to: "/dashboard", label: "All my shops", icon: Store }],
+  },
+  {
+    heading: "This device",
+    items: [
+      {
+        to: "/app/sync",
+        label: "Sync & offline",
+        note: "Queued sales, last sync, retry",
+        icon: RefreshCw,
+      },
+    ],
   },
 ];
 
@@ -235,9 +272,73 @@ function stagger(open: boolean, index: number, reduceMotion: boolean) {
     : { duration: STAGGER_OUT, ease: "easeOut" as const };
 }
 
+/**
+ * The dock's destinations in reading order — and, for the content swipe, in
+ * swipe order. More is deliberately absent: swiping *into* a sheet is not a
+ * page transition, so the swipe walks the four real screens and stops.
+ */
+export function navDestinations(isOwner: boolean): { to: TabItem["to"]; label: string }[] {
+  return (isOwner ? OWNER_TABS : STAFF_TABS).map(({ to, label }) => ({ to, label }));
+}
+
+/* ------------------------------------------------------------ hold gesture */
+
+/**
+ * Press-and-hold, slide, release — the dock's second way to move.
+ *
+ * The rules it keeps, in the order the pointer meets them:
+ *
+ *   1. A tap never becomes a gesture. The hold only arms after `HOLD_MS` of
+ *      stillness, and any wander past `HOLD_SLOP` before that disarms it, so
+ *      a thumb landing while the phone moves does nothing at all.
+ *   2. Once armed, the pointer is captured: every move — including one that
+ *      leaves the bar — keeps coming to the pill instead of being stolen by
+ *      the page underneath.
+ *   3. Sliding lights up whichever destination sits under the finger, in
+ *      real time, with one tick of haptics when it changes.
+ *   4. Releasing commits the highlighted destination; releasing on the one
+ *      already open, or on nothing, commits nothing.
+ *   5. Interruption (pointercancel, a drift past the bar, a second pointer)
+ *      cancels quietly and, because the gesture already claimed the press,
+ *      swallows the click it would otherwise have produced — a cancelled
+ *      gesture must never fire the tap underneath it.
+ *
+ * `touch-action: pan-y` on the bar is what makes step 2 honest on Android:
+ * horizontal movement stays ours (the browser has no claim on it), while a
+ * vertical drag is still the browser's scroll and arrives as pointercancel —
+ * which is exactly the "interrupted" case.
+ */
+const HOLD_MS = 300;
+const HOLD_SLOP = 12;
+const OUTSIDE_TOLERANCE = 32;
+
+type SlotBox = { left: number; top: number; width: number; height: number };
+
+type HoldPhase = "pending" | "active" | "dead";
+
+interface HoldState {
+  pointerId: number;
+  startX: number;
+  startY: number;
+  timer: number;
+  phase: HoldPhase;
+  slots: SlotBox[];
+  index: number;
+}
+
+/** A tap of haptics, only where the device offers it and permits it. */
+function buzz(ms: number) {
+  try {
+    if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(ms);
+  } catch {
+    /* Some browsers throw on vibrate during silent mode; the gesture works without it. */
+  }
+}
+
 export function FloatingNav({ isOwner, onSignOut }: { isOwner: boolean; onSignOut: () => void }) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const hash = useRouterState({ select: (state) => state.location.hash });
+  const navigate = useNavigate();
   const [moreOpen, setMoreOpen] = useState(false);
 
   const tabs = isOwner ? OWNER_TABS : STAFF_TABS;
@@ -248,10 +349,181 @@ export function FloatingNav({ isOwner, onSignOut }: { isOwner: boolean; onSignOu
     }))
     .filter((group) => group.items.length > 0);
 
-  // More holds a fixed set of destinations, so the tab has to light up while
-  // the user is inside any of them — otherwise the bar goes blank on the way to
-  // Debtors and looks broken.
-  const moreActive = groups.some((group) => group.items.some((item) => pathname === item.to));
+  // More holds destinations that did not earn a tab, so it only lights up while
+  // the user is inside one of them — and never for a destination that now has
+  // its own tab, or two highlights would claim the same screen.
+  const moreActive = groups.some((group) =>
+    group.items.some((item) => pathname === item.to && !tabs.some((tab) => tab.to === item.to)),
+  );
+
+  /* ---------------------------------------------------------- hold state */
+
+  const pillRef = useRef<HTMLDivElement>(null);
+  const holdRef = useRef<HoldState | null>(null);
+  const suppressClickRef = useRef(false);
+  const [gesture, setGesture] = useState<{ index: number; box: SlotBox } | null>(null);
+
+  const endHold = () => {
+    const hold = holdRef.current;
+    holdRef.current = null;
+    setGesture(null);
+    if (!hold) return;
+    window.clearTimeout(hold.timer);
+    if (hold.phase !== "active") return;
+
+    // The gesture consumed this press: whatever happens next must not also
+    // fire the Link the finger happened to lift on.
+    suppressClickRef.current = true;
+    const pill = pillRef.current;
+    if (pill?.hasPointerCapture?.(hold.pointerId)) {
+      try {
+        pill.releasePointerCapture(hold.pointerId);
+      } catch {
+        /* Already released by the browser — nothing to undo. */
+      }
+    }
+
+    const index = hold.index;
+    if (index < 0 || index >= hold.slots.length) return; // released on nothing
+    if (index < tabs.length) {
+      const target = tabs[index];
+      if (target && target.to !== pathname) {
+        void navigate({ to: target.to, search: { shop: undefined } });
+      }
+      return;
+    }
+    setMoreOpen(true);
+  };
+
+  const slotAt = (x: number, y: number, slots: SlotBox[]): number => {
+    for (let i = 0; i < slots.length; i += 1) {
+      const s = slots[i];
+      if (!s) continue;
+      if (x >= s.left && x <= s.left + s.width && y >= s.top && y <= s.top + s.height) return i;
+    }
+    return -1;
+  };
+
+  const onPointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (moreOpen || holdRef.current) return;
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    // A press starts clean: any unread suppression belongs to an earlier,
+    // cancelled gesture that never produced its click.
+    suppressClickRef.current = false;
+    const timer = window.setTimeout(() => {
+      const hold = holdRef.current;
+      const pill = pillRef.current;
+      if (!hold || hold.phase !== "pending" || !pill) return;
+
+      const pillRect = pill.getBoundingClientRect();
+      const nodes = Array.from(pill.querySelectorAll<HTMLElement>("[data-nav-slot]"));
+      const slots = nodes.map((node) => {
+        const rect = node.getBoundingClientRect();
+        return {
+          left: rect.left - pillRect.left,
+          top: rect.top - pillRect.top,
+          width: rect.width,
+          height: rect.height,
+        };
+      });
+
+      hold.slots = slots;
+      hold.phase = "active";
+      const start = slotAt(hold.startX - pillRect.left, hold.startY - pillRect.top, slots);
+      hold.index = start;
+      const startBox = start >= 0 ? slots[start] : undefined;
+      if (start >= 0 && startBox) setGesture({ index: start, box: startBox });
+      try {
+        pill.setPointerCapture(hold.pointerId);
+      } catch {
+        /* Capture is an optimisation; the handlers still run without it. */
+      }
+      buzz(8);
+    }, HOLD_MS);
+    holdRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      timer,
+      phase: "pending",
+      slots: [],
+      index: -1,
+    };
+  };
+
+  const onPointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const hold = holdRef.current;
+    if (!hold || hold.pointerId !== event.pointerId) return;
+
+    if (hold.phase === "pending") {
+      const moved =
+        Math.abs(event.clientX - hold.startX) > HOLD_SLOP ||
+        Math.abs(event.clientY - hold.startY) > HOLD_SLOP;
+      if (moved) {
+        hold.phase = "dead"; // a moving press is a scroll or a stray, never a hold
+        window.clearTimeout(hold.timer);
+      }
+      return;
+    }
+    if (hold.phase !== "active") return;
+
+    const pill = pillRef.current;
+    if (!pill) return;
+    const pillRect = pill.getBoundingClientRect();
+    const x = event.clientX - pillRect.left;
+    const y = event.clientY - pillRect.top;
+
+    // Drifting clear of the bar cancels — the finger is somewhere else now.
+    const outside =
+      x < -OUTSIDE_TOLERANCE ||
+      y < -OUTSIDE_TOLERANCE ||
+      x > pillRect.width + OUTSIDE_TOLERANCE ||
+      y > pillRect.height + OUTSIDE_TOLERANCE;
+    if (outside) {
+      hold.phase = "dead";
+      setGesture(null);
+      buzz(4);
+      return;
+    }
+
+    const found = slotAt(x, y, hold.slots);
+    const next = found >= 0 ? found : hold.index; // gaps between slots keep the last one
+    if (next !== hold.index) {
+      hold.index = next;
+      const box = next >= 0 ? hold.slots[next] : undefined;
+      setGesture(next >= 0 && box ? { index: next, box } : null);
+      buzz(10);
+    }
+  };
+
+  const releasePointer = (event: React.PointerEvent<HTMLDivElement>) => {
+    const hold = holdRef.current;
+    if (!hold || hold.pointerId !== event.pointerId) return;
+    if (hold.phase === "active") endHold();
+    else {
+      if (hold.phase === "pending") window.clearTimeout(hold.timer);
+      holdRef.current = null;
+      setGesture(null);
+    }
+  };
+
+  const cancelHold = (event: React.PointerEvent<HTMLDivElement>) => {
+    const hold = holdRef.current;
+    if (!hold || hold.pointerId !== event.pointerId) return;
+    window.clearTimeout(hold.timer);
+    if (hold.phase === "active") suppressClickRef.current = true;
+    holdRef.current = null;
+    setGesture(null);
+  };
+
+  // A cancelled gesture must not turn into the tap it was standing on. The
+  // flag is one-shot: an untouched tap passes straight through to the Link.
+  const onClickCapture = (event: React.MouseEvent<HTMLDivElement>) => {
+    if (!suppressClickRef.current) return;
+    suppressClickRef.current = false;
+    event.preventDefault();
+    event.stopPropagation();
+  };
 
   return (
     <>
@@ -260,15 +532,52 @@ export function FloatingNav({ isOwner, onSignOut }: { isOwner: boolean; onSignOu
         just above the bottom edge; from `lg` up it becomes a compact rail in the
         left margin, because stretching five tabs across a desktop window would
         make each target a stretch of empty glass. Same destinations either way.
+
+        `touch-action: pan-y` is the gesture contract: horizontal drags stay
+        with the hold-and-slide selection, vertical drags stay with the page.
       */}
       <nav
         aria-label="Main"
-        className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[env(safe-area-inset-bottom)] pt-2.5 lg:inset-x-auto lg:bottom-auto lg:left-4 lg:top-1/2 lg:translate-y-[-50%] lg:p-0"
+        className="pointer-events-none fixed inset-x-0 bottom-0 z-40 flex justify-center px-4 pb-[env(safe-area-inset-bottom)] pt-2.5 select-none lg:inset-x-auto lg:bottom-auto lg:left-4 lg:top-1/2 lg:translate-y-[-50%] lg:p-0"
       >
-        <div className="glass-bar pointer-events-auto flex h-[var(--glass-bar-height)] w-full max-w-md items-stretch gap-0.5 rounded-glass p-1 backdrop-blur-2xl backdrop-saturate-150 lg:h-auto lg:w-auto lg:max-w-none lg:flex-col">
-          {tabs.map((tab) => (
-            <Tab key={tab.to} item={tab} pathname={pathname} />
-          ))}
+        <div
+          ref={pillRef}
+          onPointerDown={onPointerDown}
+          onPointerMove={onPointerMove}
+          onPointerUp={releasePointer}
+          onPointerCancel={cancelHold}
+          onClickCapture={onClickCapture}
+          onContextMenu={(event) => {
+            // A long press must select a tab, not Android's "open link" menu.
+            const pointerType = (event.nativeEvent as PointerEvent).pointerType;
+            if (pointerType === "touch" || holdRef.current) event.preventDefault();
+          }}
+          className="glass-bar pointer-events-auto relative flex h-[var(--glass-bar-height)] w-full max-w-md touch-pan-y items-stretch gap-0.5 rounded-glass p-1 backdrop-blur-2xl backdrop-saturate-150 lg:h-auto lg:w-auto lg:max-w-none lg:flex-col"
+        >
+          {/* The travelling selection the hold gesture lights up. */}
+          {gesture ? (
+            <motion.span
+              aria-hidden
+              data-nav-gesture
+              initial={{ opacity: 0, scale: 0.94 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.12, ease: "easeOut" }}
+              className="pointer-events-none absolute z-0 rounded-[1.125rem] bg-ink/8 ring-1 ring-ink/20"
+              style={{
+                left: gesture.box.left,
+                top: gesture.box.top,
+                width: gesture.box.width,
+                height: gesture.box.height,
+              }}
+            />
+          ) : null}
+          {tabs.map((tab) =>
+            tab.center ? (
+              <CenterTab key={tab.to} item={tab} pathname={pathname} />
+            ) : (
+              <Tab key={tab.to} item={tab} pathname={pathname} />
+            ),
+          )}
           <MoreTab open={moreOpen} active={moreActive} onOpenChange={setMoreOpen} />
         </div>
       </nav>
@@ -298,6 +607,7 @@ function Tab({ item, pathname }: { item: TabItem; pathname: string }) {
       to={item.to}
       search={{ shop: undefined }}
       aria-current={active ? "page" : undefined}
+      data-nav-slot
       className="press hover-glass hover:bg-ink/4 relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 rounded-[1.125rem] px-0.5 lg:w-[4.5rem] lg:flex-none"
     >
       {active ? (
@@ -339,6 +649,68 @@ function Tab({ item, pathname }: { item: TabItem; pathname: string }) {
   );
 }
 
+/**
+ * The centre of the dock: the POS, as the sketch's larger middle button.
+ *
+ * Same machinery as a Tab — highlight, indicator, aria-current — so the active
+ * state reads identically wherever the user is; what changes is the target
+ * itself, a raised emerald puck, because on a shop counter the till IS the
+ * product. The lift is mobile-only: in the desktop rail the puck sits inline
+ * with its neighbours. The contact shadow is black, like every other depth
+ * cue in the product — an emerald glow would be the decorative outline the
+ * brief rules out.
+ */
+function CenterTab({ item, pathname }: { item: TabItem; pathname: string }) {
+  const reduceMotion = useReducedMotion();
+  const active = pathname === item.to;
+
+  return (
+    <Link
+      to={item.to}
+      search={{ shop: undefined }}
+      aria-current={active ? "page" : undefined}
+      data-nav-slot
+      className="press hover-glass hover:bg-ink/4 relative flex min-h-14 flex-1 flex-col items-center justify-center gap-0.5 rounded-[1.125rem] px-0.5 lg:w-[4.5rem] lg:flex-none"
+    >
+      {active ? (
+        <motion.span
+          layoutId="nav-highlight"
+          className="glass-tile pointer-events-none absolute inset-0 rounded-[1.125rem] backdrop-blur-md backdrop-saturate-150"
+          transition={reduceMotion ? { duration: 0 } : SPRING}
+        />
+      ) : null}
+
+      <motion.span
+        className={cn(
+          "relative z-10 grid size-10 -translate-y-1 place-items-center rounded-full border border-white/15 bg-positive text-background shadow-[0_6px_14px_-6px_oklch(0_0_0_/_0.5)] lg:translate-y-0",
+          active && "ring-2 ring-ink/70",
+        )}
+        animate={active ? { scale: 1.05 } : { scale: 1 }}
+        transition={reduceMotion ? { duration: 0 } : SPRING}
+      >
+        <item.icon className="size-5" aria-hidden />
+      </motion.span>
+
+      <span
+        className={cn(
+          "relative z-10 text-[0.625rem] font-semibold leading-none transition-colors duration-200",
+          active ? "text-ink" : "text-muted-foreground",
+        )}
+      >
+        {item.label}
+      </span>
+
+      <span aria-hidden className="absolute top-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full">
+        <motion.span
+          className="block size-1 rounded-full bg-ink"
+          animate={{ scale: active ? 1 : 0, opacity: active ? 1 : 0 }}
+          transition={reduceMotion ? { duration: 0 } : SPRING}
+        />
+      </span>
+    </Link>
+  );
+}
+
 /** The More destination. Opens the sheet rather than navigating. */
 function MoreTab({
   open,
@@ -357,6 +729,7 @@ function MoreTab({
       onClick={() => onOpenChange(true)}
       aria-expanded={open}
       aria-haspopup="dialog"
+      data-nav-slot
       className="press hover-glass hover:bg-ink/4 relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 rounded-[1.125rem] px-0.5 lg:w-[4.5rem] lg:flex-none"
     >
       {active ? (

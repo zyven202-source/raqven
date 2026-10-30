@@ -79,19 +79,23 @@ All colour, radius, shadow and font values are tokens in `src/styles.css`.
 Components use semantic classes (`bg-primary`, `text-muted-foreground`,
 `surface-panel`, `gradient-ink`) — never hardcoded hex or `text-white`.
 
-| Token            | Value     | Use                          |
-| ---------------- | --------- | ---------------------------- |
-| Deep Emerald     | `#032F25` | `--ink-deep`, `--background` |
-| Luminous Emerald | —         | `--ink-soft`, focus ring     |
-| Pale Mint        | —         | `--ink`, `--foreground`      |
-| Champagne        | `#F8E7C9` | `--accent`, highlights       |
+| Token            | Value       | Use                          |
+| ---------------- | ----------- | ---------------------------- |
+| Deep Green       | `#0B2E23`   | `--background`, the ground   |
+| Deep Emerald     | `#064E3B`   | `--ink-deep`, on light controls |
+| Emerald          | `#10B981`   | `--ink-soft`, `--positive`, focus ring, the mark |
+| Gold Accent      | `#F59E0B`   | `--champagne`/`--accent`, the mark's fold, taglines |
+| Primary text     | `#F0FDF4`   | `--ink`, `--foreground`      |
+| Secondary text   | `#A7C4B5`   | `--muted-foreground`         |
 
 The palette is **dark emerald end to end**: the page itself is the deep
-emerald ground, text is pale mint, and glass surfaces are translucent emerald
-with white hairlines. `--ink` and `--ink-soft` keep their names but now carry
-luminous values, so `text-ink` and `bg-ink` invert correctly on the dark
-ground. The values live as oklch tokens in `src/styles.css`; the hexes here
-are anchors only.
+green ground, text is pale, and glass surfaces are translucent emerald with
+white hairlines. Champagne is the approved **gold accent** — the one warm
+colour in the product, reserved for focus, selection and the brand's own
+highlights. `--ink` and `--ink-soft` keep their names but carry luminous
+values, so `text-ink` and `bg-ink` invert correctly on the dark ground. The
+values live as oklch tokens in `src/styles.css`; the hexes here are anchors
+only.
 
 Type: **Fraunces** for headings, **Manrope** for body.
 
@@ -172,7 +176,7 @@ last week.
   has failed — saying plainly that some things won't load until the network
   returns) and the update banner.
 - **`manifest.webmanifest`** — id, standalone display, portrait orientation,
-  `#032F25` theme, 192/512 icons plus a maskable entry, three Play listing
+  `#0B2E23` theme, 192/512 icons plus a maskable entry, three Play listing
   screenshots (two portrait, one wide), two app shortcuts (`/app/pos`,
   `/app/overview`), a `launch_handler` (a till should reopen into the running
   instance, not a second one), and `prefer_related_applications: false`

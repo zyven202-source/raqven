@@ -15,12 +15,18 @@
  *     with it). When the network is gone, the cached shell renders so the
  *     user sees the app instead of a browser error, and the ConnectivityBar
  *     banner says the truth about what will and will not load.
- *   - Hashed build assets (/assets/*): network first, cache on failure. The
- *     names are immutable, but freshness is cheap and correctness is not
- *     negotiable.
- *   - Fonts (Google's CDN): network first, cache on failure, in their own
- *     bucket. Checked before the same-origin gate, because these are the one
- *     cross-origin response this worker is allowed to store.
+ *   - Hashed build assets (/assets/*): cache first, network on a miss. The
+ *     filename carries the content hash, so a URL's bytes cannot change
+ *     under it — serving the stored copy on a repeat visit is what makes the
+ *     second load instant, and a *new* deploy is a *new* URL that the fresh
+ *     (network-first) navigation just pointed at. Old entries can never mix
+ *     with new HTML: they are simply unreferenced until the next version
+ *     bump clears them.
+ *   - Fonts: the file URLs on fonts.gstatic.com are content-addressed, so
+ *     cache first for the same reason. The stylesheet on
+ *     fonts.googleapis.com can change at the same URL, so it is served
+ *     stale-while-revalidate: the page paints immediately with the last
+ *     approved typography, and the fresh sheet lands for the next one.
  *   - Other same-origin miscellany (manifest, icons, robots.txt): network
  *     first, cache on failure, in the runtime bucket.
  *   - Everything else cross-origin — Supabase above all — is the network's
@@ -30,7 +36,9 @@
  *
  * There is no install-time precache. The cache starts empty and fills only
  * from successful network responses, so nothing can ever be served from a
- * cache the network has not already confirmed the shape of.
+ * cache the network has not already confirmed the shape of — and the first
+ * successful navigation stores the shell, which is what the offline
+ * fallback serves.
  *
  * Versioning: bump SERVICE_WORKER_VERSION whenever the caching strategy
  * changes shape — clients holding the old strategy must refresh. The old
@@ -42,7 +50,7 @@
  * who audits what runs on their phone with no build between them and it.
  */
 
-const SERVICE_WORKER_VERSION = "savo-pwa-v1";
+const SERVICE_WORKER_VERSION = "savo-pwa-v2";
 const SHELL_CACHE = `${SERVICE_WORKER_VERSION}-shell`;
 const RUNTIME_CACHE = `${SERVICE_WORKER_VERSION}-runtime`;
 const FONT_CACHE = `${SERVICE_WORKER_VERSION}-fonts`;
@@ -75,24 +83,42 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(request.url);
 
-  // Fonts from Google's CDN: network first, cached on success in their own
-  // bucket so typography still renders when the network later fails. Checked
-  // before the same-origin gate, because these are the one cross-origin
-  // response this worker is allowed to store.
+  // Fonts, checked before the same-origin gate because these are the one
+  // cross-origin response this worker is allowed to store — and only these
+  // two hosts ever are.
   if (url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com") {
+    // The stylesheet URL is stable across releases, so its bytes can change:
+    // paint the approved copy now, refresh it for the next visit.
+    if (url.hostname === "fonts.googleapis.com") {
+      event.respondWith(
+        (async () => {
+          const cache = await caches.open(FONT_CACHE);
+          const stored = await cache.match(request);
+          const refresh = fetch(request)
+            .then((fresh) => {
+              if (fresh.ok) void cache.put(request, fresh.clone());
+              return fresh;
+            })
+            .catch(() => stored);
+          return stored ?? (await refresh) ?? Response.error();
+        })(),
+      );
+      return;
+    }
+
+    // Font files are content-addressed: their URL can only ever be those
+    // bytes, so a stored copy is a correct copy.
     event.respondWith(
       (async () => {
+        const cache = await caches.open(FONT_CACHE);
+        const hit = await cache.match(request);
+        if (hit) return hit;
         try {
           const fresh = await fetch(request);
-          if (fresh.ok) {
-            const cache = await caches.open(FONT_CACHE);
-            cache.put(request, fresh.clone());
-          }
+          if (fresh.ok) cache.put(request, fresh.clone());
           return fresh;
         } catch {
-          const cache = await caches.open(FONT_CACHE);
-          const hit = await cache.match(request);
-          return hit ?? Response.error();
+          return Response.error();
         }
       })(),
     );
@@ -132,23 +158,22 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Hashed build assets: network first, cache on failure. Serving a stale
-  // asset from cache while a fresh one exists would defeat the point of
-  // shipping updates at all.
+  // Hashed build assets: cache first, network on a miss. The name contains
+  // the content hash, so the stored bytes are the correct bytes forever —
+  // and a deploy that changes them changes the name too, which the
+  // network-first navigation above picks up before anything asks for it.
   if (url.pathname.startsWith("/assets/")) {
     event.respondWith(
       (async () => {
+        const cache = await caches.open(SHELL_CACHE);
+        const hit = await cache.match(request);
+        if (hit) return hit;
         try {
           const fresh = await fetch(request);
-          if (fresh.ok) {
-            const cache = await caches.open(SHELL_CACHE);
-            cache.put(request, fresh.clone());
-          }
+          if (fresh.ok) cache.put(request, fresh.clone());
           return fresh;
         } catch {
-          const cache = await caches.open(SHELL_CACHE);
-          const hit = await cache.match(request);
-          return hit ?? Response.error();
+          return Response.error();
         }
       })(),
     );

@@ -3,14 +3,15 @@
 // so the suite proves what the browser will actually show rather than what the
 // generator intended.
 //
-// The identity is the drawn Savo mark: champagne stroke, deep-emerald tile,
-// rounded corners. The assertions locate the mark from its colour — nothing
+// The identity is the drawn Savo mark: emerald stroke with a gold band across
+// the centre fold, deep-emerald tile, rounded corners. The assertions locate
+// the mark from its colour — nothing
 // samples a fixed point in the artwork, because a probe that names coordinates
 // keeps passing by measuring whatever moved underneath it. What must be true
 // of any honest rendering is asserted instead:
 //
 //   - the corners are transparent (the tile is rounded, not a full-bleed square)
-//   - the tile is emerald and dark, the letter is champagne and pale
+//   - the tile is emerald and dark, the mark is emerald/gold and bright
 //   - the letter is a single population, centred in the tile, taller than wide
 //   - at 16px the letter still occupies real pixels, or the favicon is mud
 //
@@ -39,8 +40,18 @@ function check(name, ok, detail = "") {
   return ok;
 }
 
-/** Champagne-band test: the letter token is #F8E7C9; allow shading around it. */
-const CHAMPAGNE = `(r, g, b) => r > 170 && g > 150 && b > 100 && b <= g`;
+/**
+ * Mark-band test: the stroke is emerald #10B981 banded with gold #F59E0B.
+ * The bounds that make this honest rather than generous:
+ *   - emerald: green-dominant, and *blue* enough to be the letter (b < 0.8g),
+ *     which is what separates it from the pale mint rim and the white gloss —
+ *     both of those are far bluer and both would otherwise count as letter;
+ *     r < 120 keeps the dark tile greens out.
+ *   - gold: warm and bright, which nothing else on the tile is.
+ */
+const CHAMPAGNE = `(r, g, b) =>
+  (g > 140 && r < 120 && b > 80 && b < g * 0.8) ||
+  (r > 190 && g > 110 && g < 190 && b < 80)`;
 
 /**
  * Decode a PNG (bytes read in Node, pixels decoded in the browser) and measure
@@ -132,10 +143,10 @@ check(
   big.cornerAlphas.every((a) => a < 40),
   `corner alphas ${big.cornerAlphas.join(", ")}`,
 );
-check("the letter is present and substantial", big.letter > 3000, `${big.letter} champagne px`);
+check("the letter is present and substantial", big.letter > 3000, `${big.letter} mark px`);
 check("the tile is present behind it", big.tile > 100000, `${big.tile} tile px`);
 check(
-  "the tile is dark emerald and the letter pale champagne",
+  "the tile is dark emerald and the mark bright",
   big.tileDark !== null && big.tileDark < 110 && big.tileBright > 150,
   `tile dark ${big.tileDark}, bright ${big.tileBright}`,
 );
