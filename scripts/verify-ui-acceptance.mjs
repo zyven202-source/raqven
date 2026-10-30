@@ -1189,17 +1189,25 @@ try {
     ctx.drawImage(image, 0, 0);
     const { data } = ctx.getImageData(0, 0, canvas.width, canvas.height);
     //
-    // The letter is found from its colour, not from a coordinate: champagne is
-    // the one pale-warm population on a dark emerald tile.
+    // The mark is found from its colour, not from a coordinate: the drawn SAVO
+    // stroke is emerald #10B981 banded with gold #F59E0B, and nothing else on
+    // the deep-emerald tile is either of those. The same two-band test the
+    // icon generator's own verifier uses, so the two suites cannot disagree
+    // about what the artwork is.
     const isLetter = (i) => {
       const r = data[i];
       const g = data[i + 1];
       const b = data[i + 2];
-      return data[i + 3] > 128 && r > 170 && g > 150 && b > 100 && b <= g;
+      if (data[i + 3] <= 128) return false;
+      // emerald stroke: green-dominant, blue enough to be neither the tile
+      // nor the pale rim, and not the rim's mint or the gloss's white.
+      if (g > 140 && r < 120 && b > 80 && b < g * 0.8) return true;
+      // gold band: warm and bright, which nothing else on the tile is.
+      return r > 190 && g > 110 && g < 190 && b < 80;
     };
     //
-    // What must be true of the R tile is measured, not pointed at: two
-    // populations (pale-warm letter, dark tile), the letter's bounding box and
+    // What must be true of the mark tile is measured, not pointed at: two
+    // populations (emerald/gold mark, dark tile), the mark's bounding box and
     // centroid, and the tile's lightness range. Nothing below knows a
     // coordinate.
     const size = canvas.width;
@@ -1263,26 +1271,26 @@ try {
     `corner alphas ${icon?.corners?.join(", ") ?? "?"}`,
   );
   check(
-    "the R is present and substantial",
+    "the mark is present and substantial",
     (icon?.letter ?? 0) > 3000,
-    `${icon?.letter ?? 0} champagne px`,
+    `${icon?.letter ?? 0} mark px`,
   );
   check("the tile is present behind it", (icon?.tile ?? 0) > 100000, `${icon?.tile ?? 0} tile px`);
   check(
-    "the tile is dark emerald and the letter pale",
+    "the tile is dark emerald and the mark bright",
     (icon?.tileDark ?? 255) < 110 && (icon?.tileBright ?? 0) > 150,
     `tile dark ${icon?.tileDark ?? "?"}, bright ${icon?.tileBright ?? "?"}`,
   );
   check(
-    "the R is centred in the tile",
+    "the mark is centred in the tile",
     icon?.centre != null &&
       Math.abs(icon.centre[0] - 256) < 30 &&
       Math.abs(icon.centre[1] - 256) < 30,
     icon?.centre ? `centre ${icon.centre.map((n) => Math.round(n)).join(", ")}` : "none",
   );
   check(
-    "the R reads as a letter, taller than wide",
-    icon?.box != null && icon.box.h >= icon.box.w,
+    "the mark reads as the drawn symbol, taller than wide",
+    icon?.box != null && icon.box.h > icon.box.w,
     icon?.box ? `${icon.box.w}x${icon.box.h}` : "none",
   );
 

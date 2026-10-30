@@ -11,8 +11,9 @@
 //   2. installs with NO precache (the cache starts empty)
 //   3. the network is served fresh on every navigation (a changed document is
 //      what the page gets, even with a shell already cached)
-//   4. hashed assets are network-first: a fresh URL is fetched even when the
-//      old one is cached, and the cache afterwards holds the new bytes
+//   4. hashed assets are cache-first: a repeat visit reuses the stored bytes
+//      without touching the network (proven by fetching one while offline),
+//      and a fresh URL after a deploy is fetched and stored on first use
 //   5. other same-origin files are network-first and land in the runtime cache
 //   6. fonts cache-on-failure in their own bucket
 //   7. offline, the shell fallback renders the app instead of a browser error
@@ -154,8 +155,10 @@ check(
     : "no cached shell yet",
 );
 
-// Assets: network-first with cache-on-failure. After loading the app twice,
-// the shell bucket must hold the hashed assets the current HTML references.
+// Assets: cache first for hashed names. After loading the app twice, the
+// shell bucket must hold the hashed assets the current HTML references — and
+// the offline fetch below proves a repeat visit can reuse them with the
+// network gone instead of waiting on it.
 const assetsCached = await page.evaluate(async () => {
   const names = await caches.keys();
   const shell = names.find((n) => n.includes("-shell"));
@@ -177,6 +180,39 @@ check(
   assetsCached.htmlUrls.every((p) => p === "/index.html"),
   assetsCached.htmlUrls.join(", ") || "none",
 );
+
+// The performance claim, measured rather than asserted: a stored hashed
+// asset is served while the network is down. That is only possible if the
+// worker answers from the cache — a network-first worker would fail here.
+const assetPath = await page.evaluate(async () => {
+  const names = await caches.keys();
+  const shell = names.find((n) => n.includes("-shell"));
+  if (!shell) return "";
+  const cache = await caches.open(shell);
+  const req = (await cache.keys()).find((r) => new URL(r.url).pathname.startsWith("/assets/"));
+  return req ? new URL(req.url).pathname : "";
+});
+if (assetPath) {
+  await context.setOffline(true);
+  const offlineAsset = await page
+    .evaluate(async (path) => {
+      try {
+        const res = await fetch(path, { cache: "reload" });
+        return { status: res.status, bytes: (await res.arrayBuffer()).byteLength };
+      } catch (error) {
+        return { status: 0, error: String(error) };
+      }
+    }, assetPath)
+    .catch(() => ({ status: 0, error: "evaluate failed" }));
+  await context.setOffline(false);
+  check(
+    "a repeat visit reuses cached hashed assets without the network",
+    offlineAsset.status === 200 && offlineAsset.bytes > 0,
+    `${assetPath} → ${offlineAsset.status}`,
+  );
+} else {
+  check("a repeat visit reuses cached hashed assets without the network", false, "no asset cached");
+}
 
 // Runtime miscellany: a plain same-origin fetch (not a navigation) must land
 // in the runtime cache — network-first, cached on success.

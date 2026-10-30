@@ -34,6 +34,7 @@ import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppRestockRouteImport } from './routes/_authenticated/app.restock'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
 import { Route as AuthenticatedAppStockRouteImport } from './routes/_authenticated/app.stock'
+import { Route as AuthenticatedAppSyncRouteImport } from './routes/_authenticated/app.sync'
 import { Route as AuthenticatedAppTransactionsRouteImport } from './routes/_authenticated/app.transactions'
 
 const IndexRoute = IndexRouteImport.update({
@@ -165,6 +166,11 @@ const AuthenticatedAppStockRoute = AuthenticatedAppStockRouteImport.update({
   path: '/stock',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppSyncRoute = AuthenticatedAppSyncRouteImport.update({
+  id: '/sync',
+  path: '/sync',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppTransactionsRoute =
   AuthenticatedAppTransactionsRouteImport.update({
     id: '/transactions',
@@ -196,6 +202,7 @@ export interface FileRoutesByFullPath {
   '/app/restock': typeof AuthenticatedAppRestockRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/stock': typeof AuthenticatedAppStockRoute
+  '/app/sync': typeof AuthenticatedAppSyncRoute
   '/app/transactions': typeof AuthenticatedAppTransactionsRoute
   '/app/': typeof AuthenticatedAppIndexRoute
 }
@@ -222,6 +229,7 @@ export interface FileRoutesByTo {
   '/app/restock': typeof AuthenticatedAppRestockRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/stock': typeof AuthenticatedAppStockRoute
+  '/app/sync': typeof AuthenticatedAppSyncRoute
   '/app/transactions': typeof AuthenticatedAppTransactionsRoute
   '/app': typeof AuthenticatedAppIndexRoute
 }
@@ -251,6 +259,7 @@ export interface FileRoutesById {
   '/_authenticated/app/restock': typeof AuthenticatedAppRestockRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/stock': typeof AuthenticatedAppStockRoute
+  '/_authenticated/app/sync': typeof AuthenticatedAppSyncRoute
   '/_authenticated/app/transactions': typeof AuthenticatedAppTransactionsRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
 }
@@ -280,6 +289,7 @@ export interface FileRouteTypes {
     | '/app/restock'
     | '/app/settings'
     | '/app/stock'
+    | '/app/sync'
     | '/app/transactions'
     | '/app/'
   fileRoutesByTo: FileRoutesByTo
@@ -306,6 +316,7 @@ export interface FileRouteTypes {
     | '/app/restock'
     | '/app/settings'
     | '/app/stock'
+    | '/app/sync'
     | '/app/transactions'
     | '/app'
   id:
@@ -334,6 +345,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/restock'
     | '/_authenticated/app/settings'
     | '/_authenticated/app/stock'
+    | '/_authenticated/app/sync'
     | '/_authenticated/app/transactions'
     | '/_authenticated/app/'
   fileRoutesById: FileRoutesById
@@ -522,6 +534,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppStockRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/sync': {
+      id: '/_authenticated/app/sync'
+      path: '/sync'
+      fullPath: '/app/sync'
+      preLoaderRoute: typeof AuthenticatedAppSyncRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/transactions': {
       id: '/_authenticated/app/transactions'
       path: '/transactions'
@@ -543,6 +562,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppRestockRoute: typeof AuthenticatedAppRestockRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppStockRoute: typeof AuthenticatedAppStockRoute
+  AuthenticatedAppSyncRoute: typeof AuthenticatedAppSyncRoute
   AuthenticatedAppTransactionsRoute: typeof AuthenticatedAppTransactionsRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
 }
@@ -558,6 +578,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppRestockRoute: AuthenticatedAppRestockRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppStockRoute: AuthenticatedAppStockRoute,
+  AuthenticatedAppSyncRoute: AuthenticatedAppSyncRoute,
   AuthenticatedAppTransactionsRoute: AuthenticatedAppTransactionsRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
 }

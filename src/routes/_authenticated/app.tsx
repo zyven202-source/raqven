@@ -6,11 +6,13 @@ import { toast } from "sonner";
 
 import { CreateShopDialog } from "@/components/app/CreateShopDialog";
 import { FloatingNav } from "@/components/app/FloatingNav";
+import { SwipeArea } from "@/components/app/SwipeArea";
 import { JoinShopSheet } from "@/components/app/JoinShopSheet";
 import { LoadingState } from "@/components/app/AppChrome";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { SyncIndicator } from "@/components/app/SyncIndicator";
 import { ActiveShopProvider, useActiveShop } from "@/hooks/useActiveShop";
 import { signOut } from "@/services/auth.service";
 import type { ShopWithRole } from "@/types/savo";
@@ -89,7 +91,12 @@ function AppShell({
       </header>
 
       <div id="main" tabIndex={-1}>
-        <Outlet />
+        {/* The content area doubles as the horizontal swipe surface: it walks
+            the dock's destinations left and right, and hands every other
+            gesture straight back to the page. */}
+        <SwipeArea isOwner={role === "owner"}>
+          <Outlet />
+        </SwipeArea>
       </div>
 
       <FloatingNav isOwner={role === "owner"} onSignOut={() => void handleSignOut()} />
@@ -146,6 +153,10 @@ function ShopBar({
         </span>
         <ChevronDown className="size-4 shrink-0 text-muted-foreground" />
       </button>
+
+      {/* The connectivity/sync pill — same footprint in every state, so the
+          shop bar never jumps as the network changes. */}
+      <SyncIndicator shopId={shop.id} />
 
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetContent side="bottom" className="px-0 pb-8 pt-3">

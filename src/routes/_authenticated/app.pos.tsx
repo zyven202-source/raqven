@@ -1,7 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
-import { useCallback, useMemo, useState } from "react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   Banknote,
+  CloudOff,
   CreditCard,
   Minus,
   Plus,
@@ -15,7 +16,13 @@ import {
 } from "lucide-react";
 import { toast } from "sonner";
 
-import { EmptyState, ErrorState, LoadingState, PageContainer } from "@/components/app/AppChrome";
+import {
+  EmptyState,
+  ErrorState,
+  LoadingState,
+  NoticeState,
+  PageContainer,
+} from "@/components/app/AppChrome";
 import { Field, MoneyField } from "@/components/app/fields";
 import { StatusBadge, stockStatusLabel } from "@/components/app/primitives";
 import { ProductFormDialog } from "@/components/app/ProductFormDialog";
@@ -26,12 +33,17 @@ import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { useActiveShop } from "@/hooks/useActiveShop";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { OUTBOX_CHANGED_EVENT, useOfflineSync } from "@/hooks/useOfflineSync";
 import { useProducts } from "@/hooks/useProducts";
 import { useCreateSale } from "@/hooks/useSales";
+import { useSession } from "@/hooks/useSession";
+import { listCachedProducts, replaceShopProducts, type CachedProduct } from "@/lib/offline/db";
+import { enqueueOfflineSale } from "@/lib/offline/saleQueue";
+import { randomUUID } from "@/lib/offline/uuid";
 import { cartTotals, type CartLineInput } from "@/services/sales.service";
 import { findProductByBarcode } from "@/services/products.service";
 import { cn } from "@/lib/utils";
-import { formatMoney } from "@/lib/format";
+import { formatDateTime, formatMoney } from "@/lib/format";
 import type { PaymentMethod, Product } from "@/types/savo";
 
 export const Route = createFileRoute("/_authenticated/app/pos")({
@@ -43,6 +55,26 @@ interface CartLine extends CartLineInput {
   name: string;
   unit: string;
   available: number;
+}
+
+/**
+ * What the till needs from a product, deliberately smaller than a full row:
+ * the server's product and the device's cached copy both satisfy it, which is
+ * what lets the grid and the basket render identically online and offline.
+ */
+type TillProduct = Pick<
+  Product,
+  "id" | "name" | "unit" | "quantity" | "selling_price" | "is_low_stock" | "low_stock_threshold"
+>;
+
+/** What an offline checkout shows instead of a server receipt. */
+interface OfflineSavedSale {
+  txId: string;
+  total: number;
+  change: number;
+  itemCount: number;
+  paymentMethod: PaymentMethod;
+  createdAt: number;
 }
 
 function parseAmount(value: string) {
@@ -78,6 +110,23 @@ function PosPage() {
   // ledger and debtor caches, so the till cannot keep selling stale quantities.
   const createSaleMutation = useCreateSale(shopId);
 
+  /* ------------------------------------------------------------ offline */
+  // One honest source for "is the backend reachable" — the same probe the
+  // indicator uses — plus the device's own mirror of this shop's catalogue.
+  const { online } = useOfflineSync(shopId);
+  const offline = !online;
+  const { user } = useSession();
+  const [cachedProducts, setCachedProducts] = useState<CachedProduct[]>([]);
+  const [offlineSaved, setOfflineSaved] = useState<OfflineSavedSale | null>(null);
+
+  /*
+   * One identity per checkout *attempt*. Held in a ref so a failed attempt
+   * retried on the same basket re-sends the same id and the database's unique
+   * index collapses it into one sale — and cleared whenever the basket
+   * changes, so two genuinely different sales can never share an id.
+   */
+  const entryIdRef = useRef<string | null>(null);
+
   const [lines, setLines] = useState<CartLine[]>([]);
   const [cartOpen, setCartOpen] = useState(false);
   const [scannerOpen, setScannerOpen] = useState(false);
@@ -96,12 +145,92 @@ function PosPage() {
   const tenderedAmount = parseAmount(tendered);
   const changeDue = paymentMethod === "cash" ? Math.max(tenderedAmount - totals.total, 0) : 0;
 
+  /*
+   * The catalogue, from whichever source can actually answer right now:
+   * the server when it answers, the device's mirror when it cannot. The mirror
+   * is written after every successful fetch, so "offline" means the last
+   * confirmed state of this shop's shelf — labelled as cached on screen.
+   */
+  const serverProducts = productsQuery.data ?? [];
+  // Offline the server cannot filter, so the mirror is searched here instead.
+  const searchLower = debouncedSearch.trim().toLowerCase();
+  const cachedMatches = cachedProducts.filter((product) => {
+    if (!searchLower) return true;
+    return (
+      product.name.toLowerCase().includes(searchLower) ||
+      (product.barcode ?? "").toLowerCase().includes(searchLower) ||
+      (product.sku ?? "").toLowerCase().includes(searchLower)
+    );
+  });
+  const usingCache =
+    serverProducts.length === 0 && (offline || productsQuery.isError) && cachedMatches.length > 0;
+  const products = serverProducts.length > 0 ? serverProducts : usingCache ? cachedMatches : [];
+  const cacheCutoff = usingCache
+    ? Math.min(...cachedProducts.map((product) => product.cachedAt))
+    : null;
+
+  // Mirror every successful fetch into IndexedDB. Fire-and-forget: a failed
+  // cache write costs an offline search later, never this sale.
+  useEffect(() => {
+    if (!shopId || !productsQuery.data) return;
+    void replaceShopProducts(
+      shopId,
+      productsQuery.data.map((product) => ({
+        id: product.id,
+        name: product.name,
+        barcode: product.barcode,
+        sku: product.sku,
+        unit: product.unit,
+        buying_price: Number(product.buying_price),
+        selling_price: Number(product.selling_price),
+        quantity: Number(product.quantity),
+        low_stock_threshold: Number(product.low_stock_threshold),
+        is_low_stock: product.is_low_stock,
+        is_active: product.is_active,
+      })),
+    ).catch(() => {
+      /* See above: the mirror is best-effort, the queue never is. */
+    });
+  }, [shopId, productsQuery.data]);
+
+  // Load the mirror once per shop so an offline start has something to sell.
+  useEffect(() => {
+    if (!shopId) return;
+    let cancelled = false;
+    void listCachedProducts(shopId)
+      .then((rows) => {
+        if (!cancelled) setCachedProducts(rows);
+      })
+      .catch(() => {
+        if (!cancelled) setCachedProducts([]);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [shopId]);
+
   const cashShort =
     paymentMethod === "cash" && tendered.length > 0 && tenderedAmount < totals.total;
   const creditMissing = paymentMethod === "credit" && debtorName.trim().length < 2;
-  const canComplete = lines.length > 0 && !cashShort && !creditMissing && !submitting;
+  // Externally-verified payments need the network: never claim an M-Pesa or
+  // card payment succeeded while disconnected. Cash (and credit, whose record
+  // is the shop's own book) can be queued safely.
+  const methodBlockedOffline = (method: PaymentMethod) =>
+    offline && (method === "mpesa" || method === "card");
+  const blockedMethod = methodBlockedOffline(paymentMethod);
+  const canComplete =
+    lines.length > 0 && !cashShort && !creditMissing && !blockedMethod && !submitting;
 
-  const addToCart = useCallback((product: Product, quantity = 1) => {
+  // The basket's identity: whenever it changes, so does the operation id.
+  const basketKey =
+    lines.map((line) => `${line.productId}:${line.quantity}:${line.discountAmount}`).join("|") +
+    discount +
+    paymentMethod;
+  useEffect(() => {
+    entryIdRef.current = null;
+  }, [basketKey]);
+
+  const addToCart = useCallback((product: TillProduct, quantity = 1) => {
     setLines((current) => {
       const existing = current.find((line) => line.productId === product.id);
       const available = Number(product.quantity);
@@ -159,7 +288,12 @@ function PosPage() {
     async (barcode: string) => {
       if (!shopId) return;
       try {
-        const product = await findProductByBarcode(shopId, barcode);
+        // Offline: the mirror answers, because a shelf does not stop being
+        // scannable when the network drops.
+        const cached = offline
+          ? (cachedProducts.find((product) => product.barcode === barcode) ?? null)
+          : null;
+        const product = cached ?? (await findProductByBarcode(shopId, barcode));
         if (!product) {
           setScannerOpen(false);
           setMissingBarcode(barcode);
@@ -177,7 +311,7 @@ function PosPage() {
         toast.error(error instanceof Error ? error.message : "The barcode lookup failed.");
       }
     },
-    [shopId, addToCart, currency],
+    [shopId, addToCart, currency, offline, cachedProducts],
   );
 
   function resetCart() {
@@ -188,13 +322,12 @@ function PosPage() {
     setDebtorPhone("");
     setPaymentMethod("cash");
   }
-
   async function completeSale() {
     if (!shopId || lines.length === 0) return;
 
     setSubmitting(true);
     try {
-      const result = await createSaleMutation.mutateAsync({
+      const input = {
         shopId,
         lines: lines.map(({ productId, quantity, unitPrice, discountAmount: lineDiscount }) => ({
           productId,
@@ -208,7 +341,49 @@ function PosPage() {
         discountAmount: totals.discount,
         debtorName: paymentMethod === "credit" ? debtorName : null,
         debtorPhone: paymentMethod === "credit" ? debtorPhone : null,
+      };
+
+      /* ------------------------------------------------------- offline */
+      if (offline) {
+        if (blockedMethod) {
+          throw new Error(
+            "M-Pesa and card payments need the network. Take cash, or wait until SAVO is back online.",
+          );
+        }
+
+        // Durably stored FIRST. If this throws (storage full, storage
+        // blocked), the catch below reports a failed sale — there is no path
+        // that shows a green receipt over an unsaved one.
+        const { entry } = await enqueueOfflineSale(input, user?.id ?? null);
+
+        const saved = {
+          txId: entry.txId,
+          total: totals.total,
+          change: changeDue,
+          itemCount,
+          paymentMethod,
+          createdAt: entry.createdAt,
+        };
+        setOfflineSaved(saved);
+        setCartOpen(false);
+        resetCart();
+        window.dispatchEvent(new Event(OUTBOX_CHANGED_EVENT));
+        toast.success("Saved on this device", {
+          description: "It joins your books the moment the network comes back.",
+        });
+        return;
+      }
+
+      /* -------------------------------------------------------- online */
+      entryIdRef.current ??= randomUUID();
+      const result = await createSaleMutation.mutateAsync({
+        ...input,
+        // One identity per checkout attempt: a retry of this same attempt
+        // can never record a second sale.
+        clientTxId: entryIdRef.current,
       });
+
+      entryIdRef.current = null; // consumed — the next checkout mints a new one
 
       setCartOpen(false);
       resetCart();
@@ -234,8 +409,6 @@ function PosPage() {
   }
 
   if (!activeShop) return <LoadingState label="Opening the till…" />;
-
-  const products = productsQuery.data ?? [];
 
   return (
     <PageContainer className="pb-[calc(var(--glass-bar-clearance)+5.75rem)]">
@@ -269,9 +442,19 @@ function PosPage() {
       </div>
 
       {/* ---------------------------------------------------------- products */}
-      {productsQuery.isLoading ? (
+      {usingCache ? (
+        <div className="mb-3">
+          <NoticeState
+            icon={<CloudOff className="size-4" aria-hidden />}
+            title="Showing the catalogue saved on this device"
+            description={`${cachedProducts.length} product${cachedProducts.length === 1 ? "" : "s"}, last updated ${cacheCutoff ? formatDateTime(new Date(cacheCutoff).toISOString()) : "earlier"}. Prices and stock are re-checked with the server when each sale syncs.`}
+          />
+        </div>
+      ) : null}
+
+      {productsQuery.isLoading && products.length === 0 ? (
         <LoadingState label="Loading your products…" />
-      ) : productsQuery.isError ? (
+      ) : products.length === 0 && productsQuery.isError && !usingCache ? (
         <ErrorState
           message={productsQuery.error.message}
           onRetry={() => void productsQuery.refetch()}
@@ -404,6 +587,14 @@ function PosPage() {
         onNewSale={() => setSearch("")}
       />
 
+      {/* The offline twin of the receipt: same moment in the workflow, honest
+          about what has happened — stored here, not yet in the books. */}
+      <OfflineReceiptSheet
+        sale={offlineSaved}
+        currency={currency}
+        onClose={() => setOfflineSaved(null)}
+      />
+
       {/* ------------------------------------------------------- the basket */}
       <Sheet open={cartOpen} onOpenChange={setCartOpen}>
         <SheetContent side="bottom" className="max-h-[92vh] overflow-y-auto px-0 pb-6 pt-4">
@@ -515,24 +706,39 @@ function PosPage() {
             <div>
               <p className="mb-2 text-sm font-medium">How are they paying?</p>
               <div className="grid grid-cols-4 gap-1.5">
-                {PAYMENT_OPTIONS.map((option) => (
-                  <button
-                    key={option.value}
-                    type="button"
-                    onClick={() => setPaymentMethod(option.value)}
-                    aria-pressed={paymentMethod === option.value}
-                    className={cn(
-                      "press flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg border text-[11px] font-medium",
-                      paymentMethod === option.value
-                        ? "border-ink bg-ink text-background"
-                        : "border-border text-muted-foreground",
-                    )}
-                  >
-                    <option.icon className="size-4" />
-                    {option.label}
-                  </button>
-                ))}
+                {PAYMENT_OPTIONS.map((option) => {
+                  const blocked = methodBlockedOffline(option.value);
+                  return (
+                    <button
+                      key={option.value}
+                      type="button"
+                      disabled={blocked}
+                      title={blocked ? "Needs the network" : undefined}
+                      onClick={() => setPaymentMethod(option.value)}
+                      aria-pressed={paymentMethod === option.value}
+                      className={cn(
+                        "press flex min-h-14 flex-col items-center justify-center gap-1 rounded-lg border text-[11px] font-medium",
+                        paymentMethod === option.value
+                          ? "border-ink bg-ink text-background"
+                          : "border-border text-muted-foreground",
+                        blocked && "cursor-not-allowed opacity-40",
+                      )}
+                    >
+                      <option.icon className="size-4" />
+                      {option.label}
+                    </button>
+                  );
+                })}
               </div>
+              {offline ? (
+                <p className="flex items-start gap-1.5 text-xs leading-relaxed text-muted-foreground">
+                  <CloudOff className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                  <span>
+                    Offline: cash and credit are saved on this device. M-Pesa and card wait for the
+                    network — SAVO never claims a payment it could not verify.
+                  </span>
+                </p>
+              ) : null}
             </div>
 
             {paymentMethod === "cash" ? (
@@ -620,8 +826,19 @@ function PosPage() {
               disabled={!canComplete}
               onClick={() => void completeSale()}
             >
-              {submitting ? "Recording…" : `Complete sale · ${formatMoney(totals.total, currency)}`}
+              {submitting
+                ? offline
+                  ? "Saving…"
+                  : "Recording…"
+                : blockedMethod
+                  ? "Needs the network"
+                  : `Complete sale · ${formatMoney(totals.total, currency)}`}
             </Button>
+            {offline && !blockedMethod ? (
+              <p className="text-center text-xs text-muted-foreground">
+                Saved on this device now, synced to your books when the network returns.
+              </p>
+            ) : null}
 
             <button
               type="button"
@@ -635,5 +852,85 @@ function PosPage() {
         </SheetContent>
       </Sheet>
     </PageContainer>
+  );
+}
+
+/**
+ * The offline confirmation.
+ *
+ * Deliberately NOT a receipt: no receipt number exists until the server
+ * assigns one, so this screen says exactly what is true — the sale is stored
+ * on this device, queued, and will appear in Sales history once it syncs.
+ * The reference shown is the operation id the server will dedupe on, so a
+ * shopkeeper can match this screen to the sync queue without guessing.
+ */
+function OfflineReceiptSheet({
+  sale,
+  currency,
+  onClose,
+}: {
+  sale: OfflineSavedSale | null;
+  currency: string;
+  onClose: () => void;
+}) {
+  return (
+    <Sheet open={sale !== null} onOpenChange={(open) => !open && onClose()}>
+      <SheetContent side="bottom" className="px-0 pb-6 pt-4">
+        <SheetHeader className="px-5 pb-3 text-left">
+          <SheetTitle className="text-base">Saved on this device</SheetTitle>
+        </SheetHeader>
+
+        {sale ? (
+          <div className="space-y-4 px-5">
+            <div className="flex items-center gap-3 rounded-lg border border-caution/40 bg-caution-soft px-3.5 py-3">
+              <CloudOff className="size-4 shrink-0 text-caution" aria-hidden />
+              <div className="min-w-0">
+                <p className="text-sm font-medium">Waiting to sync</p>
+                <p className="text-xs leading-relaxed text-muted-foreground">
+                  Recorded on this phone. It reaches Sales history the moment SAVO is back online.
+                </p>
+              </div>
+            </div>
+
+            <dl className="space-y-1.5 text-sm">
+              <div className="flex justify-between text-muted-foreground">
+                <dt>Items</dt>
+                <dd className="tnum">{sale.itemCount}</dd>
+              </div>
+              <div className="flex justify-between text-muted-foreground">
+                <dt>Paid by</dt>
+                <dd className="capitalize">{sale.paymentMethod}</dd>
+              </div>
+              {sale.paymentMethod === "cash" && sale.change > 0 ? (
+                <div className="flex justify-between text-muted-foreground">
+                  <dt>Change given</dt>
+                  <dd className="tnum">{formatMoney(sale.change, currency)}</dd>
+                </div>
+              ) : null}
+              <div className="flex justify-between border-t border-border pt-1.5 text-base font-semibold">
+                <dt>Total</dt>
+                <dd className="tnum">{formatMoney(sale.total, currency)}</dd>
+              </div>
+            </dl>
+
+            <p className="tnum break-all text-[11px] text-muted-foreground">
+              Reference {sale.txId.slice(0, 8)} ·{" "}
+              {formatDateTime(new Date(sale.createdAt).toISOString())}
+            </p>
+
+            <div className="space-y-2">
+              <Button className="w-full" onClick={onClose}>
+                New sale
+              </Button>
+              <Button variant="outline" className="w-full" asChild>
+                <Link to="/app/sync" search={{ shop: undefined }}>
+                  See the sync queue
+                </Link>
+              </Button>
+            </div>
+          </div>
+        ) : null}
+      </SheetContent>
+    </Sheet>
   );
 }

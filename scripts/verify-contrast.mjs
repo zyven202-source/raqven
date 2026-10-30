@@ -251,15 +251,49 @@ async function measure(payload) {
    * colour cannot really come out at 2:1, so the giveaway is that the colour the
    * element claims to be painted in is nowhere in the crop.
    *
+   * The declared colour arrives as written in the stylesheet, and this product
+   * specifies `oklch(...)` — comparing its three components against sRGB
+   * pixels would "miss" on every crop ever captured, so oklch is converted
+   * first and a format this parser does not understand simply skips the check
+   * rather than inventing a verdict.
+   *
    * The test is deliberately only consulted when the ratio would otherwise
    * FAIL. On a passing ratio the answer cannot change anything, and running it
    * unconditionally produced false alarms on buttons, where most of the box is
    * fill and the glyphs are a small minority of the pixels.
    */
   if (ratio < 4.5) {
-    const declared = (payload.color || "").match(/[\d.]+/g);
-    if (declared && declared.length >= 3) {
-      const want = [Number(declared[0]), Number(declared[1]), Number(declared[2])];
+    const declared = (payload.color || "").trim();
+    let want = null;
+    const toRgb = function (L, C, H) {
+      const h = (H * Math.PI) / 180;
+      const a = C * Math.cos(h);
+      const b = C * Math.sin(h);
+      const l_ = L + 0.3963377774 * a + 0.2158037573 * b;
+      const m_ = L - 0.1055613458 * a - 0.0638541728 * b;
+      const s_ = L - 0.0894841775 * a - 1.291485548 * b;
+      const l = l_ * l_ * l_;
+      const m = m_ * m_ * m_;
+      const s = s_ * s_ * s_;
+      const lin = [
+        4.0767416621 * l - 3.3077115913 * m + 0.2309699292 * s,
+        -1.2684380046 * l + 2.6097574011 * m - 0.3413193965 * s,
+        -0.0041960863 * l - 0.7034186147 * m + 1.707614701 * s,
+      ];
+      return lin.map(function (c) {
+        const v = c <= 0.0031308 ? 12.92 * c : 1.055 * Math.pow(c, 1 / 2.4) - 0.055;
+        return Math.max(0, Math.min(255, Math.round(v * 255)));
+      });
+    };
+    const oklch = declared.match(/^oklch\(\s*([\d.]+)[ ,]+([\d.]+)[ ,]+([\d.]+)/i);
+    const rgbFn = declared.match(/^rgba?\(/i);
+    if (oklch) {
+      want = toRgb(Number(oklch[1]), Number(oklch[2]), Number(oklch[3]));
+    } else if (rgbFn) {
+      const n = declared.match(/[\d.]+/g);
+      if (n && n.length >= 3) want = [Number(n[0]), Number(n[1]), Number(n[2])];
+    }
+    if (want) {
       const dist = function (a) {
         return Math.sqrt(
           Math.pow(a[0] - want[0], 2) + Math.pow(a[1] - want[1], 2) + Math.pow(a[2] - want[2], 2),

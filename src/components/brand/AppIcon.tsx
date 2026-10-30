@@ -1,12 +1,13 @@
 import { cn } from "@/lib/utils";
 
-import { BRAND, CONTAINER, MARK, VIEW_BOX } from "./mark-geometry";
+import { BRAND, CONTAINER, MARK, MARK_PAINT, VIEW_BOX } from "./mark-geometry";
 
 /**
  * SAVO's mark tile, without the wordmark.
  *
- * One place draws the app-icon shape: the Savo mark stroked in champagne on
- * the deep-emerald tile. Every number it uses comes from `mark-geometry.ts`,
+ * One place draws the app-icon shape: the Savo mark stroked in emerald with a
+ * gold band across the centre fold, on the deep-emerald tile. Every number it
+ * uses comes from `mark-geometry.ts`,
  * which `scripts/generate-icons.mjs` also reads, so the raster icons in
  * `public/` and this component cannot drift apart.
  *
@@ -32,6 +33,7 @@ export function AppIcon({
   const gloss = "savo-gloss";
   const rim = "savo-rim";
   const shape = "savo-shape";
+  const paint = "savo-letter";
 
   const r = CONTAINER.cornerRadius;
 
@@ -54,6 +56,19 @@ export function AppIcon({
           <stop offset="78%" stopColor={BRAND.deep} />
           <stop offset="100%" stopColor={BRAND.night} />
         </radialGradient>
+
+        {/* The mark's paint: emerald lifting to gold across the centre fold. */}
+        <linearGradient
+          id={paint}
+          x1={MARK_PAINT.x1}
+          y1={MARK_PAINT.y1}
+          x2={MARK_PAINT.x2}
+          y2={MARK_PAINT.y2}
+        >
+          {MARK_PAINT.stops.map((stop) => (
+            <stop key={stop.offset} offset={stop.offset} stopColor={stop.color} />
+          ))}
+        </linearGradient>
 
         {/* A broad gloss across the top third. */}
         <linearGradient id={gloss} x1="12" y1="0" x2="12" y2="13">
@@ -79,11 +94,11 @@ export function AppIcon({
         </>
       ) : null}
 
-      {/* The mark: one continuous stroke, champagne on the tile. */}
+      {/* The mark: one continuous stroke, emerald with the gold fold. */}
       <path
         d={MARK.path}
         fill="none"
-        stroke={BRAND.letter}
+        stroke={detail ? `url(#${paint})` : BRAND.letter}
         strokeWidth={MARK.stroke}
         strokeLinecap={MARK.linecap}
       />

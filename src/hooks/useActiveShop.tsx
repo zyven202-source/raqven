@@ -6,6 +6,7 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -13,6 +14,7 @@ import {
 import { LoadingState } from "@/components/app/AppChrome";
 import { useSession } from "@/hooks/useSession";
 import { useMyShops } from "@/hooks/useShops";
+import { loadShopSnapshot, saveShopSnapshot } from "@/lib/offline/shopCache";
 import type { ShopRole, ShopWithRole } from "@/types/savo";
 
 const ACTIVE_SHOP_KEY = "savo.activeShopId";
@@ -62,6 +64,33 @@ export function ActiveShopProvider({ children }: { children: ReactNode }) {
   const shopsQuery = useMyShops();
   const [selectedId, setSelectedId] = useState<string | null>(() => readStoredShopId());
 
+  /*
+   * Offline fallback: the last membership list this device actually received.
+   * Loaded at mount rather than only after the live query *fails*: React Query
+   * retries with backoff, so a cold start with no network would otherwise sit
+   * on "Opening your shop…" for several seconds before the error ever lands.
+   * The server remains the authority — `shops` below always prefers live data,
+   * and the snapshot is replaced wholesale on the first successful fetch.
+   */
+  const [offlineShops, setOfflineShops] = useState<ShopWithRole[] | null>(null);
+  const snapshotRequested = useRef(false);
+
+  useEffect(() => {
+    if (shopsQuery.data) {
+      void saveShopSnapshot(shopsQuery.data).catch(() => {
+        /* Best effort: a snapshot that cannot be written costs a cold offline
+           start, never a sale. */
+      });
+      setOfflineShops(null); // live data wins
+      return;
+    }
+    if (snapshotRequested.current || offlineShops !== null) return;
+    snapshotRequested.current = true;
+    void loadShopSnapshot()
+      .then((rows) => setOfflineShops((current) => current ?? (rows.length > 0 ? rows : [])))
+      .catch(() => setOfflineShops((current) => current ?? []));
+  }, [shopsQuery.data, offlineShops]);
+
   // Reset the selection when the user changes (sign-out / sign-in).
   useEffect(() => {
     if (sessionLoading) return;
@@ -75,7 +104,10 @@ export function ActiveShopProvider({ children }: { children: ReactNode }) {
     }
   }, [session, sessionLoading]);
 
-  const shops = useMemo(() => shopsQuery.data ?? [], [shopsQuery.data]);
+  const shops = useMemo(
+    () => shopsQuery.data ?? offlineShops ?? [],
+    [shopsQuery.data, offlineShops],
+  );
 
   const activeShop = useMemo(
     () => shops.find((shop) => shop.id === selectedId) ?? null,
@@ -88,7 +120,11 @@ export function ActiveShopProvider({ children }: { children: ReactNode }) {
   // a brand new account. Without the second case they would sit on
   // "Select a shop to continue…" forever with a membership already in hand.
   useEffect(() => {
-    if (!shopsQuery.isSuccess) return;
+    // With no live answer, the snapshot can still resolve the selection — but
+    // only when there is one to resolve. An empty or absent snapshot must NOT
+    // run this logic, or it would clear a perfectly good stored selection
+    // before the server ever had a chance to answer.
+    if (!shopsQuery.isSuccess && (!offlineShops || offlineShops.length === 0)) return;
     if (activeShop) return;
     if (selectedId && !shops.some((shop) => shop.id === selectedId)) {
       // The stored shop is gone; fall back to whatever they still belong to.
@@ -106,7 +142,7 @@ export function ActiveShopProvider({ children }: { children: ReactNode }) {
     } catch {
       /* non-fatal */
     }
-  }, [shopsQuery.isSuccess, selectedId, activeShop, shops]);
+  }, [shopsQuery.isSuccess, selectedId, activeShop, shops, offlineShops]);
 
   const selectShop = useCallback((shopId: string) => {
     setSelectedId(shopId);
@@ -123,7 +159,7 @@ export function ActiveShopProvider({ children }: { children: ReactNode }) {
       activeShop,
       role: activeShop?.role ?? null,
       isOwner: activeShop?.role === "owner",
-      loading: sessionLoading || shopsQuery.isPending,
+      loading: sessionLoading || (shopsQuery.isPending && shops.length === 0),
       hasNoShops: shopsQuery.isSuccess && shops.length === 0,
       selectShop,
     }),
