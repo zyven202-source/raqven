@@ -14,6 +14,8 @@ import { OfflineBanner, UpdateBanner } from "@/components/app/ConnectivityBar";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
+import { useAnalytics } from "@/hooks/useAnalytics";
+import { trackError } from "@/lib/analytics-tracker";
 import { useServiceWorker } from "@/hooks/useServiceWorker";
 import { useSession } from "@/hooks/useSession";
 import {
@@ -87,6 +89,9 @@ function ErrorComponent({ error, reset }: ErrorComponentProps) {
   const router = useRouter();
   useEffect(() => {
     reportLovableError(error, { boundary: "tanstack_root_error_component" });
+    // Also recorded in the platform console, where the owner can see which
+    // screen failed and how often.
+    trackError(error, "render_boundary", window.location.pathname);
   }, [error]);
 
   return (
@@ -212,13 +217,15 @@ function RootShell({ children }: { children: ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
-  const { online, updateReady, applyUpdate } = useServiceWorker();
+  const { online, updateReady, applyUpdate, dismissUpdate } = useServiceWorker();
+  // Opens this tab's analytics session and records the screens it reaches.
+  useAnalytics();
 
   return (
     <QueryClientProvider client={queryClient}>
       {/* The two slivers of PWA truth: connectivity and a pending update. */}
       {!online ? <OfflineBanner /> : null}
-      {updateReady ? <UpdateBanner onUpdate={applyUpdate} /> : null}
+      {updateReady ? <UpdateBanner onUpdate={applyUpdate} onDismiss={dismissUpdate} /> : null}
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <Toaster position="top-center" richColors />

@@ -84,11 +84,16 @@ export async function lodgeDataRequest(input: {
   details?: string | null;
   shopId?: string | null;
 }): Promise<string> {
-  const { data, error } = await supabase.rpc("lodge_data_request", {
+  // Absent rather than null: the RPC declares these as optional arguments, and
+  // an explicit null fails its argument types.
+  const args: { p_request_type: DataRequestType; p_details?: string; p_shop_id?: string } = {
     p_request_type: input.type,
-    p_details: input.details?.trim() || null,
-    p_shop_id: input.shopId ?? null,
-  });
+  };
+  const details = input.details?.trim();
+  if (details) args.p_details = details;
+  if (input.shopId) args.p_shop_id = input.shopId;
+
+  const { data, error } = await supabase.rpc("lodge_data_request", args);
   if (error) throw error;
   return data as string;
 }

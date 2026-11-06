@@ -1,4 +1,4 @@
-import { Download, RefreshCw, WifiOff } from "lucide-react";
+import { Download, RefreshCw, WifiOff, X } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
 
@@ -14,7 +14,10 @@ import { Button } from "@/components/ui/button";
  * working till. Out of the way, above the content.
  *
  * `UpdateBanner` — a new version has been downloaded and is waiting. The user
- * chooses when to apply it; nothing reloads underneath a half-entered sale.
+ * chooses when to apply it; nothing reloads underneath a half-entered sale,
+ * and the notice can be dismissed for the moment — it will be offered again
+ * on the next load, because an update the owner never installs is a version
+ * that never ships to that phone.
  */
 export function OfflineBanner() {
   return (
@@ -31,7 +34,13 @@ export function OfflineBanner() {
   );
 }
 
-export function UpdateBanner({ onUpdate }: { onUpdate: () => void }) {
+export function UpdateBanner({
+  onUpdate,
+  onDismiss,
+}: {
+  onUpdate: () => void;
+  onDismiss?: (() => void) | undefined;
+}) {
   return (
     <div
       role="status"
@@ -45,6 +54,16 @@ export function UpdateBanner({ onUpdate }: { onUpdate: () => void }) {
           <RefreshCw className="size-3" aria-hidden />
           Update
         </Button>
+        {onDismiss ? (
+          <button
+            type="button"
+            onClick={onDismiss}
+            aria-label="Dismiss the update notice"
+            className="grid size-6 shrink-0 place-items-center rounded-full text-muted-foreground transition-colors active:bg-ink/5"
+          >
+            <X className="size-3" aria-hidden />
+          </button>
+        ) : null}
       </div>
     </div>
   );

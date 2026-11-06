@@ -6,6 +6,8 @@
  * the UI is allowed to update `products.quantity` directly.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/analytics-tracker";
+import { ANALYTICS_EVENTS } from "@/services/analytics.service";
 import type { InventoryMovement, MovementType, Product } from "@/types/savo";
 
 export interface ListMovementsOptions {
@@ -58,6 +60,12 @@ export async function recordStockIn(input: StockInInput): Promise<Product> {
 
   const { data, error } = await supabase.rpc("record_stock_movement", args);
   if (error) throw error;
+
+  trackEvent(ANALYTICS_EVENTS.stockAdded, {
+    shopId: data.shop_id,
+    properties: { quantity: input.quantity },
+  });
+
   return data;
 }
 
@@ -83,6 +91,12 @@ export async function recordStockCount(
 
   const { data, error } = await supabase.rpc("record_stock_movement", args);
   if (error) throw error;
+
+  trackEvent(ANALYTICS_EVENTS.stockAdjusted, {
+    shopId: data.shop_id,
+    properties: { reason: "stock_count" },
+  });
+
   return data;
 }
 
@@ -107,5 +121,11 @@ export async function recordDamage(
 
   const { data, error } = await supabase.rpc("record_stock_movement", args);
   if (error) throw error;
+
+  trackEvent(ANALYTICS_EVENTS.stockAdjusted, {
+    shopId: data.shop_id,
+    properties: { reason: "damage" },
+  });
+
   return data;
 }

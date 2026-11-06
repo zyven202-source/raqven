@@ -320,6 +320,8 @@ const PUBLIC_PAGES = [
 ];
 
 const APP_PAGES = [
+  ["overview", "/app/overview"],
+  ["pulse", "/app/pulse"],
   ["POS", "/app/pos"],
   ["stock", "/app/stock"],
   ["inventory", "/app/inventory"],

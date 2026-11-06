@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   Archive,
   MoreVertical,
@@ -54,6 +54,13 @@ import { formatMoney } from "@/lib/format";
 import { STORAGE_BUCKETS, type Product } from "@/types/savo";
 
 export const Route = createFileRoute("/_authenticated/app/inventory")({
+  // `q` is the deep-link prefill: SAVO Pulse's restock actions open this
+  // screen already searching for the product they named. Typing in the box
+  // does NOT write it back to the URL — this is a one-way inbound link, not
+  // history spam.
+  validateSearch: (search: Record<string, unknown>): { q?: string | undefined } => ({
+    q: typeof search["q"] === "string" ? search["q"] : undefined,
+  }),
   head: () => ({ meta: [{ title: "SAVO — Inventory" }] }),
   component: InventoryPage,
 });
@@ -71,7 +78,12 @@ function InventoryPage() {
   const shopId = activeShop?.id ?? "";
   const currency = activeShop?.currency ?? "KES";
 
-  const [search, setSearch] = useState("");
+  const { q } = Route.useSearch();
+  const [search, setSearch] = useState(q ?? "");
+  // One-way sync: a deep link (or a new one while mounted) prefills the box.
+  useEffect(() => {
+    if (q !== undefined) setSearch(q);
+  }, [q]);
   const [categoryId, setCategoryId] = useState("");
   const [lowStockOnly, setLowStockOnly] = useState(false);
   const [includeArchived, setIncludeArchived] = useState(false);

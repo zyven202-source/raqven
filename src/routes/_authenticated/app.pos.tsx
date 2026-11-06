@@ -185,7 +185,8 @@ function PosPage() {
         selling_price: Number(product.selling_price),
         quantity: Number(product.quantity),
         low_stock_threshold: Number(product.low_stock_threshold),
-        is_low_stock: product.is_low_stock,
+        // The database column is nullable; the offline cache wants a boolean.
+        is_low_stock: product.is_low_stock ?? false,
         is_active: product.is_active,
       })),
     ).catch(() => {

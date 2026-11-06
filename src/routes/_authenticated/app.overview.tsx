@@ -1,9 +1,11 @@
 import { Link, createFileRoute } from "@tanstack/react-router";
 import {
+  Activity,
   ArrowUpRight,
   ChevronRight,
   HandCoins,
   PackagePlus,
+  RefreshCw,
   ScanLine,
   TriangleAlert,
   Wallet,
@@ -70,57 +72,44 @@ function OverviewPage() {
   const debtorsQuery = useDebtors(shopId);
   const [restockTarget, setRestockTarget] = useState<Product | null>(null);
 
-  if (reportQuery.isLoading) return <LoadingState label="Working out today's numbers…" />;
-  if (reportQuery.isError) {
-    return (
-      <PageContainer>
-        <ErrorState
-          message={reportQuery.error.message}
-          onRetry={() => void reportQuery.refetch()}
-        />
-      </PageContainer>
-    );
-  }
-
-  const report = reportQuery.data;
-  if (!report) {
-    return (
-      <PageContainer>
-        <ErrorState
-          message="The report came back empty. Try loading it again."
-          onRetry={() => void reportQuery.refetch()}
-        />
-      </PageContainer>
-    );
-  }
-  const grossProfit = report.grossSales - report.costOfGoods;
-  const netResult = grossProfit - report.expenses;
-  const hasSales = report.salesCount > 0;
+  /*
+    The day's numbers are one RPC, and the screen no longer waits for it.
+    This used to early-return a full-page spinner — and on a slow connection
+    a timeout-style whole-page state — until `shop_report` answered. The
+    header, the navigation and every independent query below now render
+    immediately; the three sections that quote the report show their own
+    skeleton or their own error with a retry, so one slow call can never park
+    the dashboard on a blank screen again.
+  */
+  const report = reportQuery.data ?? null;
+  const grossProfit = report ? report.grossSales - report.costOfGoods : null;
+  const netResult = report && grossProfit !== null ? grossProfit - report.expenses : null;
 
   const yesterday = yesterdayQuery.data;
   const month = monthQuery.data;
   const owingDebtors = (debtorsQuery.data ?? []).filter((debtor) => Number(debtor.total_owed) > 0);
 
-  const salesTrend = trendSentence(
-    "Sales",
-    report.grossSales,
-    yesterday?.grossSales ?? null,
-    (value) => formatMoney(value, currency),
-  );
-  const profitTrend = trendSentence(
-    "Estimated profit",
-    grossProfit,
-    yesterday ? yesterday.grossSales - yesterday.costOfGoods : null,
-    (value) => formatMoney(value, currency),
-  );
-  const expenseTrend = trendSentence(
-    "Spending",
-    report.expenses,
-    yesterday?.expenses ?? null,
-    (value) => formatMoney(value, currency),
-  );
+  const salesTrend =
+    report &&
+    trendSentence("Sales", report.grossSales, yesterday?.grossSales ?? null, (value) =>
+      formatMoney(value, currency),
+    );
+  const profitTrend =
+    report && grossProfit !== null
+      ? trendSentence(
+          "Estimated profit",
+          grossProfit,
+          yesterday ? yesterday.grossSales - yesterday.costOfGoods : null,
+          (value) => formatMoney(value, currency),
+        )
+      : null;
+  const expenseTrend =
+    report &&
+    trendSentence("Spending", report.expenses, yesterday?.expenses ?? null, (value) =>
+      formatMoney(value, currency),
+    );
   const debtLine =
-    report.outstandingCredit > 0
+    report && report.outstandingCredit > 0
       ? `${formatMoney(report.outstandingCredit, currency)} is outstanding across ${
           owingDebtors.length || "some"
         } ${owingDebtors.length === 1 ? "debtor" : "debtors"}.`
@@ -131,7 +120,34 @@ function OverviewPage() {
     (line): line is string => Boolean(line),
   );
   const noInsightsYet =
-    insights.length === 0 && bestSellers.length === 0 && yesterdayQuery.isSuccess;
+    report !== null &&
+    insights.length === 0 &&
+    bestSellers.length === 0 &&
+    yesterdayQuery.isSuccess;
+
+  /* The report-dependent sections' shared non-data state. */
+  const reportPlaceholder = reportQuery.isError ? (
+    <div className="glass-1 rounded-xl p-4">
+      <p className="text-sm font-medium">Couldn't work out today's numbers</p>
+      <p className="mt-1 text-sm leading-relaxed text-muted-foreground">
+        {reportQuery.error.message}
+      </p>
+      <Button
+        variant="outline"
+        className="mt-3"
+        onClick={() => void reportQuery.refetch()}
+        disabled={reportQuery.isFetching}
+      >
+        <RefreshCw className={reportQuery.isFetching ? "animate-spin" : undefined} /> Try again
+      </Button>
+    </div>
+  ) : (
+    <div className="glass-1 rounded-xl p-4" role="status" aria-live="polite" aria-busy="true">
+      <div className="h-9 w-40 animate-pulse rounded bg-sunken" aria-hidden />
+      <div className="mt-3 h-4 w-48 animate-pulse rounded bg-sunken" aria-hidden />
+      <p className="sr-only">Working out today's numbers…</p>
+    </div>
+  );
 
   return (
     <PageContainer>
@@ -149,53 +165,64 @@ function OverviewPage() {
       {/* --------------------------------------------------- the day's headline */}
       <section className="mb-6">
         <SectionLabel>Takings</SectionLabel>
-        <div className="glass-1 rounded-xl backdrop-blur-2xl backdrop-saturate-150 p-4">
-          <p className="tnum text-[2.25rem] font-semibold leading-none">
-            {formatMoney(report.grossSales, currency)}
-          </p>
-          <p className="mt-2 text-sm text-muted-foreground">
-            {hasSales
-              ? `from ${report.salesCount} sale${report.salesCount === 1 ? "" : "s"} today`
-              : "No sales recorded yet today"}
-          </p>
-          {report.discounts > 0 ? (
-            <p className="mt-1 text-xs text-muted-foreground">
-              after {formatMoney(report.discounts, currency)} of discounts
+        {report ? (
+          <div className="glass-1 rounded-xl backdrop-blur-2xl backdrop-saturate-150 p-4">
+            <p className="tnum text-[2.25rem] font-semibold leading-none">
+              {formatMoney(report.grossSales, currency)}
             </p>
-          ) : null}
-        </div>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {report.salesCount > 0
+                ? `from ${report.salesCount} sale${report.salesCount === 1 ? "" : "s"} today`
+                : "No sales recorded yet today"}
+            </p>
+            {report.discounts > 0 ? (
+              <p className="mt-1 text-xs text-muted-foreground">
+                after {formatMoney(report.discounts, currency)} of discounts
+              </p>
+            ) : null}
+          </div>
+        ) : (
+          reportPlaceholder
+        )}
       </section>
 
       {/* ------------------------------------------- money in, money out, result */}
       <section className="mb-6">
         <SectionLabel>The day's result</SectionLabel>
-        <dl className="list-divided">
-          <Line
-            label="Gross profit (estimate)"
-            value={formatMoney(grossProfit, currency)}
-            note="Takings less what the goods cost you"
-            tone={grossProfit < 0 ? "negative" : "default"}
-          />
-          <Line
-            label="Expenses"
-            value={`− ${formatMoney(report.expenses, currency)}`}
-            note={report.expenses > 0 ? "Logged today" : "Nothing logged today"}
-          />
-          <Line
-            label="Net result (estimate)"
-            value={formatMoney(netResult, currency)}
-            note="Gross profit less expenses"
-            tone={netResult < 0 ? "negative" : "positive"}
-            emphasis
-          />
-          {report.refunds > 0 ? (
-            <Line label="Refunds paid out" value={`− ${formatMoney(report.refunds, currency)}`} />
-          ) : null}
-        </dl>
-        <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-          Profit is an estimate: it uses the buying price recorded on each product, not what you
-          actually paid on the last delivery.
-        </p>
+        {report && grossProfit !== null && netResult !== null ? (
+          <>
+            <dl className="list-divided">
+              <Line
+                label="Gross profit (estimate)"
+                value={formatMoney(grossProfit, currency)}
+                note="Takings less what the goods cost you"
+                tone={grossProfit < 0 ? "negative" : "default"}
+              />
+              <Line
+                label="Expenses"
+                value={`− ${formatMoney(report.expenses, currency)}`}
+                note={report.expenses > 0 ? "Logged today" : "Nothing logged today"}
+              />
+              <Line
+                label="Net result (estimate)"
+                value={formatMoney(netResult, currency)}
+                note="Gross profit less expenses"
+                tone={netResult < 0 ? "negative" : "positive"}
+                emphasis
+              />
+              {report.refunds > 0 ? (
+                <Line
+                  label="Refunds paid out"
+                  value={`− ${formatMoney(report.refunds, currency)}`}
+                />
+              ) : null}
+            </dl>
+            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
+              Profit is an estimate: it uses the buying price recorded on each product, not what you
+              actually paid on the last delivery.
+            </p>
+          </>
+        ) : null}
       </section>
 
       {/* -------------------------------------------------------- the numbers say */}
@@ -240,32 +267,34 @@ function OverviewPage() {
       {/* ------------------------------------------------------------ shop pulse */}
       <section className="mb-6">
         <SectionLabel>Where the shop stands</SectionLabel>
-        <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-          <Figure
-            label="Money owed to you"
-            value={formatMoney(report.outstandingCredit, currency)}
-            note="Across all debtors"
-          />
-          <Figure
-            label="Stock at cost"
-            value={formatMoney(report.stockValue, currency)}
-            note="What the shelves are worth"
-          />
-          <Figure
-            label="Cash and mobile money taken"
-            value={formatMoney(report.collected, currency)}
-            note="Excludes credit sales"
-          />
-          <Figure
-            label="Debt collected"
-            value={formatMoney(report.debtCollected, currency)}
-            note="Repayments received today"
-          />
-        </div>
+        {report ? (
+          <div className="grid grid-cols-2 gap-x-4 gap-y-4">
+            <Figure
+              label="Money owed to you"
+              value={formatMoney(report.outstandingCredit, currency)}
+              note="Across all debtors"
+            />
+            <Figure
+              label="Stock at cost"
+              value={formatMoney(report.stockValue, currency)}
+              note="What the shelves are worth"
+            />
+            <Figure
+              label="Cash and mobile money taken"
+              value={formatMoney(report.collected, currency)}
+              note="Excludes credit sales"
+            />
+            <Figure
+              label="Debt collected"
+              value={formatMoney(report.debtCollected, currency)}
+              note="Repayments received today"
+            />
+          </div>
+        ) : null}
       </section>
 
       {/* --------------------------------------------------------------- alerts */}
-      {report.lowStockCount > 0 ? (
+      {report && report.lowStockCount > 0 ? (
         <section className="mb-6">
           <Link
             to="/app/restock"
@@ -328,6 +357,30 @@ function OverviewPage() {
           <QuickAction to="/app/expenses" icon={Wallet} label="Record expense" />
           <QuickAction to="/app/debtors" icon={HandCoins} label="Take a repayment" />
         </div>
+      </section>
+
+      {/* ------------------------------------------------------------ pulse */}
+      <section className="mb-6">
+        <SectionLabel>Deeper look</SectionLabel>
+        <Link
+          to="/app/pulse"
+          search={{ shop: undefined }}
+          className="glass-2 press hover-glass flex items-center gap-3 rounded-xl px-4 py-3.5 backdrop-blur-md backdrop-saturate-150 active:opacity-80"
+        >
+          <span
+            className="grid size-9 shrink-0 place-items-center rounded-lg bg-positive-soft text-positive"
+            aria-hidden
+          >
+            <Activity className="size-5" />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">SAVO Pulse</span>
+            <span className="block text-xs leading-snug text-muted-foreground">
+              Understand your shop. Know your next move.
+            </span>
+          </span>
+          <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+        </Link>
       </section>
 
       {/* ------------------------------------------------------- recent activity */}

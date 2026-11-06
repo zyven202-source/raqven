@@ -3,6 +3,8 @@
  * the RLS policies enforce exactly that split.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/analytics-tracker";
+import { ANALYTICS_EVENTS } from "@/services/analytics.service";
 import type { ReceiptSettings, ReceiptSettingsUpdate } from "@/types/savo";
 
 export const RECEIPT_SETTINGS_COLUMNS =
@@ -56,5 +58,8 @@ export async function updateReceiptSettings(
     .select(RECEIPT_SETTINGS_COLUMNS)
     .single();
   if (error) throw error;
+
+  trackEvent(ANALYTICS_EVENTS.settingsUpdated, { shopId });
+
   return data;
 }

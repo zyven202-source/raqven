@@ -6,6 +6,8 @@
  * invalid category is impossible rather than merely unlikely.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/analytics-tracker";
+import { ANALYTICS_EVENTS } from "@/services/analytics.service";
 import type { Expense, ExpenseUpdate, PaymentMethod } from "@/types/savo";
 
 export const EXPENSE_CATEGORIES = [
@@ -89,6 +91,9 @@ export async function createExpense(input: CreateExpenseInput): Promise<Expense>
 
   const { data, error } = await supabase.from("expenses").insert(row).select().single();
   if (error) throw error;
+
+  trackEvent(ANALYTICS_EVENTS.expenseCreated, { shopId: input.shopId });
+
   return data;
 }
 
@@ -122,5 +127,8 @@ export async function updateExpense(
     .select()
     .single();
   if (error) throw error;
+
+  trackEvent(ANALYTICS_EVENTS.expenseUpdated, { shopId });
+
   return data;
 }

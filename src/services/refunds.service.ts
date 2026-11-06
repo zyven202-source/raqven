@@ -6,6 +6,8 @@
  * is off, but that is a courtesy — a direct API call is refused too.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/analytics-tracker";
+import { ANALYTICS_EVENTS } from "@/services/analytics.service";
 import type { Refund, RefundItem } from "@/types/savo";
 
 export async function listRefunds(shopId: string, limit = 100): Promise<Refund[]> {
@@ -102,6 +104,8 @@ export async function createRefund(input: CreateRefundInput): Promise<CreateRefu
     total_amount: number;
     receipt_number: string;
   };
+
+  trackEvent(ANALYTICS_EVENTS.refundCreated, { properties: { items: input.lines.length } });
 
   return {
     refundId: result.refund_id,

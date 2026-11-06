@@ -1,5 +1,10 @@
 {
   "include": ["src/**/*.ts", "src/**/*.tsx", "vite.config.ts", "eslint.config.js"],
+  // An unfinished server-side AI route from an earlier session. It is not in the
+  // route tree, references service modules that do not exist, and cannot run in
+  // this project's static build (nitro is off). Excluded so a half-written
+  // experiment does not block the typecheck of the app that does ship.
+  "exclude": ["src/routes/api.savo-ai.tsx"],
   "compilerOptions": {
     "target": "ES2022",
     "jsx": "react-jsx",

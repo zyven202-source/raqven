@@ -9,7 +9,9 @@
  *
  * What the cache is allowed to do, in the order the fetch handler decides:
  *
- *   - Navigations: network first. A successful HTML response replaces the
+ *   - Navigations: network first, with a short timeout when a cached shell
+ *     exists — a dying network falls back to the shell instead of parking the
+ *     till on a blank spinner. A successful HTML response replaces the
  *     cached shell (only text/html is ever stored at /index.html — a
  *     navigation to robots.txt or the manifest must not clobber the shell
  *     with it). When the network is gone, the cached shell renders so the
@@ -50,7 +52,16 @@
  * who audits what runs on their phone with no build between them and it.
  */
 
-const SERVICE_WORKER_VERSION = "savo-pwa-v2";
+const SERVICE_WORKER_VERSION = "savo-pwa-v3";
+
+/**
+ * How long a navigation waits for the network before falling back to the
+ * cached shell — but only when a cached shell exists to fall back to. On a
+ * first visit there is nothing in the cache, so the request is given as long
+ * as the network needs; aborting it would turn a slow-but-working first load
+ * into a blank error page.
+ */
+const NAVIGATION_TIMEOUT_MS = 4_000;
 const SHELL_CACHE = `${SERVICE_WORKER_VERSION}-shell`;
 const RUNTIME_CACHE = `${SERVICE_WORKER_VERSION}-runtime`;
 const FONT_CACHE = `${SERVICE_WORKER_VERSION}-fonts`;
@@ -131,27 +142,35 @@ self.addEventListener("fetch", (event) => {
   // or off.
   if (url.origin !== self.location.origin) return;
 
-  // Navigations: network first. The cache is only what a shop sees when the
-  // network itself is gone — never a substitute for a fresh document.
+  // Navigations: network first, with a short leash. The cache is only what a
+  // shop sees when the network itself is gone — never a substitute for a fresh
+  // document. The timeout is what keeps a dying network from parking the till
+  // on a blank spinner for half a minute: once a few seconds have passed and a
+  // cached shell is known to exist, the shell renders and the app's own data
+  // layer keeps retrying underneath it. Without a cached shell there is
+  // nothing honest to fall back to, so no timeout is applied.
   if (request.mode === "navigate") {
     event.respondWith(
       (async () => {
+        const cache = await caches.open(SHELL_CACHE);
+        const shell =
+          (await cache.match("/index.html")) ?? (await cache.match("/")) ?? null;
+
+        const canTimeOut = shell !== null && typeof AbortSignal?.timeout === "function";
+
         try {
-          const fresh = await fetch(request);
+          const fresh = await fetch(
+            request,
+            canTimeOut ? { signal: AbortSignal.timeout(NAVIGATION_TIMEOUT_MS) } : undefined,
+          );
           // Only an HTML document may replace the cached shell. A navigation
           // to a plain file (robots.txt, the manifest) is served as itself;
           // storing it under /index.html would clobber the shell with it.
           const type = fresh.headers.get("content-type") ?? "";
-          if (type.includes("text/html")) {
-            const cache = await caches.open(SHELL_CACHE);
-            cache.put("/index.html", fresh.clone());
-          }
+          if (type.includes("text/html")) cache.put("/index.html", fresh.clone());
           return fresh;
         } catch {
-          const cache = await caches.open(SHELL_CACHE);
-          const shell =
-            (await cache.match("/index.html")) ?? (await cache.match("/")) ?? Response.error();
-          return shell;
+          return shell ?? Response.error();
         }
       })(),
     );

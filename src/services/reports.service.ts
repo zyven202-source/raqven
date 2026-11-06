@@ -36,12 +36,20 @@ export function startOfMonth(date = new Date()) {
   return copy;
 }
 
-export async function getShopReport(shopId: string, from: Date, to: Date): Promise<ShopReport> {
-  const { data, error } = await supabase.rpc("shop_report", {
+export async function getShopReport(
+  shopId: string,
+  from: Date,
+  to: Date,
+  /** Cancels the call when the caller's query key changes (period switch). */
+  signal?: AbortSignal,
+): Promise<ShopReport> {
+  let rpc = supabase.rpc("shop_report", {
     p_shop_id: shopId,
     p_from: from.toISOString(),
     p_to: to.toISOString(),
   });
+  if (signal) rpc = rpc.abortSignal(signal);
+  const { data, error } = await rpc;
   if (error) throw error;
 
   const raw = data as unknown as Record<string, unknown>;

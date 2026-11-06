@@ -1,0 +1,10 @@
+{
+  "rewrites": {
+    "beforeFiles": [
+      { "source": "/.well-known/assetlinks.json", "destination": "/assetlinks.json" }
+    ],
+    "fallback": [
+      { "source": "/(.*)", "destination": "/index.html" }
+    ]
+  }
+}

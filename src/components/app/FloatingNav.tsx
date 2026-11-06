@@ -1,6 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "framer-motion";
 import {
+  Activity,
   BarChart3,
   Boxes,
   HandCoins,
@@ -53,6 +54,7 @@ type AppPath =
   | "/app/expenses"
   | "/app/transactions"
   | "/app/reports"
+  | "/app/pulse"
   | "/app/restock"
   | "/app/stock"
   | "/app/debtors"
@@ -151,6 +153,13 @@ const OWNER_MORE: MoreGroup[] = [
   {
     heading: "The business",
     items: [
+      {
+        to: "/app/pulse",
+        label: "SAVO Pulse",
+        note: "Understand your shop. Know your next move.",
+        icon: Activity,
+        ownerOnly: true,
+      },
       { to: "/app/reports", label: "Reports", icon: BarChart3, ownerOnly: true },
       { to: "/app/employees", label: "Employees", icon: Users, ownerOnly: true },
       { to: "/dashboard", label: "All my shops", icon: Store },

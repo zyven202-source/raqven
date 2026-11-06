@@ -1,9 +1,10 @@
 import { Link, Outlet, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { useQueryClient } from "@tanstack/react-query";
-import { Check, ChevronDown, Store } from "lucide-react";
+import { useQuery, useQueryClient } from "@tanstack/react-query";
+import { Check, ChevronDown, ShieldAlert, Sparkles, Store } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { SavoAiLauncher } from "@/components/ai/SavoAiLauncher";
 import { CreateShopDialog } from "@/components/app/CreateShopDialog";
 import { FloatingNav } from "@/components/app/FloatingNav";
 import { SwipeArea } from "@/components/app/SwipeArea";
@@ -15,6 +16,7 @@ import { Sheet, SheetContent } from "@/components/ui/sheet";
 import { SyncIndicator } from "@/components/app/SyncIndicator";
 import { ActiveShopProvider, useActiveShop } from "@/hooks/useActiveShop";
 import { signOut } from "@/services/auth.service";
+import { fetchIsPlatformAdmin } from "@/services/analytics.service";
 import type { ShopWithRole } from "@/types/savo";
 
 export const Route = createFileRoute("/_authenticated/app")({
@@ -45,6 +47,16 @@ function AppShell({
   const { activeShop, shops, role, loading, hasNoShops, selectShop } = useActiveShop();
   const { shop: searchShop } = Route.useSearch();
 
+  // Whether this account may see the platform console. The database answers and
+  // enforces it; this only decides whether the door is drawn.
+  const platformAdmin = useQuery({
+    queryKey: ["platform-admin"],
+    queryFn: fetchIsPlatformAdmin,
+    staleTime: 5 * 60_000,
+    retry: 1,
+  });
+  const isPlatformAdmin = platformAdmin.data === true;
+
   // A ?shop= deep link wins when it matches one of the user's memberships.
   useEffect(() => {
     if (searchShop && searchShop !== activeShop?.id && shops.some((s) => s.id === searchShop)) {
@@ -66,7 +78,7 @@ function AppShell({
     return <LoadingState label="Opening your shop…" onRetry={() => window.location.reload()} />;
 
   if (hasNoShops || !activeShop) {
-    return <NoShopState />;
+    return <NoShopState isPlatformAdmin={isPlatformAdmin} />;
   }
 
   return (
@@ -86,6 +98,7 @@ function AppShell({
           shop={activeShop}
           shops={shops}
           role={role}
+          isPlatformAdmin={isPlatformAdmin}
           onSwitch={(id) => void navigate({ to: "/app", search: { shop: id } })}
         />
       </header>
@@ -100,6 +113,9 @@ function AppShell({
       </div>
 
       <FloatingNav isOwner={role === "owner"} onSignOut={() => void handleSignOut()} />
+
+      {/* The assistant floats above the page and below every dialog. */}
+      <SavoAiLauncher />
     </div>
   );
 }
@@ -109,11 +125,14 @@ function ShopBar({
   shop,
   shops,
   role,
+  isPlatformAdmin,
   onSwitch,
 }: {
   shop: ShopWithRole;
   shops: ShopWithRole[];
   role: "owner" | "employee" | null;
+  /** Draws the console door. Access itself is checked in PostgreSQL. */
+  isPlatformAdmin: boolean;
   onSwitch: (id: string) => void;
 }) {
   const [open, setOpen] = useState(false);
@@ -188,6 +207,50 @@ function ShopBar({
               </li>
             ))}
           </ul>
+
+          {/* The platform console is a separate product surface, so it is the
+              last thing in this sheet rather than a fifth tab on the dock. */}
+          {isPlatformAdmin ? (
+            <>
+              <p className="px-4 pb-2 pt-4 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                Platform
+              </p>
+              <ul className="list-divided">
+                <li>
+                  <Link
+                    to="/admin/analytics"
+                    onClick={() => setOpen(false)}
+                    className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-sunken"
+                  >
+                    <ShieldAlert className="size-4 shrink-0 text-muted-foreground" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">
+                        Platform console
+                      </span>
+                      <span className="block text-xs text-muted-foreground">
+                        Accounts, activity and errors across every shop
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+                <li>
+                  <Link
+                    to="/admin/ai"
+                    onClick={() => setOpen(false)}
+                    className="flex w-full items-center gap-3 px-4 py-3.5 text-left active:bg-sunken"
+                  >
+                    <Sparkles className="size-4 shrink-0 text-muted-foreground" />
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">SAVO AI</span>
+                      <span className="block text-xs text-muted-foreground">
+                        Provider status, usage and approved help text
+                      </span>
+                    </span>
+                  </Link>
+                </li>
+              </ul>
+            </>
+          ) : null}
         </SheetContent>
       </Sheet>
     </div>
@@ -198,7 +261,7 @@ function ShopBar({
  * Shown when the signed-in user belongs to no shop. It offers both real ways
  * out — create a shop, or join one with a code — and never a dead end.
  */
-function NoShopState() {
+function NoShopState({ isPlatformAdmin }: { isPlatformAdmin: boolean }) {
   return (
     <div className="flex min-h-screen flex-col bg-background/30">
       <header className="px-5 py-4">
@@ -220,6 +283,14 @@ function NoShopState() {
               I have an access code
             </Button>
           </JoinShopSheet>
+          {isPlatformAdmin ? (
+            <Button asChild variant="ghost" className="h-12 w-full text-base">
+              <Link to="/admin/analytics">
+                <ShieldAlert className="size-4" aria-hidden />
+                Platform console
+              </Link>
+            </Button>
+          ) : null}
         </div>
       </main>
     </div>

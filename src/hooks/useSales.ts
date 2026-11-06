@@ -53,6 +53,16 @@ export function useReceiptPayload(saleId: string | null) {
     queryKey: salesKeys.receipt(saleId ?? "none"),
     queryFn: () => getReceiptPayload(saleId as string),
     enabled: Boolean(saleId),
+    /*
+      The sale itself is already recorded by the time this runs — it is a
+      separate read of stored rows. One quick retry absorbs a single dropped
+      packet, but the default of three silent retries with backoff keeps the
+      sheet on "Preparing the receipt…" for the better part of ten seconds
+      before the error ever lands, which is exactly the endless-spinner state
+      this screen must not have. One retry, then an honest error with a button.
+    */
+    retry: 1,
+    retryDelay: (attempt) => Math.min(1_000 * 2 ** attempt, 4_000),
   });
 }
 

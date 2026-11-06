@@ -6,6 +6,8 @@
  * the sale's own balance in one transaction and refuses overpayment.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/analytics-tracker";
+import { ANALYTICS_EVENTS } from "@/services/analytics.service";
 import type { Debtor, DebtorPayment, DebtorUpdate, PaymentMethod, Sale } from "@/types/savo";
 
 export async function listDebtors(shopId: string, includeSettled = false): Promise<Debtor[]> {
@@ -109,6 +111,8 @@ export async function recordDebtorPayment(
     amount: number;
     balance_remaining: number;
   };
+
+  trackEvent(ANALYTICS_EVENTS.debtorPaymentRecorded);
 
   return {
     paymentId: result.payment_id,

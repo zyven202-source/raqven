@@ -1,4 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/analytics-tracker";
+import { ANALYTICS_EVENTS } from "@/services/analytics.service";
 
 /**
  * Authentication data access.
@@ -29,6 +31,9 @@ export async function signUpWithEmail(params: {
     },
   });
   if (error) throw error;
+
+  trackEvent(ANALYTICS_EVENTS.accountRegistered);
+
   return { hasSession: Boolean(data.session) };
 }
 
@@ -44,6 +49,9 @@ export async function signInWithEmail(
 ): Promise<{ hasSession: boolean }> {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) throw error;
+
+  trackEvent(ANALYTICS_EVENTS.loginSuccess);
+
   return { hasSession: Boolean(data.session) };
 }
 
@@ -53,6 +61,8 @@ export async function requestPasswordReset(email: string) {
     redirectTo: `${window.location.origin}/auth/reset-password`,
   });
   if (error) throw error;
+
+  trackEvent(ANALYTICS_EVENTS.passwordResetRequested);
 }
 
 /**
@@ -77,4 +87,6 @@ export async function updatePassword(newPassword: string) {
 export async function signOut() {
   const { error } = await supabase.auth.signOut();
   if (error) throw error;
+
+  trackEvent(ANALYTICS_EVENTS.logout);
 }

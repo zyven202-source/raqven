@@ -7,6 +7,8 @@
  * no client-side path that writes a sale row.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/analytics-tracker";
+import { ANALYTICS_EVENTS } from "@/services/analytics.service";
 import type {
   Debtor,
   Payment,
@@ -130,6 +132,14 @@ export async function createSale(input: CreateSaleInput): Promise<CreateSaleResu
     deduplicated?: boolean;
   };
 
+  // A replayed offline sale is not a second sale; only a fresh one is counted.
+  if (!result.deduplicated) {
+    trackEvent(ANALYTICS_EVENTS.transactionCompleted, {
+      shopId: input.shopId,
+      properties: { items: input.lines.length, status: result.status },
+    });
+  }
+
   return {
     saleId: result.sale_id,
     receiptNumber: result.receipt_number,
@@ -157,7 +167,7 @@ export async function listSales(options: ListSalesOptions): Promise<Sale[]> {
   let query = supabase
     .from("sales")
     .select(
-      "id, shop_id, receipt_number, debtor_id, customer_name, customer_phone, subtotal, discount_amount, tax_amount, total_amount, amount_paid, balance_due, status, note, user_id, sold_at, created_at, updated_at",
+      "id, shop_id, receipt_number, debtor_id, customer_name, customer_phone, subtotal, discount_amount, tax_amount, total_amount, amount_paid, balance_due, status, note, user_id, sold_at, created_at, updated_at, client_tx_id",
     )
     .eq("shop_id", options.shopId)
     .order("sold_at", { ascending: false })

@@ -60,13 +60,21 @@ async function probeNetwork(): Promise<boolean> {
   }
 }
 
-export function useServiceWorker() {
-  const [updateReady, setUpdateReady] = useState(false);
+/**
+ * Probe-confirmed connectivity on its own, with no service-worker or sync
+ * side effects — for screens that only need to know whether the figures on
+ * screen can still be refreshed (SAVO Pulse labels its numbers live or
+ * stale-with-timestamp accordingly).
+ *
+ * Deliberately separate from `useServiceWorker`: importing that hook to read
+ * `online` would run the registration effect a second time, and importing
+ * `useOfflineSync` would start a second sync loop. This is just the probe.
+ */
+export function useOnlineStatus(): boolean {
   // Optimistic start: the network is assumed present until a probe proves
   // otherwise. Seeding from navigator.onLine is exactly what pinned a
   // permanent "Offline" tag above a working till.
   const [online, setOnline] = useState(true);
-  const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
 
   useEffect(() => {
     let disposed = false;
@@ -106,6 +114,14 @@ export function useServiceWorker() {
       window.removeEventListener("focus", onVisible);
     };
   }, []);
+
+  return online;
+}
+
+export function useServiceWorker() {
+  const [updateReady, setUpdateReady] = useState(false);
+  const [waitingWorker, setWaitingWorker] = useState<ServiceWorker | null>(null);
+  const online = useOnlineStatus();
 
   useEffect(() => {
     if (!import.meta.env.PROD) return;

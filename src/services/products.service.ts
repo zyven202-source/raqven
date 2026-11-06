@@ -6,6 +6,8 @@
  * use; they are never the thing that protects the data.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/analytics-tracker";
+import { ANALYTICS_EVENTS } from "@/services/analytics.service";
 import type { Category, Product, ProductUpdate } from "@/types/savo";
 
 /** Only the columns the list screens render — never `select("*")` on products. */
@@ -119,6 +121,8 @@ export async function createProduct(input: CreateProductInput): Promise<Product>
 
   if (error) throw error;
 
+  trackEvent(ANALYTICS_EVENTS.productCreated, { shopId: input.shopId });
+
   const opening = input.openingQuantity ?? 0;
   if (opening > 0) {
     const { error: moveError } = await supabase.rpc("record_stock_movement", {
@@ -177,6 +181,14 @@ export async function updateProduct(
     .select(PRODUCT_COLUMNS)
     .single();
   if (error) throw error;
+
+  // Archiving is an update with `is_active: false`; it is its own event so the
+  // console can tell it apart from an ordinary edit.
+  trackEvent(
+    patch.isActive === false ? ANALYTICS_EVENTS.productArchived : ANALYTICS_EVENTS.productUpdated,
+    { shopId: data.shop_id },
+  );
+
   return data;
 }
 

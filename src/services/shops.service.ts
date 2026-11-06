@@ -3,6 +3,8 @@
  * row level security — a user only ever sees shops they belong to.
  */
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/analytics-tracker";
+import { ANALYTICS_EVENTS } from "@/services/analytics.service";
 import { slugify } from "@/lib/format";
 import { removeShopFiles } from "@/services/storage.service";
 import type {
@@ -169,6 +171,8 @@ export async function createShop(input: CreateShopInput): Promise<CreateShopResu
     accessCodeCreated = true;
   }
 
+  trackEvent(ANALYTICS_EVENTS.shopCreated, { shopId: shop.id });
+
   return { shop, accessCodeCreated };
 }
 
@@ -180,6 +184,12 @@ export async function updateShop(shopId: string, patch: ShopUpdate): Promise<Sho
     .select(SHOP_COLUMNS)
     .single();
   if (error) throw error;
+
+  trackEvent(
+    patch.logo_url !== undefined ? ANALYTICS_EVENTS.shopLogoUpdated : ANALYTICS_EVENTS.shopUpdated,
+    { shopId },
+  );
+
   return data;
 }
 
@@ -208,6 +218,9 @@ export async function redeemAccessCode(
   if (error) throw error;
 
   const result = data as unknown as { shop_id: string; shop_name: string };
+
+  trackEvent(ANALYTICS_EVENTS.employeeJoined, { shopId: result.shop_id });
+
   return { shopId: result.shop_id, shopName: result.shop_name };
 }
 
