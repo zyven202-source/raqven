@@ -1,1 +1,5 @@
-project_id = "lbowjunrhljkntchrmjr"
+# Must match VITE_SUPABASE_PROJECT_ID in .env — the project the app actually
+# talks to. It previously named a different project, so migrations pushed with
+# `supabase db push` could report success while the deployed app's schema
+# stayed behind (the analytics RPCs 404'd on every page load).
+project_id = "oogsbtrzzstxstspxnpz"
