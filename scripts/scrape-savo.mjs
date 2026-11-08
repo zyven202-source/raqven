@@ -19,7 +19,7 @@
 import { chromium } from "playwright";
 
 const BASE =
-  process.env.SCRAP_BASE ?? "https://site-823f0103f2d4410b881fabc7521ebbbc.freebuff.page";
+  process.env.SCRAP_BASE ?? "https://savo.freebuff.page";
 const CHRO = process.env.CHROMIUM_PATH;
 const SLEEP = +(process.env.SLEEP_SCALE ?? "0.3") || 0.3;
 

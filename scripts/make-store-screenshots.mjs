@@ -16,7 +16,7 @@
  * Usage:
  *   CHROMIUM_PATH=... bun scripts/make-store-screenshots.mjs [baseUrl]
  *   Default base URL: the running preview or
- *   https://site-823f0103f2d4410b881fabc7521ebbbc.freebuff.page
+ *   https://savo.freebuff.page
  *
  * Output: public/screenshots/{savo-landing,savo-pos,savo-wide}.png
  * Exits non-zero if a required shot could not be captured.

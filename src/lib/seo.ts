@@ -24,12 +24,12 @@
  *
  * Every absolute URL the product publishes (canonical link, Open Graph,
  * JSON-LD `url`, the sitemap, the robots entry, and the Play listing's privacy
- * and account-deletion links) is built from this one constant. It has moved
- * twice before (`ravqen.freebuff.app` answered 404, then `savo.freebuff.app`),
- * and each time every dependent URL had to move with it — so it stays here,
- * in one place, and nothing else in the app spells out a host.
+ * and account-deletion links) is built from this one constant. The origin has
+ * changed hosts more than once, and each time every dependent URL had to move
+ * with it — so it stays here, in one place, and nothing else in the app spells
+ * out a host.
  */
-export const SITE_URL = "https://site-823f0103f2d4410b881fabc7521ebbbc.freebuff.page";
+export const SITE_URL = "https://savo.freebuff.page";
 
 /** The one term a shop owner in Kenya would actually type to find this. */
 export const PRIMARY_KEYWORD = "Kenyan shop POS";

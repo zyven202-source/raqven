@@ -10,11 +10,11 @@ import { chromium } from "playwright";
  * distinct from one another, and — the one that matters most — that text on
  * glass is still readable.
  *
- *   CHROMIUM_PATH=... bun scripts/verify-glass-ui.mjs https://site-823f0103f2d4410b881fabc7521ebbbc.freebuff.page
+ *   CHROMIUM_PATH=... bun scripts/verify-glass-ui.mjs https://savo.freebuff.page
  */
 
 const BASE =
-  process.argv[2] ?? "https://site-823f0103f2d4410b881fabc7521ebbbc.freebuff.page";
+  process.argv[2] ?? "https://savo.freebuff.page";
 const stamp = Date.now();
 const EMAIL = `glass${stamp}@example.com`;
 const PASSWORD = "Sup3rSecret!23";

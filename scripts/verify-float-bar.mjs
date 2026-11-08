@@ -12,7 +12,7 @@ import { chromium } from "playwright";
  */
 
 const BASE =
-  process.argv[2] ?? "https://site-823f0103f2d4410b881fabc7521ebbbc.freebuff.page";
+  process.argv[2] ?? "https://savo.freebuff.page";
 const stamp = Date.now();
 const EMAIL = `float${stamp}@example.com`;
 const PASSWORD = "Sup3rSecret!23";
