@@ -1,5 +1,7 @@
-# Must match VITE_SUPABASE_PROJECT_ID in .env — the project the app actually
-# talks to. It previously named a different project, so migrations pushed with
-# `supabase db push` could report success while the deployed app's schema
-# stayed behind (the analytics RPCs 404'd on every page load).
-project_id = "oogsbtrzzstxstspxnpz"
+# The project this repo is actually deployed against: "Raqven" (ref
+# lbowjunrhljkntchrmjr), the only project on the account's access token, holding
+# the live users and shops. `.env` used to point the app at a *different*
+# project, so the deployed bundle called RPCs that did not exist there — every
+# analytics start/session call 404'd. This file and VITE_SUPABASE_* must name
+# the same project, or `supabase db push` updates a database nobody is using.
+project_id = "lbowjunrhljkntchrmjr"
