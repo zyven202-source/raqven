@@ -4,7 +4,8 @@ import { chromium } from "playwright";
 // uncaught error. The full acceptance run takes three minutes to reach the
 // health check; this takes fifteen seconds to reach the same signal.
 
-const BASE = process.argv[2] ?? "https://savo.freebuff.app";
+const BASE =
+  process.argv[2] ?? "https://site-823f0103f2d4410b881fabc7521ebbbc.freebuff.page";
 const ROUTES = process.argv.slice(3).length
   ? process.argv.slice(3)
   : ["/", "/auth/login", "/auth/signup", "/dashboard"];

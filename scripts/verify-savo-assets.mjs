@@ -12,7 +12,8 @@
  * Used after a fix so the result is falsifiable.
  */
 
-const BASE = process.env.SCRAP_BASE ?? "https://savo.freebuff.app";
+const BASE =
+  process.env.SCRAP_BASE ?? "https://site-823f0103f2d4410b881fabc7521ebbbc.freebuff.page";
 
 const EXPECTED_ASSETS = {
   "/manifest.webmanifest": "application/manifest+json",

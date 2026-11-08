@@ -36,10 +36,11 @@ import { chromium } from "playwright";
  * and reported but not failed — WCAG exempts them, and a till screen is not
  * where to lean on an exemption without saying so.
  *
- *   CHROMIUM_PATH=... bun scripts/verify-contrast.mjs https://savo.freebuff.app
+ *   CHROMIUM_PATH=... bun scripts/verify-contrast.mjs https://site-823f0103f2d4410b881fabc7521ebbbc.freebuff.page
  */
 
-const BASE = process.argv[2] ?? "https://savo.freebuff.app";
+const BASE =
+  process.argv[2] ?? "https://site-823f0103f2d4410b881fabc7521ebbbc.freebuff.page";
 
 /*
  * Optional third argument: a comma-separated list of page names to measure.

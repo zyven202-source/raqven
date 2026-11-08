@@ -20,15 +20,16 @@
 
 /** Absolute origin. Open Graph and JSON-LD both reject relative URLs. */
 /**
- * The canonical origin.
+ * The canonical origin — the deployed Freebuff Sites production URL.
  *
- * This was `ravqen.freebuff.app` — the old app's host, which now answers 404.
  * Every absolute URL the product publishes (canonical link, Open Graph,
  * JSON-LD `url`, the sitemap, the robots entry, and the Play listing's privacy
- * and account-deletion links) is built from this one constant, so leaving the
- * dead host here meant all of them pointed at a page that does not exist.
+ * and account-deletion links) is built from this one constant. It has moved
+ * twice before (`ravqen.freebuff.app` answered 404, then `savo.freebuff.app`),
+ * and each time every dependent URL had to move with it — so it stays here,
+ * in one place, and nothing else in the app spells out a host.
  */
-export const SITE_URL = "https://savo.freebuff.app";
+export const SITE_URL = "https://site-823f0103f2d4410b881fabc7521ebbbc.freebuff.page";
 
 /** The one term a shop owner in Kenya would actually type to find this. */
 export const PRIMARY_KEYWORD = "Kenyan shop POS";

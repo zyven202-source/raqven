@@ -10,6 +10,8 @@ lerna-debug.log*
 node_modules
 dist
 dist-ssr
+# Staged copy of the static build the Sites deploy uploads (sites.manifest.json)
+site-public
 .output
 .vinxi
 .tanstack/**

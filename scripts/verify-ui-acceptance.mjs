@@ -16,7 +16,7 @@
  *   with the access code and sees only that shop -> no cross-shop leakage
  *
  * Usage:  bun scripts/verify-ui-acceptance.mjs [baseUrl]
- * Default base URL: https://savo.freebuff.app
+ * Default base URL: https://site-823f0103f2d4410b881fabc7521ebbbc.freebuff.page
  *
  * Exits non-zero if any expectation fails. Screenshots go to /tmp. The
  * throwaway accounts are deleted at the end through the management API.
@@ -25,7 +25,11 @@
 import { chromium } from "playwright";
 import { readFileSync } from "node:fs";
 
-const BASE = (process.argv[2] || process.env.ACCEPTANCE_URL || "https://savo.freebuff.app").replace(
+const BASE = (
+  process.argv[2] ||
+  process.env.ACCEPTANCE_URL ||
+  "https://site-823f0103f2d4410b881fabc7521ebbbc.freebuff.page"
+).replace(
   /\/$/,
   "",
 );

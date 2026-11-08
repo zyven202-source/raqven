@@ -11,7 +11,8 @@ import { chromium } from "playwright";
  * is covered by verify-ui-acceptance.mjs.
  */
 
-const BASE = process.argv[2] ?? "https://savo.freebuff.app";
+const BASE =
+  process.argv[2] ?? "https://site-823f0103f2d4410b881fabc7521ebbbc.freebuff.page";
 const stamp = Date.now();
 const EMAIL = `float${stamp}@example.com`;
 const PASSWORD = "Sup3rSecret!23";

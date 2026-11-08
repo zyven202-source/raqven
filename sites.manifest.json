@@ -1,0 +1,7 @@
+{
+  "entrypoint": "site-worker.js",
+  "compatibilityDate": "2026-11-08",
+  "modules": [{ "name": "site-worker.js", "type": "esm", "path": "./deploy/site-worker.js" }],
+  "assetsDirectory": "./site-public",
+  "spa": true
+}
