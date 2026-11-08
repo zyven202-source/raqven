@@ -25,6 +25,7 @@ import {
   SEO_TITLE,
   SITE_NAME,
   SITE_URL,
+  siteJsonLd,
 } from "@/lib/seo";
 import appCss from "../styles.css?url";
 import { SEARCH_CONSOLE_VERIFICATION_TOKEN } from "@/lib/store-links";
@@ -194,6 +195,19 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { rel: "apple-touch-icon", href: "/icon-192.png" },
       { rel: "manifest", href: "/manifest.webmanifest" },
     ],
+    /*
+      Who publishes the site and what it is, on every route — the landing page
+      adds what the application does on top of this. Same string-`children`
+      form as the landing page's JSON-LD, and for the same reason: a src-less
+      head script is only rendered when `children` is a string, which is what
+      keeps the prerendered tag and the hydrated tag identical.
+    */
+    scripts: [
+      {
+        type: "application/ld+json",
+        children: JSON.stringify(siteJsonLd()),
+      },
+    ],
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -203,7 +217,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootShell({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en-KE">
       <head>
         <HeadContent />
       </head>

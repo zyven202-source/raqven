@@ -3,39 +3,44 @@
   The sitemap Google Search Console is submitted against. Only URLs a signed-out
   visitor can actually load are listed: the landing page, the two auth entry
   points and the three public policies. Everything under /app and /dashboard
-  requires a session and redirects, so indexing them would only produce
-  "Page with redirect" noise in the report.
+  requires a session and redirects, and carries `noindex` from the authenticated
+  layout, so indexing them would only produce "Page with redirect" noise in the
+  report. The password-reset pair is deliberately absent for the same reason: it
+  is `noindex`, and a sitemap must never list a URL that refuses indexing.
+
+  `lastmod` is the date the page's content last changed, not the date this file
+  was touched — bump it on the entry you edited.
 -->
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://savo.freebuff.app/</loc>
-    <lastmod>2026-10-01</lastmod>
+    <lastmod>2026-11-08</lastmod>
     <changefreq>monthly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://savo.freebuff.app/auth/login</loc>
-    <lastmod>2026-10-01</lastmod>
+    <lastmod>2026-11-08</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://savo.freebuff.app/auth/signup</loc>
-    <lastmod>2026-10-01</lastmod>
+    <lastmod>2026-11-08</lastmod>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://savo.freebuff.app/legal/privacy</loc>
-    <lastmod>2026-10-01</lastmod>
+    <lastmod>2026-11-08</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://savo.freebuff.app/legal/terms</loc>
-    <lastmod>2026-10-01</lastmod>
+    <lastmod>2026-11-08</lastmod>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://savo.freebuff.app/legal/refunds</loc>
-    <lastmod>2026-10-01</lastmod>
+    <lastmod>2026-11-08</lastmod>
     <priority>0.5</priority>
   </url>
 </urlset>

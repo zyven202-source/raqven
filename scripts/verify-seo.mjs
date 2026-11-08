@@ -36,6 +36,8 @@ import {
   SEO_TITLE,
   SITE_NAME,
   SITE_URL,
+  pageMeta,
+  siteJsonLd,
   webApplicationJsonLd,
 } from "../src/lib/seo.ts";
 
@@ -343,7 +345,7 @@ check(
 );
 
 const root = withoutComments(readFileSync("src/routes/__root.tsx", "utf8"));
-check("the document declares its language", /<html lang="en">/.test(root));
+check("the document declares its language", /<html lang="en-KE">/.test(root));
 check(
   "the root provides a fallback social card for every other route",
   /og:image/.test(root) && /OG_IMAGE_URL/.test(root),
@@ -351,6 +353,159 @@ check(
 check(
   "a name/content descriptor is never written into the links array",
   !/links:\s*\[[^\]]*name:\s*"/s.test(root),
+);
+
+log(`\n=== Every page describes itself, and only public ones invite indexing ===`);
+
+const canonicalOf = (head) => head.links.find((link) => link.rel === "canonical")?.href;
+const metaOf = (head, key, value) =>
+  head.meta.find((descriptor) => descriptor[key] === value)?.content;
+
+const sample = pageMeta({
+  title: "SAVO — Privacy policy",
+  description: "What SAVO collects, and why.",
+  path: "/legal/privacy",
+});
+check(
+  "pageMeta() builds the canonical URL from the page's own path",
+  canonicalOf(sample) === `${SITE_URL}/legal/privacy`,
+  canonicalOf(sample),
+);
+check(
+  "og:url is the page's own URL, never the home page's",
+  metaOf(sample, "property", "og:url") === canonicalOf(sample),
+  metaOf(sample, "property", "og:url"),
+);
+check(
+  "og:title is the page's own title, so a share cannot unfurl as another page",
+  metaOf(sample, "property", "og:title") === "SAVO — Privacy policy",
+  metaOf(sample, "property", "og:title"),
+);
+check(
+  "the Twitter card repeats the same title and description as Open Graph",
+  metaOf(sample, "property", "og:title") === metaOf(sample, "name", "twitter:title") &&
+    metaOf(sample, "property", "og:description") === metaOf(sample, "name", "twitter:description"),
+);
+check(
+  "a public page invites indexing",
+  /^index, follow/.test(metaOf(sample, "name", "robots") ?? ""),
+  metaOf(sample, "name", "robots"),
+);
+const hidden = pageMeta({
+  title: "SAVO — Set a new password",
+  description: "Choose a new password.",
+  path: "/auth/reset-password",
+  noindex: true,
+});
+check(
+  "a noindex page says so, once and unambiguously",
+  metaOf(hidden, "name", "robots") === "noindex, nofollow",
+  metaOf(hidden, "name", "robots"),
+);
+
+for (const [file, path] of [
+  ["src/routes/auth.login.tsx", "/auth/login"],
+  ["src/routes/auth.signup.tsx", "/auth/signup"],
+  ["src/routes/legal.privacy.tsx", "/legal/privacy"],
+  ["src/routes/legal.terms.tsx", "/legal/terms"],
+  ["src/routes/legal.refunds.tsx", "/legal/refunds"],
+]) {
+  const source = withoutComments(readFileSync(file, "utf8"));
+  check(
+    `${path} builds its head from pageMeta() with its own path`,
+    /pageMeta\(\{/.test(source) && source.includes(`path: "${path}"`),
+  );
+  check(`${path} no longer writes a canonical by hand`, !/rel: "canonical"/.test(source));
+  check(`${path} stays indexable`, !/noindex: true/.test(source));
+}
+
+for (const [file, path] of [
+  ["src/routes/auth.forgot-password.tsx", "/auth/forgot-password"],
+  ["src/routes/auth.reset-password.tsx", "/auth/reset-password"],
+]) {
+  const source = withoutComments(readFileSync(file, "utf8"));
+  check(
+    `${path} is noindex — nobody reaches it from a search result`,
+    /noindex: true/.test(source) && source.includes(`path: "${path}"`),
+  );
+}
+check(
+  "every signed-in screen is noindex, from the single layout they share",
+  /noindex, nofollow/.test(
+    withoutComments(readFileSync("src/routes/_authenticated/route.tsx", "utf8")),
+  ),
+);
+
+log(`\n=== The site describes itself on every page ===`);
+
+const site = siteJsonLd();
+const graph = site["@graph"] ?? [];
+const nodesOfType = (type) => graph.filter((node) => node["@type"] === type);
+check("it is a schema.org graph", site["@context"] === "https://schema.org" && graph.length >= 2);
+check(
+  "it identifies the publisher",
+  nodesOfType("Organization").some(
+    (node) => node.name === SITE_NAME && node.logo?.url === OG_IMAGE_URL,
+  ),
+);
+check(
+  "it identifies the site, once, on its canonical URL",
+  nodesOfType("WebSite").some((node) => node.url === `${SITE_URL}/`),
+);
+check(
+  "the site points at the publisher rather than repeating it",
+  nodesOfType("WebSite").some((node) => String(node.publisher?.["@id"]).endsWith("#organization")),
+);
+check(
+  "it claims no rating, review, offer or price",
+  !/aggregateRating|"review"|"offers"|"price"|ratingValue/i.test(JSON.stringify(site)),
+);
+check(
+  "the root emits it through a string-children head script",
+  /scripts: \[/.test(root) && /children: JSON\.stringify\(siteJsonLd\(\)\)/.test(root),
+);
+check(
+  "the document language agrees with the manifest",
+  /<html lang="en-KE">/.test(root) &&
+    /"lang": "en-KE"/.test(readFileSync("public/manifest.webmanifest", "utf8")),
+);
+
+log(`\n=== The sitemap lists only pages that invite indexing ===`);
+
+const sitemap = readFileSync("public/sitemap.xml", "utf8");
+const locs = [...sitemap.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => match[1]);
+const sitemapPaths = locs.map((loc) => loc.slice(SITE_URL.length));
+check("the sitemap lists pages", locs.length >= 4, `${locs.length} URLs`);
+check(
+  "every URL is absolute, on the canonical origin",
+  locs.every((loc) => loc.startsWith(`${SITE_URL}/`)),
+);
+check(
+  "every URL is a route that exists in src/routes",
+  sitemapPaths.every((path) => {
+    const routeFile = path === "/" ? "index" : path.slice(1).replace(/\//g, ".");
+    return existsSync(`src/routes/${routeFile}.tsx`);
+  }),
+  sitemapPaths.join(", "),
+);
+check(
+  "it lists no signed-in screen",
+  sitemapPaths.every((path) => !/^\/(app|admin|dashboard|onboarding)\b/.test(path)),
+);
+check(
+  "it lists no page that declares itself noindex",
+  sitemapPaths.every((path) => !/^\/auth\/(forgot-password|reset-password)$/.test(path)),
+);
+check(
+  "it carries no future lastmod date",
+  [...sitemap.matchAll(/<lastmod>([^<]+)<\/lastmod>/g)].every((match) => {
+    const date = new Date(match[1]);
+    return !Number.isNaN(date.valueOf()) && date <= new Date();
+  }),
+);
+check(
+  "robots.txt points crawlers at the sitemap",
+  robots.includes(`Sitemap: ${SITE_URL}/sitemap.xml`),
 );
 
 console.log(`\n${passed}/${passed + failures.length} checks passed`);

@@ -7,21 +7,16 @@ import {
   LEGAL_REVIEW_ITEMS,
   RETENTION_ROWS,
 } from "@/config/legal";
-import { SITE_URL } from "@/lib/seo";
+import { pageMeta, SITE_URL } from "@/lib/seo";
 
 export const Route = createFileRoute("/legal/terms")({
-  head: () => ({
-    meta: [
-      { title: "SAVO — Terms of service" },
-      {
-        name: "description",
-        content:
-          "The rules for using SAVO: your account, your shop, your staff, your data, and what happens if something goes wrong.",
-      },
-      { name: "robots", content: "index, follow" },
-    ],
-    links: [{ rel: "canonical", href: `${SITE_URL}/legal/terms` }],
-  }),
+  head: () =>
+    pageMeta({
+      title: "SAVO — Terms of service",
+      description:
+        "The rules for using SAVO: your account, your shop, your staff, your data, and what happens if something goes wrong.",
+      path: "/legal/terms",
+    }),
   component: TermsPage,
 });
 

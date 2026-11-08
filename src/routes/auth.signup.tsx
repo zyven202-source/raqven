@@ -6,16 +6,18 @@ import { Field, PasswordField } from "@/components/app/fields";
 import { Input } from "@/components/ui/input";
 import { useSession } from "@/hooks/useSession";
 import { useRecordConsent } from "@/hooks/usePrivacy";
+import { pageMeta } from "@/lib/seo";
 import { signUpWithEmail } from "@/services/auth.service";
 import { AuthHeading, AuthSwitchLink, SubmitButton } from "./-auth-parts";
 
 export const Route = createFileRoute("/auth/signup")({
-  head: () => ({
-    meta: [
-      { title: "SAVO — Create your account" },
-      { name: "description", content: "Create a SAVO account for your shop." },
-    ],
-  }),
+  head: () =>
+    pageMeta({
+      title: "SAVO — Create your account",
+      description:
+        "Create a free SAVO account, add your shop and record your first sale from an Android phone.",
+      path: "/auth/signup",
+    }),
   component: SignupPage,
 });
 

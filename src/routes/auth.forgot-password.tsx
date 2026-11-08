@@ -4,13 +4,18 @@ import { toast } from "sonner";
 
 import { Field } from "@/components/app/fields";
 import { Input } from "@/components/ui/input";
+import { pageMeta } from "@/lib/seo";
 import { requestPasswordReset } from "@/services/auth.service";
 import { AuthHeading, AuthSwitchLink, SubmitButton } from "./-auth-parts";
 
 export const Route = createFileRoute("/auth/forgot-password")({
-  head: () => ({
-    meta: [{ title: "SAVO — Reset password" }],
-  }),
+  head: () =>
+    pageMeta({
+      title: "SAVO — Reset your password",
+      description: "Request a password-reset link for your SAVO account.",
+      path: "/auth/forgot-password",
+      noindex: true,
+    }),
   component: ForgotPasswordPage,
 });
 

@@ -16,7 +16,7 @@ import {
   PROCESSORS,
   RETENTION_ROWS,
 } from "@/config/legal";
-import { SITE_URL } from "@/lib/seo";
+import { pageMeta, SITE_URL } from "@/lib/seo";
 import { ACCOUNT_DELETION_URL } from "@/lib/store-links";
 
 /*
@@ -30,18 +30,13 @@ const _playAnchorCheck: typeof ACCOUNT_DELETION_URL extends `${string}#delete-my
   : never = true;
 
 export const Route = createFileRoute("/legal/privacy")({
-  head: () => ({
-    meta: [
-      { title: "SAVO — Privacy policy" },
-      {
-        name: "description",
-        content:
-          "What SAVO collects, why, who else can see it, how long it is kept, and how to get a copy of it or ask for it to be removed.",
-      },
-      { name: "robots", content: "index, follow" },
-    ],
-    links: [{ rel: "canonical", href: `${SITE_URL}/legal/privacy` }],
-  }),
+  head: () =>
+    pageMeta({
+      title: "SAVO — Privacy policy",
+      description:
+        "What SAVO collects, why, who else can see it, how long it is kept, and how to get a copy of it or ask for it to be removed.",
+      path: "/legal/privacy",
+    }),
   component: PrivacyPage,
 });
 

@@ -4,6 +4,7 @@ import { Loader2 } from "lucide-react";
 
 import { Field, PasswordField } from "@/components/app/fields";
 import { Button } from "@/components/ui/button";
+import { pageMeta } from "@/lib/seo";
 import { updatePassword, verifyRecoveryToken } from "@/services/auth.service";
 import { AuthHeading, AuthSwitchLink, SubmitButton } from "./-auth-parts";
 
@@ -12,9 +13,13 @@ export const Route = createFileRoute("/auth/reset-password")({
     token_hash: typeof search["token_hash"] === "string" ? search["token_hash"] : undefined,
     type: search["type"] === "recovery" ? ("recovery" as const) : undefined,
   }),
-  head: () => ({
-    meta: [{ title: "SAVO — Set a new password" }],
-  }),
+  head: () =>
+    pageMeta({
+      title: "SAVO — Set a new password",
+      description: "Choose a new password for your SAVO account.",
+      path: "/auth/reset-password",
+      noindex: true,
+    }),
   component: ResetPasswordPage,
 });
 

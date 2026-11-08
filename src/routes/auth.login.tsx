@@ -6,20 +6,18 @@ import { Field, PasswordField } from "@/components/app/fields";
 import { Input } from "@/components/ui/input";
 import { useSession } from "@/hooks/useSession";
 import { useStorageAvailable } from "@/hooks/useStorageAvailable";
+import { pageMeta } from "@/lib/seo";
 import { STORAGE_BLOCKED_MESSAGE } from "@/lib/storage";
 import { signInWithEmail } from "@/services/auth.service";
 import { AuthHeading, AuthSwitchLink, SubmitButton } from "./-auth-parts";
 
 export const Route = createFileRoute("/auth/login")({
-  head: () => ({
-    meta: [
-      { title: "SAVO — Sign in" },
-      {
-        name: "description",
-        content: "Sign in to SAVO to manage your shop's sales, stock and daily numbers.",
-      },
-    ],
-  }),
+  head: () =>
+    pageMeta({
+      title: "SAVO — Sign in",
+      description: "Sign in to SAVO to manage your shop's sales, stock and daily numbers.",
+      path: "/auth/login",
+    }),
   component: LoginPage,
 });
 

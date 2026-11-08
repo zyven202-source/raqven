@@ -1,21 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
 
 import { ConfigValue, LegalPage, LegalSection, LegalSubhead } from "@/components/app/LegalPage";
-import { SITE_URL } from "@/lib/seo";
+import { pageMeta } from "@/lib/seo";
 
 export const Route = createFileRoute("/legal/refunds")({
-  head: () => ({
-    meta: [
-      { title: "SAVO — Refund policy" },
-      {
-        name: "description",
-        content:
-          "How refunds work in SAVO: each shop decides whether it accepts them, and what the app records when it does.",
-      },
-      { name: "robots", content: "index, follow" },
-    ],
-    links: [{ rel: "canonical", href: `${SITE_URL}/legal/refunds` }],
-  }),
+  head: () =>
+    pageMeta({
+      title: "SAVO — Refund policy",
+      description:
+        "How refunds work in SAVO: each shop decides whether it accepts them, and what the app records when it does.",
+      path: "/legal/refunds",
+    }),
   component: RefundsPage,
 });
 

@@ -486,6 +486,20 @@ has no published ratings and no billing integration, and the only truthful price
 to put in structured data is none at all — an invented rating is both dishonest
 and something Google acts on.
 
+**Every page describes itself from one function.** `pageMeta()` builds a public
+page's `<title>`, description, canonical link and share tags from that page's own
+path — before it existed, `/legal/privacy` rendered “SAVO — Privacy policy” as its
+`<title>` and the home page's `og:url`/`og:title` one line below it, so a shared
+policy link unfurled as the landing page. The same function takes `noindex: true`,
+which is how the password-reset pair and every signed-in screen (from the single
+`_authenticated` layout) stay out of search results: a crawler cannot sign in, so
+all it could index there is a loading state. The sitemap lists only the pages that
+invite indexing, and the suite fails if a listed URL is `noindex` or has no route.
+
+A second JSON-LD block — `Organization` plus `WebSite`, emitted from the root head
+on every route — says who publishes the site and what it is. The landing page's
+`WebApplication` adds what the product does on top of it.
+
 **Two traps, both recorded in the code.** Structured data cannot be a `<script>`
 tag written inside the landing component: this app prerenders a static shell
 containing the `head()` descriptors but _not_ the route's rendered markup, so a
@@ -512,8 +526,9 @@ landing page has four sections — hero, _A day at the counter_, _Numbers you ca
 defend_, and a closing call to action — and the `verify-ui-acceptance` run fails
 if a heading level is ever skipped.
 
-`verify-seo.mjs` runs **69 checks** across the strings, the descriptors, the
-schema, the files those tags point at, and every `<img>` in `src/`. The browser
+`verify-seo.mjs` runs **107 checks** across the strings, the descriptors, the
+schema, the per-page head every route builds, the sitemap, the files those tags
+point at, and every `<img>` in `src/`. The browser
 half — that the tags actually reach the painted page, that the outline holds, and
 that the page hydrates without a React error — lives in the acceptance run,
 because it needs a real DOM.

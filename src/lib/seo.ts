@@ -87,6 +87,119 @@ export const HOME_META = [
 ] as const;
 
 /**
+ * One page's head, built from that page's own facts.
+ *
+ * **Why this exists.** Every route used to write its own `meta` array, and the
+ * only place `og:url` was declared was the root head — with the home page's URL
+ * hard-coded. So `/legal/privacy` rendered "SAVO — Privacy policy" as its
+ * `<title>` and, one line below it, an `og:url` and `og:title` claiming to be
+ * the home page. A crawler reads both; a chat app unfurls the second. The fix
+ * is not to remember the extra tags on each page, it is to make one function
+ * the only way a page describes itself, and to derive `og:url` from the same
+ * `path` the canonical link uses so they cannot disagree.
+ *
+ * `noindex` is for screens that must not appear in a search result: the
+ * password-reset pair (thin, and useful to nobody but the account holder) and
+ * every signed-in screen (a crawler cannot sign in, so all it can index is a
+ * loading state).
+ */
+export type PageHeadInput = {
+  /** The page title, already brand-prefixed. */
+  title: string;
+  /** One sentence, written for a search result, not for a crawler. */
+  description: string;
+  /** The page's absolute path, beginning with `/`, e.g. `/legal/privacy`. */
+  path: string;
+  /** Open Graph type. `website` unless the page is genuinely an article. */
+  type?: "website" | "article" | "profile";
+  /** True when the page must stay out of search results. */
+  noindex?: boolean;
+};
+
+export function pageMeta({
+  title,
+  description,
+  path,
+  type = "website",
+  noindex = false,
+}: PageHeadInput) {
+  const url = `${SITE_URL}${path}`;
+
+  return {
+    meta: [
+      { title },
+      { name: "description", content: description },
+      {
+        name: "robots",
+        content: noindex
+          ? "noindex, nofollow"
+          : "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
+      },
+      { property: "og:site_name", content: SITE_NAME },
+      { property: "og:title", content: title },
+      { property: "og:description", content: description },
+      { property: "og:type", content: type },
+      { property: "og:url", content: url },
+      { property: "og:locale", content: "en_KE" },
+      { property: "og:image", content: OG_IMAGE_URL },
+      { property: "og:image:type", content: "image/png" },
+      { property: "og:image:width", content: "512" },
+      { property: "og:image:height", content: "512" },
+      { property: "og:image:alt", content: OG_IMAGE_ALT },
+      { name: "twitter:card", content: "summary" },
+      { name: "twitter:title", content: title },
+      { name: "twitter:description", content: description },
+      { name: "twitter:image", content: OG_IMAGE_URL },
+      { name: "twitter:image:alt", content: OG_IMAGE_ALT },
+    ],
+    links: [{ rel: "canonical", href: url }],
+  };
+}
+
+/**
+ * The site itself: one `Organization` and one `WebSite` node, on every route.
+ *
+ * The landing page's `WebApplication` answers "what does this do?". These answer
+ * the two questions a search engine asks before it trusts an answer: who
+ * publishes this, and what is this site. Identity only — no rating, no price, no
+ * address the operator has not confirmed — because a knowledge panel built on
+ * an invented fact is a correction to file, not a win.
+ */
+export function siteJsonLd() {
+  const organizationId = `${SITE_URL}/#organization`;
+
+  return {
+    "@context": "https://schema.org",
+    "@graph": [
+      {
+        "@type": "Organization",
+        "@id": organizationId,
+        name: SITE_NAME,
+        url: `${SITE_URL}/`,
+        logo: {
+          "@type": "ImageObject",
+          url: OG_IMAGE_URL,
+          contentUrl: OG_IMAGE_URL,
+          width: 512,
+          height: 512,
+          caption: OG_IMAGE_ALT,
+        },
+        areaServed: { "@type": "Country", name: "Kenya" },
+      },
+      {
+        "@type": "WebSite",
+        "@id": `${SITE_URL}/#website`,
+        url: `${SITE_URL}/`,
+        name: SITE_NAME,
+        description: SEO_DESCRIPTION,
+        inLanguage: "en-KE",
+        publisher: { "@id": organizationId },
+      },
+    ],
+  };
+}
+
+/**
  * The application, described once as schema.org `WebApplication`.
  *
  * `featureList` is not marketing copy — each entry is a screen that exists and
