@@ -115,3 +115,37 @@ The bridge that does work, once you have an API key:
 
 Until step 1 exists, the agent must keep saying it cannot see the figures — which
 is exactly what §2 instructs it to do.
+
+## Status of the bridge in this repository
+
+Built and deployed to Raqven on 2026-11-11:
+
+- `supabase/functions/savo-ai/ashna.ts` — the Ashna adapter: base
+  `https://api.ashna.ai/v1/api`, `POST /chat/completions`, `Authorization: Bearer`,
+  `model = customAgentId`, with provider errors mapped onto SAVO's own codes
+  (`provider_auth`, `provider_model`, `provider_unavailable`, `timeout`).
+- `savo-ai` accepts `action: "live"`. It verifies the caller's token, resolves the
+  shop from `shop_members` (never from the request), reads the snapshot through the
+  existing read-only tools — so the caller's RLS applies unchanged — and sends that
+  JSON to the agent as its only permitted source of figures. Owner-only reads that
+  are refused are recorded as `unavailable`, not surfaced as failures.
+- Deployed: unauthenticated `POST` → `401`, `OPTIONS` → `204`.
+
+Still required before it can answer:
+
+1. **Two function secrets**, never in the bundle and never in git:
+
+   ```bash
+   supabase secrets set --project-ref lbowjunrhljkntchrmjr \
+     ASHNA_API_KEY=... ASHNA_AGENT_ID=<customAgentId slug>
+   ```
+
+   `ASHNA_AGENT_ID` is the agent's **customAgentId**, not the numeric id in the embed
+   snippet (`6af4b2760a3887001318c482`). It is shown under Agent info, or in the
+   address bar as `?agent=<slug>`.
+
+2. A surface that can render the answer. The embedded widget cannot call this
+   action and cannot receive its reply — it is a third-party iframe. Grounded
+   answers appear in SAVO's own panel; the Ashna bubble stays a product-help
+   assistant. Choosing one launcher *and* live figures therefore means the launcher
+   is SAVO's panel, with the Ashna agent answering in the background.
