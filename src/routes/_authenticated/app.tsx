@@ -4,7 +4,6 @@ import { Check, ChevronDown, ShieldAlert, Sparkles, Store } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
-import { SavoAiLauncher } from "@/components/ai/SavoAiLauncher";
 import { CreateShopDialog } from "@/components/app/CreateShopDialog";
 import { FloatingNav } from "@/components/app/FloatingNav";
 import { SwipeArea } from "@/components/app/SwipeArea";
@@ -114,8 +113,12 @@ function AppShell({
 
       <FloatingNav isOwner={role === "owner"} onSignOut={() => void handleSignOut()} />
 
-      {/* The assistant floats above the page and below every dialog. */}
-      <SavoAiLauncher />
+      {/*
+        One assistant, mounted once in the root layout: the Ashna agent that
+        carries SAVO's own instructions. The native mascot button used to sit
+        here as a second entry point; two bubbles in the same corner offering
+        the same thing is a choice the user should never have to make.
+      */}
     </div>
   );
 }
