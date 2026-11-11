@@ -34,7 +34,13 @@ export function AshnaWidget() {
   const hidden = HIDDEN_ON.has(pathname);
 
   useEffect(() => {
-    if (!TOKEN) return;
+    if (!TOKEN) {
+      // Missing is a build problem, not a runtime one. Say so plainly rather
+      // than shipping a page that quietly has no assistant: the previous
+      // deploy did exactly that because the build had no env file to read.
+      console.warn("[ashna] VITE_ASHNA_AI_TOKEN is not set — the assistant is not loaded.");
+      return;
+    }
     // The router can remount the root; never inject the loader twice.
     if (document.querySelector("script[data-ashna-widget]")) return;
 

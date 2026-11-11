@@ -118,3 +118,21 @@ someone wants the assistant to answer with their own live numbers, that needs a
 server-side step — SAVO's own AI endpoint, running with their session, computing
 the figures and passing them to the agent as context. Until that exists, do not
 imply it does.
+
+## Building and deploying — one variable decides whether the widget exists
+
+`VITE_ASHNA_AI_TOKEN` is read at **build** time and inlined into the browser
+bundle, because the vendor's loader needs it as a `data-token` attribute in the
+page. So:
+
+- It must be present in the environment of whatever machine runs `npm run build`
+  (here: `.env.local`, which is gitignored; in Lovable: the project's env
+  settings).
+- `Sites → Secrets` is **not** a substitute. Those are Worker runtime variables
+  and never reach the client build.
+- If the variable is missing, `AshnaWidget` logs a warning and loads nothing.
+  That is deliberate: a site with no assistant is better than a broken embed,
+  but the warning is what stops it from being noticed a week later.
+
+The token is origin-restricted to `savo.freebuff.page`, so it is publishable by
+design — rotating it is an env change, not a code change.
