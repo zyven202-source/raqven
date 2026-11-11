@@ -10,6 +10,7 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
+import { AshnaWidget } from "@/components/ai/AshnaWidget";
 import { OfflineBanner, UpdateBanner } from "@/components/app/ConnectivityBar";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
@@ -243,6 +244,8 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <Toaster position="top-center" richColors />
+      {/* An additional assistant, mounted once for the whole product. */}
+      <AshnaWidget />
     </QueryClientProvider>
   );
 }
