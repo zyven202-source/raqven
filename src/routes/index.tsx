@@ -46,7 +46,7 @@ export const Route = createFileRoute("/")({
 
 /**
  * The public page makes one promise: this is the record book your shop runs on.
- * It shows the work SAVO actually does, with no invented statistics and no
+ * It shows the work Pith actually does, with no invented statistics and no
  * decorative dashboards — if a number cannot be real, it is not on this page.
  *
  * **One `<h1>`, and it carries the term people search for.** The heading is the
@@ -60,7 +60,7 @@ function Landing() {
     <div className="min-h-dvh bg-background/30">
       <header className="border-b border-border">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-5 py-3.5">
-          <Link to="/" aria-label="SAVO home">
+          <Link to="/" aria-label="Pith home">
             <Logo />
           </Link>
           <div className="flex items-center gap-1">
@@ -82,7 +82,7 @@ function Landing() {
             {HOME_HEADLINE}
           </h1>
           <p className="mt-5 max-w-lg text-base leading-relaxed text-muted-foreground">
-            SAVO replaces the till notebook, the stock book and the &ldquo;who owes what&rdquo;
+            Pith replaces the till notebook, the stock book and the &ldquo;who owes what&rdquo;
             list. It works on an Android phone, at the counter, in the sun.
           </p>
           <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted-foreground">
@@ -189,7 +189,7 @@ function Landing() {
           <div className="mx-auto w-full max-w-3xl px-5 py-14 text-center">
             <h2 className="text-2xl leading-tight">Start your shop&rsquo;s book today</h2>
             <p className="mx-auto mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
-              Create your shop, add a few products and make the first sale. SAVO keeps the stock,
+              Create your shop, add a few products and make the first sale. Pith keeps the stock,
               the debtors and the expenses from there.
             </p>
             <div className="mt-7 flex flex-col justify-center gap-3 sm:flex-row">
@@ -208,7 +208,7 @@ function Landing() {
         <div className="mx-auto w-full max-w-3xl px-5 py-8">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <Logo showTagline />
-            <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} SAVO</p>
+            <p className="text-sm text-muted-foreground">&copy; {new Date().getFullYear()} Pith</p>
           </div>
           {/*
             The three policies are linked from every public page, not buried on a

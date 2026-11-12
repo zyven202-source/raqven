@@ -155,7 +155,7 @@ const OWNER_MORE: MoreGroup[] = [
     items: [
       {
         to: "/app/pulse",
-        label: "SAVO Pulse",
+        label: "Pith Pulse",
         note: "Understand your shop. Know your next move.",
         icon: Activity,
         ownerOnly: true,

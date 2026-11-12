@@ -45,7 +45,7 @@ export const PLAY_LISTING = {
    */
   developerName: "Abdirahman Hilowle Adan",
   /** 30 characters max on Play. */
-  appName: "SAVO — Shop POS Kenya",
+  appName: "Pith — Shop POS Kenya",
   /** 80 characters max on Play. */
   shortDescription:
     "Sales, stock, M-Pesa, debtors and expenses for Kenyan shops — offline-tolerant.",

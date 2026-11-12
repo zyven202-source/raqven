@@ -9,7 +9,7 @@
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
 
-## SAVO architecture rules
+## Pith architecture rules
 
 - Layering is `routes/components → hooks → services → Supabase client`. UI never calls Supabase directly — why: keeps the backend swappable for the future Freebuff move.
 - All Supabase queries live in `src/services/*.service.ts`; generated Supabase code stays in `src/integrations/supabase/` and is aliased through `src/types/savo.ts`. Why: app code must not depend on generated files.

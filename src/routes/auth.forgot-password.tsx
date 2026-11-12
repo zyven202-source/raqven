@@ -11,8 +11,8 @@ import { AuthHeading, AuthSwitchLink, SubmitButton } from "./-auth-parts";
 export const Route = createFileRoute("/auth/forgot-password")({
   head: () =>
     pageMeta({
-      title: "SAVO — Reset your password",
-      description: "Request a password-reset link for your SAVO account.",
+      title: "Pith — Reset your password",
+      description: "Request a password-reset link for your Pith account.",
       path: "/auth/forgot-password",
       noindex: true,
     }),

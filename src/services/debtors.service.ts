@@ -1,5 +1,5 @@
 /**
- * Debtors — SAVO records credit, not a customer CRM.
+ * Debtors — Pith records credit, not a customer CRM.
  *
  * A debtor row exists only because a credit sale created one. Repayments go
  * through the `record_debtor_payment` RPC, which moves the debtor balance and

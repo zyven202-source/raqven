@@ -7,7 +7,7 @@ import { useActiveShop } from "@/hooks/useActiveShop";
 import { useSession } from "@/hooks/useSession";
 
 /**
- * The floating SAVO AI mascot — the only entry point to the assistant.
+ * The floating Pith AI mascot — the only entry point to the assistant.
  *
  * Cheap on purpose: this button is a span and an SVG until the first tap. The
  * panel (and with it the Studio and the Supabase client calls) is a separate
@@ -84,9 +84,9 @@ export function SavoAiLauncher() {
             animate={{ opacity: 1, y: 0 }}
             className="mr-1 max-w-[13rem] rounded-lg rounded-br-sm border border-glass-line bg-[var(--glass-3)] px-2.5 py-1.5 text-xs leading-snug shadow-[var(--shadow-pop)] backdrop-blur-md"
           >
-            <span className="font-medium">Ask SAVO AI</span>
+            <span className="font-medium">Ask Pith AI</span>
             <span className="block text-muted-foreground">
-              {activeShop ? "About this shop, or how SAVO works." : "How SAVO works."}
+              {activeShop ? "About this shop, or how Pith works." : "How Pith works."}
             </span>
           </motion.div>
         ) : null}
@@ -95,7 +95,7 @@ export function SavoAiLauncher() {
           ref={buttonRef}
           type="button"
           onClick={openPanel}
-          aria-label="Open SAVO AI assistant"
+          aria-label="Open Pith AI assistant"
           aria-haspopup="dialog"
           aria-expanded={open}
           initial={reduceMotion ? false : { opacity: 0, scale: 0.86, y: 10 }}
@@ -105,7 +105,7 @@ export function SavoAiLauncher() {
           className="press group relative grid size-[54px] place-items-center rounded-full bg-positive text-background shadow-[0_8px_22px_-8px_oklch(0_0_0_/_0.65)] ring-1 ring-white/20 outline-none transition-shadow hover:shadow-[0_10px_26px_-8px_oklch(0_0_0_/_0.7)] focus-visible:ring-2 focus-visible:ring-champagne focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:size-[60px]"
         >
           <SavoMascot className="block size-[38px] [&>svg]:size-full sm:size-[42px]" expression={open ? "happy" : "idle"} />
-          <span className="sr-only">SAVO AI</span>
+          <span className="sr-only">Pith AI</span>
           {/* A single gold dot: brand, not a notification badge, and it never animates. */}
           <span
             aria-hidden

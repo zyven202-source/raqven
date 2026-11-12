@@ -1,4 +1,4 @@
-/** Formatting helpers shared across SAVO. Default locale is Kenya. */
+/** Formatting helpers shared across Pith. Default locale is Kenya. */
 
 export function formatMoney(amount: number | string | null | undefined, currency = "KES") {
   const value = typeof amount === "string" ? Number(amount) : (amount ?? 0);

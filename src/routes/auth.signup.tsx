@@ -13,9 +13,9 @@ import { AuthHeading, AuthSwitchLink, SubmitButton } from "./-auth-parts";
 export const Route = createFileRoute("/auth/signup")({
   head: () =>
     pageMeta({
-      title: "SAVO — Create your account",
+      title: "Pith — Create your account",
       description:
-        "Create a free SAVO account, add your shop and record your first sale from an Android phone.",
+        "Create a free Pith account, add your shop and record your first sale from an Android phone.",
       path: "/auth/signup",
     }),
   component: SignupPage,

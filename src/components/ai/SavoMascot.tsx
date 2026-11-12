@@ -1,5 +1,5 @@
 /**
- * The SAVO AI mascot — the canonical artwork.
+ * The Pith AI mascot — the canonical artwork.
  *
  * One function draws the character, and both the in-app illustration and the
  * downloaded asset come from it, so a copy exported from Studio can never drift

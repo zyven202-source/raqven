@@ -19,7 +19,7 @@ import { formatMoney } from "@/lib/format";
 import { startOfDay, startOfMonth } from "@/services/reports.service";
 
 export const Route = createFileRoute("/_authenticated/app/reports")({
-  head: () => ({ meta: [{ title: "SAVO — Reports" }] }),
+  head: () => ({ meta: [{ title: "Pith — Reports" }] }),
   component: () => (
     <OwnerOnly title="Reports">
       <ReportsPage />

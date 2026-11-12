@@ -11,7 +11,7 @@ import { cn } from "@/lib/utils";
 import { openOfflineDb, type OutboxEntry, type OutboxStatus } from "@/lib/offline/db";
 
 export const Route = createFileRoute("/_authenticated/app/sync")({
-  head: () => ({ meta: [{ title: "SAVO — Sync & offline" }] }),
+  head: () => ({ meta: [{ title: "Pith — Sync & offline" }] }),
   component: SyncPage,
 });
 
@@ -136,7 +136,7 @@ function SyncPage() {
             tone="danger"
             icon={<CloudOff className="size-4" aria-hidden />}
             title="Offline saving is unavailable on this device"
-            description="This browser is not allowing local storage, so sales cannot be queued while offline. Work online, or enable site storage and reopen SAVO."
+            description="This browser is not allowing local storage, so sales cannot be queued while offline. Work online, or enable site storage and reopen Pith."
           />
         </div>
       ) : null}

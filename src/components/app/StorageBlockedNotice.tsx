@@ -22,7 +22,7 @@ export function StorageBlockedNotice({ detail }: { detail?: string | undefined }
             onClick={() => window.open(window.location.href, "_blank", "noopener")}
             className="h-12"
           >
-            Open SAVO in a new tab
+            Open Pith in a new tab
           </Button>
         }
       />

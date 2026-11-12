@@ -3,13 +3,12 @@ import { cn } from "@/lib/utils";
 import { BRAND, CONTAINER, MARK, MARK_PAINT, VIEW_BOX } from "./mark-geometry";
 
 /**
- * SAVO's mark tile, without the wordmark.
+ * Pith's mark tile, without the wordmark.
  *
- * One place draws the app-icon shape: the Savo mark stroked in emerald with a
- * gold band across the centre fold, on the deep-emerald tile. Every number it
- * uses comes from `mark-geometry.ts`,
- * which `scripts/generate-icons.mjs` also reads, so the raster icons in
- * `public/` and this component cannot drift apart.
+ * One place draws the app-icon shape: the P monogram in mint on a forest tile
+ * that is lit from the upper left. Every number it uses comes from
+ * `mark-geometry.ts`, which `scripts/generate-icons.mjs` also reads, so the
+ * raster icons in `public/` and this component cannot drift apart.
  *
  * `detail={false}` drops the gloss and the rim. That is the variant for
  * anywhere the icon has to survive at 16 pixels: at that size a gloss is mud
@@ -29,11 +28,11 @@ export function AppIcon({
   // `href="#id"`, and a generated id there breaks the reference at best and
   // breaks prerendering hydration at worst. Every instance defines the same
   // gradients, so a duplicate id resolves to the same gradient either way.
-  const shell = "savo-shell";
-  const gloss = "savo-gloss";
-  const rim = "savo-rim";
-  const shape = "savo-shape";
-  const paint = "savo-letter";
+  const shell = "pith-shell";
+  const gloss = "pith-gloss";
+  const rim = "pith-rim";
+  const shape = "pith-shape";
+  const paint = "pith-letter";
 
   const r = CONTAINER.cornerRadius;
 
@@ -52,12 +51,12 @@ export function AppIcon({
         {/* The tile, lit from the upper left. */}
         <radialGradient id={shell} cx="0.33" cy="0.2" r="1.05">
           <stop offset="0%" stopColor={BRAND.glow} />
-          <stop offset="38%" stopColor={BRAND.ink} />
-          <stop offset="78%" stopColor={BRAND.deep} />
+          <stop offset="42%" stopColor={BRAND.ink} />
+          <stop offset="82%" stopColor={BRAND.deep} />
           <stop offset="100%" stopColor={BRAND.night} />
         </radialGradient>
 
-        {/* The mark's paint: emerald lifting to gold across the centre fold. */}
+        {/* The monogram: mint lifting to cream across the bowl. */}
         <linearGradient
           id={paint}
           x1={MARK_PAINT.x1}
@@ -72,15 +71,15 @@ export function AppIcon({
 
         {/* A broad gloss across the top third. */}
         <linearGradient id={gloss} x1="12" y1="0" x2="12" y2="13">
-          <stop offset="0%" stopColor={BRAND.white} stopOpacity="0.26" />
+          <stop offset="0%" stopColor={BRAND.white} stopOpacity="0.16" />
           <stop offset="100%" stopColor={BRAND.white} stopOpacity="0" />
         </linearGradient>
 
         {/* A bright hairline along the lit edge, fading round the far side. */}
         <linearGradient id={rim} x1="2" y1="1.5" x2="21" y2="22">
-          <stop offset="0%" stopColor={BRAND.mint} stopOpacity="0.95" />
-          <stop offset="45%" stopColor={BRAND.mint} stopOpacity="0.12" />
-          <stop offset="100%" stopColor={BRAND.white} stopOpacity="0.22" />
+          <stop offset="0%" stopColor={BRAND.mint} stopOpacity="0.6" />
+          <stop offset="45%" stopColor={BRAND.mint} stopOpacity="0.08" />
+          <stop offset="100%" stopColor={BRAND.white} stopOpacity="0.14" />
         </linearGradient>
 
         <rect id={shape} x="0" y="0" width={VIEW_BOX} height={VIEW_BOX} rx={r} />
@@ -94,11 +93,11 @@ export function AppIcon({
         </>
       ) : null}
 
-      {/* The mark: one continuous stroke, emerald with the gold fold. */}
+      {/* The monogram: one continuous stroke, mint on forest. */}
       <path
         d={MARK.path}
         fill="none"
-        stroke={detail ? `url(#${paint})` : BRAND.letter}
+        stroke={detail ? `url(#${paint})` : BRAND.mint}
         strokeWidth={MARK.stroke}
         strokeLinecap={MARK.linecap}
       />

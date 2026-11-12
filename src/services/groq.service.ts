@@ -1,5 +1,5 @@
 /**
- * SAVO AI — Groq provider adapter (server-side only).
+ * Pith AI — Groq provider adapter (server-side only).
  *
  * The OpenAI-compatible chat completions endpoint that Groq serves is the only
  * provider surface the rest of the backend knows about. The adapter is the seam
@@ -191,7 +191,7 @@ export async function fetchGroqChat(args: {
   const { url, apiKey, request } = args;
   if (!apiKey) {
     throw new GroqProviderError(
-      "SAVO AI is not configured. Ask the platform administrator to set GROQ_API_KEY and GROQ_MODEL.",
+      "Pith AI is not configured. Ask the platform administrator to set GROQ_API_KEY and GROQ_MODEL.",
       undefined,
       undefined,
       "auth",
@@ -256,7 +256,7 @@ async function mapGroqResponseError(response: Response): Promise<never> {
  */
 function mapGroqFetchError(error: unknown): never {
   if (error && typeof error === "object" && "name" in error && error.name === "AbortError") {
-    throw new GroqProviderError("SAVO AI took too long to respond from Groq.", error, undefined, "timeout");
+    throw new GroqProviderError("Pith AI took too long to respond from Groq.", error, undefined, "timeout");
   }
 
   if (error && typeof error === "object" && "message" in error) {
@@ -272,7 +272,7 @@ function mapGroqFetchError(error: unknown): never {
 
     if (network) {
       throw new GroqProviderError(
-        "SAVO AI could not reach Groq. Your connection or the provider may be having issues.",
+        "Pith AI could not reach Groq. Your connection or the provider may be having issues.",
         error,
         undefined,
         "network",
@@ -280,7 +280,7 @@ function mapGroqFetchError(error: unknown): never {
     }
   }
 
-  throw new GroqProviderError("SAVO AI encountered an error while talking to Groq.", error, undefined, "server");
+  throw new GroqProviderError("Pith AI encountered an error while talking to Groq.", error, undefined, "server");
 }
 
 /**

@@ -47,7 +47,7 @@ import { formatDateTime, formatMoney } from "@/lib/format";
 import type { PaymentMethod, Product } from "@/types/savo";
 
 export const Route = createFileRoute("/_authenticated/app/pos")({
-  head: () => ({ meta: [{ title: "SAVO — Point of Sale" }] }),
+  head: () => ({ meta: [{ title: "Pith — Point of Sale" }] }),
   component: PosPage,
 });
 
@@ -348,7 +348,7 @@ function PosPage() {
       if (offline) {
         if (blockedMethod) {
           throw new Error(
-            "M-Pesa and card payments need the network. Take cash, or wait until SAVO is back online.",
+            "M-Pesa and card payments need the network. Take cash, or wait until Pith is back online.",
           );
         }
 
@@ -736,7 +736,7 @@ function PosPage() {
                   <CloudOff className="mt-0.5 size-3.5 shrink-0" aria-hidden />
                   <span>
                     Offline: cash and credit are saved on this device. M-Pesa and card wait for the
-                    network — SAVO never claims a payment it could not verify.
+                    network — Pith never claims a payment it could not verify.
                   </span>
                 </p>
               ) : null}
@@ -753,7 +753,7 @@ function PosPage() {
                 />
                 {tendered.length === 0 ? (
                   <p className="text-xs text-muted-foreground">
-                    Type what the customer handed you and SAVO works out the change.
+                    Type what the customer handed you and Pith works out the change.
                   </p>
                 ) : (
                   <p
@@ -809,7 +809,7 @@ function PosPage() {
                   collected, is the difference between a book the shop owns and a
                   list of people the shop was handed. It is not a consent box: it
                   is the shop telling its own customer why the shop is writing
-                  this down, which is the shop&rsquo;s obligation, not a click SAVO
+                  this down, which is the shop&rsquo;s obligation, not a click Pith
                   can collect consent for on someone else&rsquo;s behalf.
                 */}
                 <p className="text-xs leading-relaxed text-muted-foreground">
@@ -888,7 +888,7 @@ function OfflineReceiptSheet({
               <div className="min-w-0">
                 <p className="text-sm font-medium">Waiting to sync</p>
                 <p className="text-xs leading-relaxed text-muted-foreground">
-                  Recorded on this phone. It reaches Sales history the moment SAVO is back online.
+                  Recorded on this phone. It reaches Sales history the moment Pith is back online.
                 </p>
               </div>
             </div>

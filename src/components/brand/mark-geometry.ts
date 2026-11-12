@@ -1,17 +1,15 @@
 /**
- * SAVO's brand data, in one place.
+ * Pith's brand data, in one place.
  *
- * The identity is a drawn symbol — the Savo mark: one continuous stroke that
- * sweeps over the top bowl, through the centre and round the lower bowl. Two
- * tangent arcs, one line, no letterform and no icon library: a shape that is
- * recognisable at 16 pixels, prints on a thermal receipt in one ink, and works
- * filled or outlined on any ground.
+ * The identity is a drawn monogram, not a typeset letter: one continuous
+ * stroke that forms a P — a straight stem and a single round bowl — with the
+ * terminals cut flat against the tangent so the shape reads as engineered
+ * rather than written. It is legible at 16 pixels, prints on a receipt in one
+ * ink, and works as an outline on paper or reversed out of forest green.
  *
  * This file keeps the numbers every rendering shares — the tile geometry, the
- * brand colours, and the mark's own path — so the React icon in `AppIcon.tsx`,
- * the raster icons `scripts/generate-icons.mjs` writes into `public/`, and the
- * mark inlined into printed receipts cannot drift apart. It is data, not a
- * component.
+ * brand colours, and the mark's own path — so the React components and the
+ * raster icons in `public/` cannot drift apart. It is data, not a component.
  */
 
 /** The square the icon is drawn in. */
@@ -28,79 +26,68 @@ export const CONTAINER = {
 
 /**
  * The brand colours, by name, for anything that cannot read CSS variables.
- *
- * The approved identity: a dark-to-medium green tile with a glowing rim, the
- * mark stroked in vivid emerald (#10B981) and a gold highlight (#F59E0B)
- * banded across the centre fold — the one warm note in an all-green mark.
+ * The palette is Pith's: forest green, deep green, soft mint, warm cream.
  */
 export const BRAND = {
-  /** The deep emerald the tile is filled with. */
-  deep: "#064E3B",
-  /** The mid emerald of the lit tile. */
-  ink: "#0A5E48",
+  /** Deep forest — the darkest ground. #09291F */
+  deep: "#09291f",
+  /** Forest — the tile. #123C2D */
+  ink: "#123c2d",
   /** The near-black foot of the tile's gradient. */
-  night: "#061A14",
-  /** The highlight green of the lit edge — pale enough to never read as ink. */
-  mint: "#A7F3D0",
-  /** The warm highlight at the gradient's origin. */
-  glow: "#0E7A5C",
-  /** The emerald the mark is drawn in (#10B981). */
-  letter: "#10B981",
-  /** The gold band across the centre fold (#F59E0B). */
-  gold: "#F59E0B",
+  night: "#061e17",
+  /** Soft mint — the mark on the tile, and the lightest green. #DDEBDD */
+  mint: "#ddebdd",
+  /** The lit top-left of the tile. #236B49 */
+  glow: "#236b49",
+  /** Supporting green — the mark when it is drawn in ink. #236B49 */
+  letter: "#236b49",
+  /** Warm cream — the page, and the mark's highlight. #F7F5EE */
+  cream: "#f7f5ee",
   /** Pure white, for the gloss stops. */
-  white: "#FFFFFF",
+  white: "#ffffff",
 } as const;
 
 /**
- * How the mark's stroke is painted when detail is on: emerald, lifting to gold
- * across the centre fold (y 4 → 20 on the 24-unit grid, gold peaking at the
- * tangency, y 12) and back. The same stops feed AppIcon, Logo and the raster
- * generator so the gold band lands on the fold in every rendering.
+ * How the mark's stroke is painted when detail is on: mint at the top of the
+ * bowl, warm cream across the middle — one soft highlight, no second hue.
  */
 export const MARK_PAINT = {
   x1: 12,
-  y1: 4,
+  y1: 3,
   x2: 12,
-  y2: 20,
+  y2: 14,
   stops: [
-    { offset: "0%", color: BRAND.letter },
-    { offset: "38%", color: BRAND.letter },
-    { offset: "50%", color: BRAND.gold },
-    { offset: "62%", color: BRAND.letter },
-    { offset: "100%", color: BRAND.letter },
+    { offset: "0%", color: BRAND.mint },
+    { offset: "55%", color: BRAND.cream },
+    { offset: "100%", color: BRAND.mint },
   ],
 } as const;
 
 /**
- * The mark itself: a stroked path on the 24-unit grid.
+ * The mark itself: a P, stroked as one path on the 24-unit grid.
  *
  * Geometry, in full, so it can be reasoned about without a renderer:
  *
- * - The upper bowl is the circle centred (12, 8) with radius 4; the lower bowl
- *   is the circle centred (12, 16) with the same radius. The two are tangent
- *   at (12, 12) — the centre of the tile — so the two arcs join with one
- *   continuous horizontal tangent and no visible seam.
- * - The stroke starts at (14, 4.54) — 1 o'clock on the upper bowl — runs
- *   counterclockwise over the top, down the left side and along the bottom of
- *   the upper bowl to the tangency, then clockwise round the right side and
- *   the bottom of the lower bowl, finishing at (10, 19.46) — 7 o'clock, the
- *   point-symmetric partner of the start.
- * - Terminals are cut flat (butt caps) against the tangent, which slants each
- *   end and keeps the mark engineered rather than typeset.
- * - The ink box is x 6.4–17.6, y 2.4–21.6: taller than wide, centred, with
- *   real margin inside the tile, which is what lets the same path serve the
- *   16-pixel favicon and the 512-pixel store icon without a second drawing.
+ * - The stem rises at x ≈ 8.1 from y 20.2 to y 4.1 — full height, so the
+ *   monogram fills the tile's optical box the way a capital does.
+ * - The bowl is a single arc springing from the top of the stem, round to
+ *   the right and returning to the stem at y ≈ 12.9 — slightly more than
+ *   half the stem's height, which is what keeps it reading as a P and not as
+ *   a lowercase p or a flag.
+ * - Terminals are cut flat, so each end sits on the tangent and the shape
+ *   looks drawn rather than handwritten.
+ * - The ink box is x 8.1–19.4, y 4.1–20.2: taller than wide, with real margin
+ *   inside the tile, so the same path serves the 16-pixel favicon and the
+ *   512-pixel app icon without a second drawing.
  *
  * A stroked path has no font dependency, so this renders identically in the
- * browser, in headless Chromium, and inside a receipt file printed from a
- * phone with no network.
+ * browser and in a receipt file printed from a phone with no network.
  */
 export const MARK = {
   /** The path of the mark, in viewBox units. */
-  path: "M14 4.54 A4 4 0 1 0 12 12 A4 4 0 1 1 10 19.46",
+  path: "M8.1 20.2V4.1h4.4c4.05 0 6.9 1.85 6.9 4.4s-2.85 4.4-6.9 4.4H8.1",
   /** Stroke width in viewBox units. */
-  stroke: 3.2,
+  stroke: 3.1,
   /** Flat terminals: the slant comes from the tangent, not from a font. */
   linecap: "butt" as const,
 } as const;

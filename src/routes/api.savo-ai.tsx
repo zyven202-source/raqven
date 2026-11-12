@@ -1,5 +1,5 @@
 /**
- * SAVO AI — server route (backend control plane).
+ * Pith AI — server route (backend control plane).
  *
  * This is the server boundary for the assistant. It authenticates the request
  * through the existing Supabase middleware, resolves the caller's active shop from
@@ -10,7 +10,7 @@
  * Public endpoints on this route:
  *  - GET  /api/savo-ai/status        — provider + model + configuration health
  *  - POST /api/savo-ai/chat         — assistant turn, with optional tool calls
- *  - POST /api/savo-ai/studio       — SAVO Studio structured content generation
+ *  - POST /api/savo-ai/studio       — Pith Studio structured content generation
  *  - POST /api/savo-ai/knowledge    — knowledge-base lookup + snippets
  *
  * Protected endpoints are resolved through the existing `requireSupabaseAuth`
@@ -196,7 +196,7 @@ async function handleChat(request: Request): Promise<ChatResponse> {
       ok: false,
       error: {
         type: "provider_unavailable",
-        message: "SAVO AI is not configured. Ask the platform administrator to set GROQ_API_KEY and GROQ_MODEL.",
+        message: "Pith AI is not configured. Ask the platform administrator to set GROQ_API_KEY and GROQ_MODEL.",
         configured: false,
       },
     };
@@ -232,7 +232,7 @@ async function handleChat(request: Request): Promise<ChatResponse> {
       ok: false,
       error: {
         type: "server",
-        message: "SAVO AI encountered an error. Please try again.",
+        message: "Pith AI encountered an error. Please try again.",
         configured: true,
       },
     };
@@ -244,7 +244,7 @@ async function handleChat(request: Request): Promise<ChatResponse> {
       ok: false,
       error: {
         type: "provider_unavailable",
-        message: "SAVO AI returned an empty response.",
+        message: "Pith AI returned an empty response.",
         configured: true,
         model: providerConfig.model,
       },
@@ -331,7 +331,7 @@ export async function POST(request: Request) {
       return new Response(JSON.stringify({
         error: {
           type: "provider_unavailable",
-          message: "SAVO AI is not configured. Ask the platform administrator to set GROQ_API_KEY and GROQ_MODEL.",
+          message: "Pith AI is not configured. Ask the platform administrator to set GROQ_API_KEY and GROQ_MODEL.",
           configured: false,
         },
       }), {
@@ -377,7 +377,7 @@ export async function POST(request: Request) {
       return new Response(JSON.stringify({
         error: {
           type: "server",
-          message: "SAVO AI encountered an error.",
+          message: "Pith AI encountered an error.",
           configured: true,
         },
       }), {
@@ -391,7 +391,7 @@ export async function POST(request: Request) {
       return new Response(JSON.stringify({
         error: {
           type: "provider_unavailable",
-          message: "SAVO AI returned an empty response.",
+          message: "Pith AI returned an empty response.",
           configured: true,
           model: providerConfig.model,
         },
@@ -463,7 +463,7 @@ export async function POST(request: Request) {
     });
   }
 
-  return new Response(JSON.stringify({ error: { type: "not_found", message: "Unknown SAVO AI endpoint." } }), {
+  return new Response(JSON.stringify({ error: { type: "not_found", message: "Unknown Pith AI endpoint." } }), {
     headers: { "Content-Type": "application/json" },
     status: 404,
   });
@@ -474,9 +474,9 @@ export async function POST(request: Request) {
 // ---------------------------------------------------------------------------
 
 function defaultSystemPrompt(shop: Shop, role: ShopRole): string {
-  return `You are SAVO AI, the intelligent assistant and mascot of SAVO, a Kenyan retail management app for small shops.
+  return `You are Pith AI, the intelligent assistant and mascot of Pith, a Kenyan retail management app for small shops.
 
-You are friendly, practical, and concise. You help a shop owner or employee understand SAVO and their recorded business data. You speak plainly, in English or Swahili where useful, and you do not invent figures.
+You are friendly, practical, and concise. You help a shop owner or employee understand Pith and their recorded business data. You speak plainly, in English or Swahili where useful, and you do not invent figures.
 
 The current shop:
 - Name: ${sanitizeForModel(shop.name)}

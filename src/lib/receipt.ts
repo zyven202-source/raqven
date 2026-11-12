@@ -10,7 +10,7 @@ import { formatDateTime, formatMoney } from "@/lib/format";
 import type { ReceiptPayload } from "@/services/sales.service";
 
 /**
- * SAVO's mark, for the receipt header.
+ * Pith's mark, for the receipt header.
  *
  * The mark is a stroked path, not a font glyph, so the receipt carries the
  * exact same symbol the app icon draws — in black, the one ink a thermal head
@@ -54,7 +54,7 @@ export function receiptText(payload: ReceiptPayload, currency = "KES") {
   if (settings?.header_text) lines.push(centre(settings.header_text));
   if (shop.location) lines.push(centre(shop.location));
   if (shop.phone) lines.push(centre(shop.phone));
-  lines.push(centre("Powered by SAVO"));
+  lines.push(centre("Powered by Pith"));
   lines.push(rule());
   lines.push(line("Receipt", sale.receipt_number));
   lines.push(line("Date", formatDateTime(sale.sold_at)));
@@ -114,7 +114,7 @@ export function receiptText(payload: ReceiptPayload, currency = "KES") {
 
   lines.push(rule());
   lines.push(centre(settings?.footer_text || "Asante kwa biashara!"));
-  lines.push(centre("Powered by SAVO"));
+  lines.push(centre("Powered by Pith"));
 
   return lines.join("\n");
 }
@@ -271,7 +271,7 @@ export function receiptHtml(
   <hr />
   <footer>
     <p>${esc(settings?.footer_text || "Asante kwa biashara!")}</p>
-    <p class="muted">Powered by SAVO</p>
+    <p class="muted">Powered by Pith</p>
   </footer>
 </body>
 </html>`;

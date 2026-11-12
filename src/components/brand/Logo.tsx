@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
 
-import { MARK, MARK_PAINT, VIEW_BOX } from "./mark-geometry";
+import { MARK, VIEW_BOX } from "./mark-geometry";
 
 interface LogoProps {
   className?: string;
@@ -12,18 +12,17 @@ interface LogoProps {
 }
 
 /**
- * SAVO's logo: the Savo mark beside the wordmark.
+ * Pith's logo: the P monogram beside the wordmark.
  *
- * The identity is the drawn mark — one continuous stroke over two tangent
- * bowls — not a typeset letter and not a generic trade icon. The wordmark is
- * optional and only appears where there is room for it (splash, sign-in, the
- * pre-shop empty state); everywhere dense, the tile stands alone.
+ * `tone` selects the ground, because a forest mark on a dark bar is invisible
+ * and a mint mark on a white receipt is a smudge:
  *
- * `tone` selects the ground, because a dark mark on a dark bar is invisible
- * and a light mark on a white receipt is a smudge:
+ *   - `ink` — the plain mark in forest green, for paper grounds.
+ *   - `light` — the reversed mark in mint, with a cream wordmark, for forest
+ *     grounds such as the install screen or a dark receipt header.
  *
- *   - `ink` — the emerald tile with the emerald mark and its gold fold.
- *   - `light` — the bare emerald mark, for dark grounds.
+ * `compact` returns the monogram alone, which is what dense chrome (the shop
+ * bar, the till header) should use — a wordmark at 40 pixels is noise.
  */
 export function Logo({
   className,
@@ -32,18 +31,14 @@ export function Logo({
   compact = false,
   markSize = "size-9",
 }: LogoProps) {
-  const bare = tone === "light";
-  const sizeClass = markSize === "size-8" ? "size-9" : markSize;
+  const reversed = tone === "light";
 
   const tile = (
     <span
       className={cn(
         "grid shrink-0 place-items-center rounded-xl",
-        sizeClass,
-        // The colour sits under the gradient image so the mark always has its
-        // dark ground — including in print stylesheets and anywhere a
-        // background image does not paint.
-        bare ? "text-ink-soft" : "gradient-ink bg-ink-deep text-ink-soft",
+        markSize,
+        reversed ? "bg-ink-deep text-mint" : "bg-mint text-ink",
       )}
       aria-hidden
     >
@@ -53,24 +48,15 @@ export function Logo({
         fill="none"
         xmlns="http://www.w3.org/2000/svg"
       >
-        {!bare ? (
-          <defs>
-            <linearGradient
-              id="savo-letter"
-              x1={MARK_PAINT.x1}
-              y1={MARK_PAINT.y1}
-              x2={MARK_PAINT.x2}
-              y2={MARK_PAINT.y2}
-            >
-              {MARK_PAINT.stops.map((stop) => (
-                <stop key={stop.offset} offset={stop.offset} stopColor={stop.color} />
-              ))}
-            </linearGradient>
-          </defs>
-        ) : null}
+        {/*
+          The mark is drawn in the tile's text colour, one ink and no gradient.
+          The full app icon can afford a lit tile; at 36 pixels beside a
+          wordmark a highlight is only a muddy edge, and mint-on-mint would not
+          read at all.
+        */}
         <path
           d={MARK.path}
-          stroke={!bare ? "url(#savo-letter)" : "currentColor"}
+          stroke="currentColor"
           strokeWidth={MARK.stroke}
           strokeLinecap={MARK.linecap}
         />
@@ -87,19 +73,19 @@ export function Logo({
         <span
           className={cn(
             "block font-display text-lg font-semibold tracking-tight",
-            bare ? "text-background" : "text-foreground",
+            reversed ? "text-cream" : "text-ink",
           )}
         >
-          SAVO
+          Pith
         </span>
         {showTagline ? (
           <span
             className={cn(
               "mt-1 block text-[11px] tracking-wide",
-              bare ? "text-champagne/80" : "text-champagne",
+              reversed ? "text-mint/85" : "text-muted-foreground",
             )}
           >
-            Every sale. Every stock. Every number.
+            Run. Track. Grow.
           </span>
         ) : null}
       </span>

@@ -12,9 +12,9 @@ import { pageMeta, SITE_URL } from "@/lib/seo";
 export const Route = createFileRoute("/legal/terms")({
   head: () =>
     pageMeta({
-      title: "SAVO — Terms of service",
+      title: "Pith — Terms of service",
       description:
-        "The rules for using SAVO: your account, your shop, your staff, your data, and what happens if something goes wrong.",
+        "The rules for using Pith: your account, your shop, your staff, your data, and what happens if something goes wrong.",
       path: "/legal/terms",
     }),
   component: TermsPage,
@@ -24,7 +24,7 @@ function TermsPage() {
   return (
     <LegalPage
       title="Terms of service"
-      intro="These terms are the agreement between you and the business behind SAVO. They are written to be read. Where a clause is the kind of thing only a lawyer should settle, it is marked as such rather than dressed up as settled law."
+      intro="These terms are the agreement between you and the business behind Pith. They are written to be read. Where a clause is the kind of thing only a lawyer should settle, it is marked as such rather than dressed up as settled law."
     >
       {/* ------------------------------------------------- the legal review */}
       <LegalSection id="not-legal-advice" title="Read this first">
@@ -40,7 +40,7 @@ function TermsPage() {
           </strong>{" "}
           Nobody building software can tell you what the law in Kenya requires of this product. The
           following clauses are marked in this page because they need a qualified Kenyan lawyer to
-          settle before SAVO is offered commercially:
+          settle before Pith is offered commercially:
         </p>
         <ol className="list-decimal space-y-1.5 pl-5">
           {LEGAL_REVIEW_ITEMS.map((item) => (
@@ -48,7 +48,7 @@ function TermsPage() {
           ))}
         </ol>
         <p>
-          Nothing in this document should be read as a statement that SAVO&rsquo;s operators cannot
+          Nothing in this document should be read as a statement that Pith&rsquo;s operators cannot
           be sued, cannot be held liable, or are exempt from any law. They are not. If these terms
           turn out to be wrong, the fix is a lawyer and a correction — not a disclaimer here.
         </p>
@@ -57,12 +57,12 @@ function TermsPage() {
       {/* ------------------------------------------------------------- who */}
       <LegalSection id="agreement" title="The agreement">
         <p>
-          These terms apply to anyone who creates an account for, or uses, SAVO. By creating an
+          These terms apply to anyone who creates an account for, or uses, Pith. By creating an
           account or using the service you accept them. If you do not accept them, do not use the
           service; you can close your account at any time from Settings.
         </p>
         <p>
-          You must be at least 18 years old to hold an account. SAVO is a business tool; the person
+          You must be at least 18 years old to hold an account. Pith is a business tool; the person
           who creates the account is the one responsible for it.
         </p>
       </LegalSection>
@@ -74,7 +74,7 @@ function TermsPage() {
           <li>
             <strong>The accuracy of what you enter</strong> — your name, email, phone number, your
             shop&rsquo;s name and details, your products, your prices, your customers&rsquo;
-            details. SAVO records what you give it. Garbage in produces a garbage ledger, and the
+            details. Pith records what you give it. Garbage in produces a garbage ledger, and the
             app cannot tell the difference.
           </li>
           <li>
@@ -94,17 +94,17 @@ function TermsPage() {
           </li>
         </ul>
         <p>
-          You are responsible for activity on your account. SAVO is not liable for losses caused by
+          You are responsible for activity on your account. Pith is not liable for losses caused by
           an account being used by someone you gave access to.
         </p>
       </LegalSection>
 
       {/* ------------------------------------------------------ shop owner */}
-      <LegalSection id="shop-owner" title="If you run a shop on SAVO">
-        <p>As the owner of a shop on SAVO you are responsible for:</p>
+      <LegalSection id="shop-owner" title="If you run a shop on Pith">
+        <p>As the owner of a shop on Pith you are responsible for:</p>
         <ul>
           <li>
-            <strong>The business, not the software.</strong> SAVO records your sales, stock and
+            <strong>The business, not the software.</strong> Pith records your sales, stock and
             expenses. It does not run your shop, set your prices, decide what you may sell, or
             guarantee that your records satisfy any tax, licensing or regulatory obligation. Those
             remain yours, and where the law requires an accountant, a receipt format, a licence or a
@@ -112,15 +112,15 @@ function TermsPage() {
           </li>
           <li>
             <strong>Your customers&rsquo; information.</strong> Debtor names, phone numbers and
-            credit balances are personal data about other people. SAVO gives you the tools to keep
+            credit balances are personal data about other people. Pith gives you the tools to keep
             them — access is limited to your shop, and you can delete a debtor once the balance is
             settled — but collecting it, explaining it to the person, and honouring their rights is
-            your responsibility as the party who decided to collect it. SAVO&rsquo;s own Privacy
-            Policy covers SAVO&rsquo;s processing; it does not discharge your obligations as a
+            your responsibility as the party who decided to collect it. Pith&rsquo;s own Privacy
+            Policy covers Pith&rsquo;s processing; it does not discharge your obligations as a
             business.
           </li>
           <li>
-            <strong>Backing up what matters.</strong> SAVO is the working record, not the only
+            <strong>Backing up what matters.</strong> Pith is the working record, not the only
             record. Export your reports to CSV regularly. A till computer can be stolen, and a
             stolen phone is not a backup strategy.
           </li>
@@ -134,7 +134,7 @@ function TermsPage() {
       {/* --------------------------------------------------------- employees */}
       <LegalSection id="employees" title="Staff access">
         <p>
-          SAVO has exactly two roles. <strong>Owners</strong> control everything: shop details,
+          Pith has exactly two roles. <strong>Owners</strong> control everything: shop details,
           receipt settings, the refund switch, staff access codes, and the activity log.{" "}
           <strong>Employees</strong> can use the till, record sales, move stock, log expenses and
           take repayments, but cannot change the shop&rsquo;s settings or manage who is on the team.
@@ -146,7 +146,7 @@ function TermsPage() {
         <p>
           Access codes are how a new staff member joins. A code is a bearer token: anyone who has it
           can join as an employee. Keep it to the person it is for, give it out in person, and
-          retire it the moment someone leaves. SAVO stores codes as a salted hash and cannot recover
+          retire it the moment someone leaves. Pith stores codes as a salted hash and cannot recover
           a code for you — if it is lost, mint a new one.
         </p>
         <p>
@@ -162,7 +162,7 @@ function TermsPage() {
 
       {/* --------------------------------------------------- acceptable use */}
       <LegalSection id="acceptable-use" title="Acceptable use">
-        <p>Do not use SAVO to:</p>
+        <p>Do not use Pith to:</p>
         <ul>
           <li>break the law, or store or process anything you have no right to process;</li>
           <li>
@@ -178,17 +178,17 @@ function TermsPage() {
             anything other than the images and receipts the product is for;
           </li>
           <li>
-            misrepresent who you are, impersonate another person or business, or claim a SAVO
+            misrepresent who you are, impersonate another person or business, or claim a Pith
             account for a shop you do not run;
           </li>
           <li>
-            resell, rebrand or provide SAVO to third parties as your own product without written
+            resell, rebrand or provide Pith to third parties as your own product without written
             permission;
           </li>
           <li>store content that infringes someone else&rsquo;s rights;</li>
         </ul>
         <p>
-          SAVO may suspend or close an account that breaks these rules, and will tell you why where
+          Pith may suspend or close an account that breaks these rules, and will tell you why where
           it is safe to do so.
         </p>
       </LegalSection>
@@ -196,10 +196,10 @@ function TermsPage() {
       {/* ---------------------------------------------------------- payment */}
       <LegalSection id="payment" title="Subscription and payment">
         <p>
-          <strong>SAVO currently has no paid tier and takes no payment.</strong> The version
+          <strong>Pith currently has no paid tier and takes no payment.</strong> The version
           published at <a href={SITE_URL}>{SITE_URL}</a> is free, and no card, bank or M-Pesa
           details are collected anywhere in it. M-Pesa appears only as a way to record how a
-          customer paid; SAVO never takes the customer&rsquo;s money and never sees their M-Pesa
+          customer paid; Pith never takes the customer&rsquo;s money and never sees their M-Pesa
           credentials.
         </p>
         <p>
@@ -213,22 +213,22 @@ function TermsPage() {
       {/* ------------------------------------------------------ availability */}
       <LegalSection id="availability" title="Service availability">
         <p>
-          SAVO is provided as-is. It works on the networks, phones and browsers it was built for,
+          Pith is provided as-is. It works on the networks, phones and browsers it was built for,
           and it will not work perfectly on all of them. Specifically:
         </p>
         <ul>
           <li>
             The service is provided on an &ldquo;as available&rdquo; and &ldquo;as is&rdquo; basis.
             It may be unavailable for maintenance, for network failure, or for reasons outside
-            SAVO&rsquo;s control, and no uptime percentage is promised anywhere in this document or
+            Pith&rsquo;s control, and no uptime percentage is promised anywhere in this document or
             in the product.
           </li>
           <li>
-            <strong>Keep your own records.</strong> SAVO is the working record. If a till cannot
+            <strong>Keep your own records.</strong> Pith is the working record. If a till cannot
             reach the network, the sale has not been recorded — do not assume it will appear later.
           </li>
           <li>
-            <strong>Software has defects.</strong> SAVO is built and tested carefully, but it is not
+            <strong>Software has defects.</strong> Pith is built and tested carefully, but it is not
             certified error-free and this document does not claim it is. If a figure looks wrong,
             check the activity log and the transaction history before acting on it.
           </li>
@@ -243,8 +243,8 @@ function TermsPage() {
       {/* ------------------------------------------------------------ data */}
       <LegalSection id="data" title="Your data">
         <p>
-          The <a href="/legal/privacy">Privacy Policy</a> sets out what SAVO collects, why, who can
-          see it and how long it is kept. That policy is part of these terms: using SAVO means
+          The <a href="/legal/privacy">Privacy Policy</a> sets out what Pith collects, why, who can
+          see it and how long it is kept. That policy is part of these terms: using Pith means
           accepting it.
         </p>
         <LegalSubhead title="What is kept after you leave">
@@ -262,11 +262,11 @@ function TermsPage() {
           </p>
         </LegalSubhead>
 
-        <LegalSubhead title="Who SAVO is responsible to">
+        <LegalSubhead title="Who Pith is responsible to">
           <p>
-            For your own account, SAVO is the party deciding what is collected and why. For the
-            records inside a shop, the shop is: SAVO processes them on the shop&rsquo;s
-            instructions. Where SAVO&rsquo;s role is one the Data Protection Act 2019 treats as a
+            For your own account, Pith is the party deciding what is collected and why. For the
+            records inside a shop, the shop is: Pith processes them on the shop&rsquo;s
+            instructions. Where Pith&rsquo;s role is one the Data Protection Act 2019 treats as a
             data processor rather than a controller, and the contract that reflects that, are
             matters for a qualified Kenyan lawyer. This is marked in the readiness report.
           </p>
@@ -276,7 +276,7 @@ function TermsPage() {
       {/* --------------------------------------------------------------- IP */}
       <LegalSection id="intellectual-property" title="Intellectual property">
         <p>
-          SAVO — the name, the logo, the app icon, the interface, the source code and the underlying
+          Pith — the name, the logo, the app icon, the interface, the source code and the underlying
           software — belongs to <ConfigValue field="legalName" /> (
           <ConfigValue field="tradingName" />
           ). These terms grant you a limited, non-exclusive, non-transferable, revocable licence to
@@ -284,12 +284,12 @@ function TermsPage() {
         </p>
         <p>
           <strong>Your data stays yours.</strong> The records you enter are yours and your
-          customers&rsquo;. SAVO claims no ownership of them and licences no right to resell,
+          customers&rsquo;. Pith claims no ownership of them and licences no right to resell,
           publish or use them to build anything else. The same applies to the images you upload: you
           must have the right to use them.
         </p>
         <p>
-          <strong>Feedback</strong> you send is welcome, and sending it does not oblige SAVO to keep
+          <strong>Feedback</strong> you send is welcome, and sending it does not oblige Pith to keep
           it secret — but no confidentiality attaches to it.
         </p>
       </LegalSection>
@@ -302,7 +302,7 @@ function TermsPage() {
           service.
         </p>
         <p>
-          SAVO may suspend access temporarily to protect the service or other shops — for example,
+          Pith may suspend access temporarily to protect the service or other shops — for example,
           to investigate a suspected breach of another shop&rsquo;s data — and may close an account
           that has broken these terms. Where it is safe to do so, you will be told why and given the
           chance to put it right.
@@ -322,14 +322,14 @@ function TermsPage() {
           below is deliberately plain and deliberately not a shield.
         </p>
         <p>
-          To the fullest extent the law allows, SAVO is not liable for indirect or consequential
+          To the fullest extent the law allows, Pith is not liable for indirect or consequential
           loss, or for loss of profit, revenue, goodwill or anticipated savings, arising from the
           use of, or inability to use, the service.
         </p>
         <p>
-          SAVO&rsquo;s total aggregate liability to you for anything connected with the service is
-          limited to the amount you actually paid SAVO for it. SAVO is currently free, so that
-          amount is zero — which is not a rhetorical flourish, and is not a promise that SAVO will
+          Pith&rsquo;s total aggregate liability to you for anything connected with the service is
+          limited to the amount you actually paid Pith for it. Pith is currently free, so that
+          amount is zero — which is not a rhetorical flourish, and is not a promise that Pith will
           never have to account for anything it does.
         </p>
         <p>
@@ -339,7 +339,7 @@ function TermsPage() {
           of these terms stands.
         </p>
         <p>
-          You are responsible for backing up your own data and for checking your figures. SAVO is a
+          You are responsible for backing up your own data and for checking your figures. Pith is a
           recording tool, not your accountant and not your advisor.
         </p>
       </LegalSection>
@@ -352,7 +352,7 @@ function TermsPage() {
           consumer, so a lawyer must settle both what this says and whether it can be said at all.
         </p>
         <p>
-          You agree to indemnify SAVO against claims, damages and reasonable costs arising from your
+          You agree to indemnify Pith against claims, damages and reasonable costs arising from your
           use of the service, your breach of these terms, or content you upload that infringes
           someone else&rsquo;s rights — to the extent the law allows such a promise to be made.
         </p>

@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * SAVO design system.
+ * Pith design system (see :root below for the palette).
  *
  * Principles this file encodes:
  *   1. Structure is drawn with hairlines and rows, not with stacked rounded
@@ -58,6 +58,8 @@
 
   /* Brand */
   --color-ink: var(--ink);
+  --color-mint: var(--mint);
+  --color-forest: var(--ink-soft);
   --color-ink-deep: var(--ink-deep);
   --color-ink-soft: var(--ink-soft);
   --color-champagne: var(--champagne);
@@ -115,150 +117,112 @@
     0 -4px 12px -8px oklch(0.2 0.03 173 / 0.2);
 }
 
+/* ---------------------------------------------------------------------------
+ * Pith design system.
+ *
+ * A light, paper-like product: a warm cream page, white surfaces drawn with
+ * hairlines, forest green only where something is brand-owned or positive.
+ * The values below are the brand palette, and nothing in a component hardcodes
+ * a colour — change the brand here and the whole product follows.
+ *
+ *   1. Structure is rows and hairlines, not a stack of rounded cards.
+ *   2. Radii are small and consistent. 12px is the largest radius on a page.
+ *   3. Colour carries meaning: forest = the shop's own money and actions,
+ *      amber = needs attention, red = loss or refusal.
+ *   4. Numbers use tabular figures so columns of money line up.
+ *   5. Type does the work: one text face, one display face, four sizes.
+ * ------------------------------------------------------------------------- */
 :root {
   --radius: 0.625rem;
 
-  /*
-   * Brand — the approved SAVO identity, emerald with a gold accent.
-   *
-   * The names keep their place in the vocabulary; the values are the approved
-   * palette: `ink` is the near-neutral pale text every heading is set in,
-   * `ink-soft` is the true emerald (#10B981) that active states and glows are
-   * drawn in, `ink-deep` is the deep emerald (#064E3B) that type sits on when
-   * a control goes light, and champagne is the gold accent (#F59E0B) — the
-   * one warm colour in an all-green product, which is exactly why it marks
-   * focus, selection and the brand's own highlights.
-   */
-  --ink: oklch(0.975 0.02 150); /* Primary text #F0FDF4 — pale, almost neutral */
-  --ink-deep: oklch(0.388 0.089 172); /* Deep Emerald #064E3B */
-  --ink-soft: oklch(0.758 0.154 163); /* Emerald #10B981 — the glowing mid stop */
-  --champagne: oklch(0.795 0.154 70); /* Gold Accent #F59E0B */
-  --champagne-deep: oklch(0.55 0.11 70); /* Gold, dark enough for type on pale */
-  --cream: oklch(0.962 0.014 84.6); /* Soft Cream #F7F2E8 */
+  /* Brand */
+  --ink: #123c2d; /* Forest — headings, primary actions, the tile */
+  --ink-deep: #09291f; /* Deep forest — pressed states, the darkest ground */
+  --ink-soft: #236b49; /* Supporting green — links, figures, marks */
+  --champagne: #b45309; /* Amber — attention, never decoration */
+  --champagne-deep: #7c3a06;
+  --cream: #f7f5ee;
+  --mint: #ddebdd;
+  --forest: #123c2d;
 
-  /* The page IS the emerald: one deep ground, with hairlines and glass above it. */
-  --background: oklch(0.278 0.038 170); /* Deep Green ground #0B2E23 */
-  --foreground: oklch(0.975 0.018 148); /* Primary text #F0FDF4 */
-  --card: oklch(0.33 0.04 171 / 0.85);
-  --card-foreground: var(--foreground);
-  --popover: oklch(0.305 0.038 171 / 0.94);
-  --popover-foreground: var(--foreground);
-  --sunken: oklch(0.2 0.03 172 / 0.55);
+  /* The page is warm paper; surfaces are white sitting on it. */
+  --background: #f7f5ee;
+  --foreground: #17231d;
+  --card: #ffffff;
+  --card-foreground: #17231d;
+  --popover: #ffffff;
+  --popover-foreground: #17231d;
+  --sunken: #f1f0e7;
 
-  --primary: var(--ink);
-  --primary-foreground: oklch(0.24 0.05 172); /* Deep Emerald on a pale control */
-  --secondary: oklch(0.35 0.04 171 / 0.75);
-  --secondary-foreground: var(--foreground);
-  --muted: oklch(0.35 0.036 171 / 0.6);
-  --muted-foreground: oklch(0.79 0.045 165); /* Secondary text #A7C4B5 */
-  --accent: var(--champagne);
-  --accent-foreground: var(--ink-deep);
-  --destructive: oklch(0.62 0.19 27);
-  --destructive-foreground: oklch(0.985 0.006 80.7);
+  --primary: #123c2d;
+  --primary-foreground: #ffffff;
+  --secondary: #edf1ec;
+  --secondary-foreground: #123c2d;
+  --muted: #eff2ec;
+  --muted-foreground: #68756d;
+  --accent: #ddebdd;
+  --accent-foreground: #09291f;
+  --destructive: #b42318;
+  --destructive-foreground: #ffffff;
 
-  /* Status. Luminous hues on the dark ground; the softs are translucent
-     washes of the same hue, so chips and notices read without painting a
-     panel pale. `positive` IS the brand emerald (#10B981) and `caution` IS
-     the brand gold (#F59E0B) — in a money product, "good" and "the brand"
-     are the same colour, and the one warm hue is reserved for attention. */
-  --positive: oklch(0.758 0.154 163);
-  --positive-soft: oklch(0.34 0.06 168 / 0.55);
-  --caution: oklch(0.795 0.154 70);
-  --caution-soft: oklch(0.36 0.06 82 / 0.55);
-  --negative-soft: oklch(0.35 0.07 26 / 0.55);
-  /* Destructive TEXT: at 0.72 the salmon measured 3.98:1 against the glass
-     button fill and the suite's crop caught it — 0.80 keeps the exact hue and
-     reads at ~4.9:1 while everything behind it stays a dark wash. */
-  --negative: oklch(0.8 0.16 26);
-  --info: oklch(0.76 0.1 245);
-  --info-soft: oklch(0.34 0.05 245 / 0.55);
+  /* Status. Soft tints carry the chip; the solid hue carries the text. */
+  --positive: #1b7a4a;
+  --positive-soft: #e3f1e7;
+  --caution: #b45309;
+  --caution-soft: #fdf0dc;
+  --negative: #b42318;
+  --negative-soft: #fcecea;
+  --info: #1f5fa8;
+  --info-soft: #e8f1fa;
 
-  --border: oklch(1 0 0 / 13%);
-  --line-strong: oklch(1 0 0 / 24%);
-  --input: oklch(1 0 0 / 18%);
-  --ring: var(--ink-soft);
+  --border: #e3e8e1;
+  --line-strong: #c9d2c8;
+  --input: #d3dad2;
+  --ring: #236b49;
 
-  --sidebar: oklch(0.24 0.045 171);
-  --sidebar-foreground: oklch(0.962 0.014 84.6);
-  --sidebar-primary: oklch(0.795 0.154 70);
-  --sidebar-primary-foreground: oklch(0.24 0.05 172);
-  --sidebar-accent: oklch(0.4 0.073 168.9);
-  --sidebar-accent-foreground: oklch(0.992 0.007 80.7);
-  --sidebar-border: oklch(0.4 0.073 168.9);
-  --sidebar-ring: oklch(0.795 0.154 70);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #17231d;
+  --sidebar-primary: #123c2d;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #ddebdd;
+  --sidebar-accent-foreground: #09291f;
+  --sidebar-border: #e3e8e1;
+  --sidebar-ring: #236b49;
 
   /*
-   * THE GLASS MATERIAL, IN THREE LEVELS.
-   *
-   * The point of having levels is hierarchy, not decoration. One glass effect
-   * applied everywhere is wallpaper; three, used deliberately, let a screen say
-   * "this is a surface", "this is a control" and "this is temporary" without
-   * anything having to shout.
-   *
-   *   L1 primary   — things you act on or read as a unit. Modals, sheets, the
-   *                  floating navigation, main cards. Opaque enough to carry
-   *                  body text without effort.
-   *   L2 secondary — the supporting cast. Filters, search, small controls. Less
-   *                  opaque and less dominant, because it sits *inside* L1
-   *                  surfaces and must not compete with them.
-   *   L3 floating  — temporary UI: popovers, menus, tooltips. The most opaque
-   *                  and the most deeply shadowed, because it has to read as
-   *                  detached from whatever is behind it and because a menu
-   *                  that is hard to read is worse than no menu.
-   *
-   * L3 being the *most* opaque is deliberate and slightly counter-intuitive.
-   * Opacity is a legibility tool here, not a status symbol.
+   * Surfaces. The three glass levels keep their names because components
+   * already use them; on paper they are not "glass" so much as a white sheet
+   * laid on cream — opaque enough to carry body text, ruled with a hairline.
    */
-  --glass-1: oklch(0.345 0.04 171 / 0.76);
-  --glass-1-line: oklch(1 0 0 / 0.14);
-  --glass-1-sheen: oklch(1 0 0 / 0.1);
+  --glass-1: #ffffff;
+  --glass-1-line: #e3e8e1;
+  --glass-1-sheen: rgb(255 255 255 / 0.6);
 
-  --glass-2: oklch(0.335 0.036 171 / 0.5);
-  --glass-2-line: oklch(1 0 0 / 0.12);
-  --glass-2-sheen: oklch(1 0 0 / 0.07);
+  --glass-2: #fbfcfa;
+  --glass-2-line: #e8ece5;
+  --glass-2-sheen: rgb(255 255 255 / 0.5);
 
-  --glass-3: oklch(0.315 0.034 171 / 0.93);
-  --glass-3-line: oklch(1 0 0 / 0.18);
-  --glass-3-sheen: oklch(1 0 0 / 0.1);
+  --glass-3: #ffffff;
+  --glass-3-line: #dfe5dd;
+  --glass-3-sheen: rgb(255 255 255 / 0.6);
 
-  /** The border colour a hovered surface takes. A step up, never a jump. */
-  --hover-line: oklch(0.78 0.1 166 / 0.5);
+  /** The border a hovered surface takes: one step of green, never a jump. */
+  --hover-line: rgb(35 107 73 / 0.4);
 
-  /*
-   * Depth, in three steps, and deliberately small.
-   *
-   * Depth here comes from a hairline, a contact shadow and a wide diffuse
-   * shadow together — the three are what read as a real object. One big
-   * drop-shadow does not: it reads as a sticker, and on a translucent surface
-   * it also muddies the text sitting on it. Every offset is negative, which
-   * keeps the shadow tight to the object instead of glowing around it.
-   *
-   * These live in `:root` and are overridden in `.dark` rather than living in
-   * `@theme`, because nothing generates a Tailwind utility from them — they are
-   * only ever referenced by the glass utilities, and a plain custom property
-   * has an ordinary, predictable cascade.
-   *
-   * On the dark ground the shadows are pure black — a coloured shadow is
-   * invisible on a coloured page, and black is what actually separates a pane
-   * from the glass behind it.
-   */
-  --depth-1: 0 1px 1px oklch(0 0 0 / 0.25), 0 6px 18px -12px oklch(0 0 0 / 0.4);
-  --depth-2: 0 1px 1px oklch(0 0 0 / 0.24), 0 3px 10px -8px oklch(0 0 0 / 0.35);
-  --depth-3: 0 2px 4px oklch(0 0 0 / 0.3), 0 14px 34px -18px oklch(0 0 0 / 0.5);
-  --depth-hover: 0 2px 4px oklch(0 0 0 / 0.35), 0 12px 26px -14px oklch(0 0 0 / 0.45);
+  /* Depth: a contact shadow plus a wide soft one. Small on purpose. */
+  --depth-1: 0 1px 2px rgb(23 35 29 / 0.04), 0 1px 1px rgb(23 35 29 / 0.03);
+  --depth-2: 0 1px 2px rgb(23 35 29 / 0.05);
+  --depth-3: 0 4px 12px -4px rgb(23 35 29 / 0.12), 0 12px 32px -18px rgb(23 35 29 / 0.18);
+  --depth-hover: 0 2px 4px rgb(23 35 29 / 0.06), 0 12px 24px -16px rgb(23 35 29 / 0.16);
 
-  /*
-   * The glass palette. Each surface is a translucent tint of the page itself
-   * plus a light-catching top edge, so the navigation picks up whatever is
-   * scrolling underneath it instead of hiding it behind an opaque slab.
-   */
-  --glass: oklch(0.335 0.038 171 / 0.6);
-  --glass-strong: oklch(0.305 0.036 171 / 0.9);
-  --glass-line: oklch(1 0 0 / 0.13);
-  --glass-sheen: oklch(1 0 0 / 0.1);
-  --glass-tile: oklch(1 0 0 / 0.12);
-  --glass-tile-line: oklch(1 0 0 / 0.22);
-  --glass-sunk: oklch(0.22 0.03 172 / 0.6);
+  /* The floating navigation and top bar. */
+  --glass: rgb(255 255 255 / 0.9);
+  --glass-strong: rgb(255 255 255 / 0.98);
+  --glass-line: #e3e8e1;
+  --glass-sheen: rgb(255 255 255 / 0.75);
+  --glass-tile: #ddebdd;
+  --glass-tile-line: #c9dccb;
+  --glass-sunk: #f4f5f0;
 }
 
 /*
@@ -266,71 +230,77 @@
  * with pale mint text — so `.dark` only goes a step deeper and colder, keeping
  * the same hue family. Nothing here needs to "invert" anymore; it shades.
  */
+/*
+ * Dark mode. Not the product's default — the brand is paper and forest — but a
+ * shop that works at night should not be shown a white page. The same hue
+ * family, deepened: nothing inverts, it shades.
+ */
 .dark {
-  /* The darkest background of the identity: #061A14. */
-  --background: oklch(0.215 0.032 172);
-  --foreground: oklch(0.97 0.015 150);
-  --card: oklch(0.265 0.038 172 / 0.88);
-  --card-foreground: oklch(0.97 0.015 150);
-  --popover: oklch(0.245 0.036 172 / 0.96);
-  --popover-foreground: oklch(0.97 0.015 150);
-  --sunken: oklch(0.155 0.028 172 / 0.55);
-  --primary: var(--ink);
-  --primary-foreground: oklch(0.22 0.042 172);
-  --secondary: oklch(0.29 0.038 171 / 0.75);
-  --secondary-foreground: oklch(0.97 0.015 150);
-  --muted: oklch(0.29 0.034 171 / 0.6);
-  --muted-foreground: oklch(0.81 0.04 165);
-  --accent: oklch(0.33 0.05 168);
-  --accent-foreground: oklch(0.97 0.015 150);
-  --destructive: oklch(0.68 0.18 27);
-  --destructive-foreground: oklch(0.2 0.03 172);
-  --positive: oklch(0.79 0.15 163);
-  --positive-soft: oklch(0.3 0.055 168 / 0.55);
-  --caution: oklch(0.82 0.15 70);
-  --caution-soft: oklch(0.32 0.055 82 / 0.55);
-  --negative: oklch(0.82 0.15 26);
-  --negative-soft: oklch(0.31 0.065 26 / 0.55);
-  --info: oklch(0.78 0.1 245);
-  --info-soft: oklch(0.3 0.05 245 / 0.55);
-  --border: oklch(1 0 0 / 15%);
-  --line-strong: oklch(1 0 0 / 26%);
-  --input: oklch(1 0 0 / 20%);
-  --ring: oklch(0.75 0.1 166);
+  --background: #09291f;
+  --foreground: #f2f6f2;
+  --card: #0f3327;
+  --card-foreground: #f2f6f2;
+  --popover: #0f3327;
+  --popover-foreground: #f2f6f2;
+  --sunken: #061e17;
+  --primary: #ddebdd;
+  --primary-foreground: #09291f;
+  --secondary: #143a2c;
+  --secondary-foreground: #f2f6f2;
+  --muted: #16382b;
+  --muted-foreground: #a9bdb1;
+  --accent: #236b49;
+  --accent-foreground: #ffffff;
+  --destructive: #f1998f;
+  --destructive-foreground: #09291f;
+  --positive: #6fd3a0;
+  --positive-soft: rgb(111 211 160 / 0.16);
+  --caution: #f0b36b;
+  --caution-soft: rgb(240 179 107 / 0.16);
+  --negative: #f1998f;
+  --negative-soft: rgb(241 153 143 / 0.16);
+  --info: #9dc4f0;
+  --info-soft: rgb(157 196 240 / 0.16);
+  --border: rgb(255 255 255 / 0.12);
+  --line-strong: rgb(255 255 255 / 0.24);
+  --input: rgb(255 255 255 / 0.18);
+  --ring: #7fbf9b;
 
-  --glass-1: oklch(0.315 0.038 171 / 0.72);
-  --glass-1-line: oklch(1 0 0 / 0.16);
-  --glass-1-sheen: oklch(1 0 0 / 0.12);
+  --sidebar: #061e17;
+  --sidebar-foreground: #f2f6f2;
+  --sidebar-primary: #ddebdd;
+  --sidebar-primary-foreground: #09291f;
+  --sidebar-accent: #143a2c;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: rgb(255 255 255 / 0.12);
+  --sidebar-ring: #7fbf9b;
 
-  --glass-2: oklch(0.305 0.034 171 / 0.46);
-  --glass-2-line: oklch(1 0 0 / 0.13);
-  --glass-2-sheen: oklch(1 0 0 / 0.08);
+  --glass-1: #123c2d;
+  --glass-1-line: rgb(255 255 255 / 0.1);
+  --glass-1-sheen: rgb(255 255 255 / 0.05);
 
-  --glass-3: oklch(0.285 0.032 171 / 0.94);
-  --glass-3-line: oklch(1 0 0 / 0.2);
-  --glass-3-sheen: oklch(1 0 0 / 0.12);
+  --glass-2: #10362a;
+  --glass-2-line: rgb(255 255 255 / 0.09);
+  --glass-2-sheen: rgb(255 255 255 / 0.04);
 
-  --hover-line: oklch(0.8 0.11 166 / 0.45);
+  --glass-3: #0f3327;
+  --glass-3-line: rgb(255 255 255 / 0.14);
+  --glass-3-sheen: rgb(255 255 255 / 0.06);
 
-  /*
-   * Depth in the dark theme has to be pure black and a good deal stronger.
-   * The light theme's shadows are a deep teal, which is nearly invisible on a
-   * dark surface — so in dark mode most of the sense of a pane floating above
-   * the page comes from the shadow being genuinely black, and the hairline
-   * doing the rest.
-   */
-  --depth-1: 0 1px 1px oklch(0 0 0 / 0.3), 0 6px 18px -12px oklch(0 0 0 / 0.45);
-  --depth-2: 0 1px 1px oklch(0 0 0 / 0.28), 0 3px 10px -8px oklch(0 0 0 / 0.4);
-  --depth-3: 0 2px 4px oklch(0 0 0 / 0.35), 0 14px 34px -18px oklch(0 0 0 / 0.55);
-  --depth-hover: 0 2px 4px oklch(0 0 0 / 0.4), 0 12px 26px -14px oklch(0 0 0 / 0.5);
+  --hover-line: rgb(127 191 155 / 0.45);
 
-  --glass: oklch(0.315 0.036 171 / 0.58);
-  --glass-strong: oklch(0.285 0.034 171 / 0.92);
-  --glass-line: oklch(1 0 0 / 0.15);
-  --glass-sheen: oklch(1 0 0 / 0.12);
-  --glass-tile: oklch(1 0 0 / 0.13);
-  --glass-tile-line: oklch(1 0 0 / 0.24);
-  --glass-sunk: oklch(0.185 0.028 171 / 0.6);
+  --depth-1: 0 1px 2px rgb(0 0 0 / 0.3);
+  --depth-2: 0 1px 2px rgb(0 0 0 / 0.25);
+  --depth-3: 0 10px 28px -16px rgb(0 0 0 / 0.55);
+  --depth-hover: 0 6px 20px -14px rgb(0 0 0 / 0.45);
+
+  --glass: rgb(9 41 31 / 0.9);
+  --glass-strong: rgb(9 41 31 / 0.98);
+  --glass-line: rgb(255 255 255 / 0.12);
+  --glass-sheen: rgb(255 255 255 / 0.06);
+  --glass-tile: rgb(255 255 255 / 0.1);
+  --glass-tile-line: rgb(255 255 255 / 0.18);
+  --glass-sunk: rgb(6 30 23 / 0.6);
 }
 
 @layer base {
@@ -353,7 +323,7 @@
      * The page ground is the deep emerald itself, so overscroll glows the
      * brand colour instead of the browser's grey.
      */
-    background-color: var(--ink-deep);
+    background-color: var(--background);
   }
 
   /* Money and quantities must not reflow as they change. */
@@ -403,7 +373,7 @@
  * images do not paint.
  */
 @utility gradient-ink {
-  background-color: var(--ink-deep);
+  background-color: var(--background);
   background-image: linear-gradient(
     145deg,
     color-mix(in oklab, var(--ink-soft) 35%, var(--ink-deep)) 0%,

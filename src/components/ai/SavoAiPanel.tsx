@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { useSavoAi } from "@/hooks/useSavoAi";
 
 /**
- * The SAVO AI assistant panel.
+ * The Pith AI assistant panel.
  *
  * Two surfaces, one component: a near-full-height sheet on a phone and a panel
  * anchored above the mascot on a desktop. It is a real modal — `aria-modal`,
@@ -27,13 +27,13 @@ const MAX_INPUT = 2000;
 type Suggestion = { label: string; prompt: string; needs: "any" | "shop" | "owner" };
 
 const SUGGESTIONS: Suggestion[] = [
-  { label: "Help me use SAVO", prompt: "Help me use SAVO", needs: "any" },
+  { label: "Help me use Pith", prompt: "Help me use Pith", needs: "any" },
   { label: "Check low stock", prompt: "Which products are running low on stock?", needs: "shop" },
   { label: "Summarize my sales today", prompt: "Summarize my recorded sales for today.", needs: "shop" },
   { label: "Explain my business report", prompt: "Explain how to read my business report.", needs: "any" },
   { label: "Who owes me money?", prompt: "Which debtors have outstanding balances?", needs: "shop" },
   { label: "How did this month go?", prompt: "How did my shop do this month so far?", needs: "owner" },
-  { label: "Create a SAVO advertisement", prompt: "", needs: "any" },
+  { label: "Create a Pith advertisement", prompt: "", needs: "any" },
 ];
 
 export function SavoAiPanel({
@@ -100,7 +100,7 @@ export function SavoAiPanel({
           the whole page, so a full-screen dim would be heavier than the job. */}
       <button
         type="button"
-        aria-label="Close SAVO AI"
+        aria-label="Close Pith AI"
         onClick={onClose}
         className="fixed inset-0 z-40 cursor-default bg-ink-deep/45 backdrop-blur-[2px] sm:hidden"
         tabIndex={-1}
@@ -127,10 +127,10 @@ export function SavoAiPanel({
           </span>
           <div className="min-w-0 flex-1">
             <h2 id="savo-ai-title" className="text-[0.9375rem] font-semibold leading-tight">
-              SAVO AI
+              Pith AI
             </h2>
             <p className="truncate text-xs leading-tight text-muted-foreground">
-              {shopName ? `Answers for ${shopName}` : "Ask about SAVO"}
+              {shopName ? `Answers for ${shopName}` : "Ask about Pith"}
             </p>
           </div>
           <div className="flex shrink-0 items-center gap-0.5">
@@ -150,7 +150,7 @@ export function SavoAiPanel({
               variant="ghost"
               size="icon"
               onClick={onClose}
-              aria-label="Minimise SAVO AI"
+              aria-label="Minimise Pith AI"
               className="text-muted-foreground"
             >
               <ChevronDown />
@@ -159,7 +159,7 @@ export function SavoAiPanel({
         </header>
 
         {/* --------------------------------------------------------------- tabs */}
-        <div role="tablist" aria-label="SAVO AI" className="flex gap-1 border-b border-glass-line px-3 pt-2">
+        <div role="tablist" aria-label="Pith AI" className="flex gap-1 border-b border-glass-line px-3 pt-2">
           {(
             [
               { key: "ask", label: "Ask" },
@@ -203,11 +203,11 @@ export function SavoAiPanel({
                   <div className="flex items-start gap-2.5">
                     <SavoMascot className="mt-0.5 block size-8 shrink-0 [&>svg]:size-full" expression="happy" />
                     <div className="rounded-xl rounded-tl-sm bg-positive/10 px-3 py-2.5 text-sm leading-relaxed ring-1 ring-positive/20">
-                      <p className="font-medium">Hello — I&rsquo;m SAVO AI.</p>
+                      <p className="font-medium">Hello — I&rsquo;m Pith AI.</p>
                       <p className="mt-1 text-muted-foreground">
                         {shopId
-                          ? "Ask me about this shop's recorded sales, stock, expenses or debtors — or how to do something in SAVO."
-                          : "Ask me how SAVO works, or what a screen is for. Sign in and open a shop to ask about its figures."}
+                          ? "Ask me about this shop's recorded sales, stock, expenses or debtors — or how to do something in Pith."
+                          : "Ask me how Pith works, or what a screen is for. Sign in and open a shop to ask about its figures."}
                       </p>
                     </div>
                   </div>
@@ -271,11 +271,11 @@ export function SavoAiPanel({
                 >
                   <p className="font-medium text-foreground">
                     {error.code === "rate_limited"
-                      ? "SAVO AI is at its limit"
+                      ? "Pith AI is at its limit"
                       : error.code === "not_configured"
-                        ? "SAVO AI is not configured"
+                        ? "Pith AI is not configured"
                         : error.code === "provider_unavailable" || error.code === "network"
-                          ? "SAVO AI is unavailable"
+                          ? "Pith AI is unavailable"
                           : "That didn't work"}
                   </p>
                   <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{error.message}</p>
@@ -308,7 +308,7 @@ export function SavoAiPanel({
                 className="flex items-end gap-2"
               >
                 <label htmlFor="savo-ai-input" className="sr-only">
-                  Ask SAVO AI
+                  Ask Pith AI
                 </label>
                 <textarea
                   id="savo-ai-input"
@@ -326,7 +326,7 @@ export function SavoAiPanel({
                       submit();
                     }
                   }}
-                  placeholder={shopId ? "Ask about this shop…" : "Ask about SAVO…"}
+                  placeholder={shopId ? "Ask about this shop…" : "Ask about Pith…"}
                   className="tnum max-h-32 min-h-10 flex-1 resize-none rounded-lg border border-input bg-sunken px-3 py-2.5 text-sm leading-relaxed outline-none placeholder:text-muted-foreground focus-visible:border-positive focus-visible:ring-2 focus-visible:ring-positive/30"
                 />
                 <Button
@@ -343,7 +343,7 @@ export function SavoAiPanel({
               <p className="mt-1.5 text-[11px] leading-snug text-muted-foreground">
                 {shopId
                   ? "Figures are read live from your shop's records, under your own access. Answers can be wrong — check anything important."
-                  : "SAVO AI explains the product. It cannot change prices, stock, balances or permissions."}
+                  : "Pith AI explains the product. It cannot change prices, stock, balances or permissions."}
               </p>
               {started && turns.length > 0 ? (
                 <p className="mt-1 text-[11px] text-muted-foreground/80">

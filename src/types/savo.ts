@@ -1,5 +1,5 @@
 /**
- * SAVO domain types.
+ * Pith domain types.
  *
  * These are thin, portable aliases over the generated database types so that
  * application code never imports the generated file directly. If the project

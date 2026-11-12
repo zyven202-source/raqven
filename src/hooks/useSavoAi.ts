@@ -4,7 +4,7 @@ import { useSession } from "@/hooks/useSession";
 import { AiError, askSavoAi, type AiChatTurn } from "@/services/ai.service";
 
 /**
- * Conversation state for SAVO AI.
+ * Conversation state for Pith AI.
  *
  * Deliberately not React Query: this is a conversation, not a cache, and
  * refetching it on window focus would be wrong. It is also deliberately not in
@@ -104,7 +104,7 @@ export function useSavoAi(shopId: string | null): SavoAiState {
         setError(
           cause instanceof AiError
             ? cause
-            : new AiError("SAVO AI could not answer that. Try again.", "internal"),
+            : new AiError("Pith AI could not answer that. Try again.", "internal"),
         );
       } finally {
         setPending(false);

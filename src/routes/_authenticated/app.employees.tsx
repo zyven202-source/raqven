@@ -31,7 +31,7 @@ import { formatDateTime } from "@/lib/format";
 import { isAccessCodeTakenElsewhere, suggestAccessCode } from "@/services/shops.service";
 
 export const Route = createFileRoute("/_authenticated/app/employees")({
-  head: () => ({ meta: [{ title: "SAVO — Staff access" }] }),
+  head: () => ({ meta: [{ title: "Pith — Staff access" }] }),
   component: () => (
     <OwnerOnly title="Staff access">
       <EmployeesPage />
@@ -354,7 +354,7 @@ function EmployeesPage() {
         )}
 
         <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-          To bring someone in, send them the access code. They sign up in SAVO, choose &ldquo;I have
+          To bring someone in, send them the access code. They sign up in Pith, choose &ldquo;I have
           an access code&rdquo;, and they land straight in this shop.
         </p>
       </section>

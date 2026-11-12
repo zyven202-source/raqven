@@ -19,7 +19,7 @@ import { cn } from "@/lib/utils";
 import type { MovementType } from "@/types/savo";
 
 export const Route = createFileRoute("/_authenticated/app/stock")({
-  head: () => ({ meta: [{ title: "SAVO — Stock movements" }] }),
+  head: () => ({ meta: [{ title: "Pith — Stock movements" }] }),
   component: StockLedgerPage,
 });
 

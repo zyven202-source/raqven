@@ -15,8 +15,8 @@ export const Route = createFileRoute("/auth/reset-password")({
   }),
   head: () =>
     pageMeta({
-      title: "SAVO — Set a new password",
-      description: "Choose a new password for your SAVO account.",
+      title: "Pith — Set a new password",
+      description: "Choose a new password for your Pith account.",
       path: "/auth/reset-password",
       noindex: true,
     }),

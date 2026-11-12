@@ -52,7 +52,9 @@ export function AshnaWidget() {
     script.setAttribute("data-token", TOKEN);
     // SAVO's emerald rather than the vendor's default violet, so the launcher
     // reads as part of this product. Rounded to match the app's own controls.
-    script.setAttribute("data-icon-color", "#10B981");
+    // Pith's forest green rather than the vendor's default violet, so the
+    // launcher belongs to the product it sits in.
+    script.setAttribute("data-icon-color", "#123C2D");
     script.setAttribute("data-icon-shape", "rounded");
     document.body.appendChild(script);
   }, []);

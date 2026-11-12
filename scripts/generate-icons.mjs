@@ -1,62 +1,82 @@
 #!/usr/bin/env node
-// Render SAVO's raster icons from the brand SVG through headless Chromium.
+// Render Pith's raster icons from the brand geometry.
 //
 // The mark is a stroked path, not typography, so there is no font to wait for:
-// the generator loads the same composition AppIcon.tsx draws and screenshots
-// the SVG node with Playwright -- which returns a PNG buffer directly, so
-// there is no image code here at all beyond the ICO wrapper.
+// this composes the same SVG that `AppIcon.tsx` draws, from the same numbers in
+// `mark-geometry.ts`, and rasterises it with resvg — a Rust SVG renderer with a
+// prebuilt binary, so there is no browser download and no system library to
+// install. Re-run it after changing the geometry or the palette:
 //
-// Run after changing src/components/brand/AppIcon.tsx:
+//   bun scripts/generate-icons.mjs
 //
-//   cd /home/daytona/codebase && node scripts/generate-icons.mjs
-//
-// Playwright resolves from /tmp/pwtest's node_modules.
+// Outputs, all in `public/`:
+//   favicon.ico                16, 32 and 48 px, flat (no gloss — it is mud at 16)
+//   icon-192.png               192 px, full material (home screen)
+//   icon-512.png               512 px, full material (store listing, maskable)
+//   apple-touch-icon.png       180 px, full material on an opaque ground
 import { writeFileSync } from "node:fs";
 import { join } from "node:path";
 
-const { chromium } = await import(
-  process.env.PLAYWRIGHT_PATH || "/tmp/pwtest/node_modules/playwright/index.mjs"
-);
+import { Resvg } from "@resvg/resvg-js";
 
-// The same numbers the React AppIcon renders. The .ts extension is required
-// for Node's type stripping, and is how the previous generator did it too.
 const { BRAND, CONTAINER, MARK, MARK_PAINT, VIEW_BOX } =
   await import("../src/components/brand/mark-geometry.ts");
 
-// The same composition AppIcon.tsx draws, composed from the same data.
-function artSvg(size) {
+const OUT = join(import.meta.dirname, "..", "public");
+
+/** The tile plus the monogram, at one detail level. */
+function artSvg({ detail = true, opaque = false } = {}) {
   const rect = `x="0" y="0" width="${VIEW_BOX}" height="${VIEW_BOX}" rx="${CONTAINER.cornerRadius}"`;
+  const shell = detail
+    ? [
+        '<radialGradient id="shell" cx="0.33" cy="0.2" r="1.05">',
+        `<stop offset="0%" stop-color="${BRAND.glow}"/>`,
+        `<stop offset="42%" stop-color="${BRAND.ink}"/>`,
+        `<stop offset="82%" stop-color="${BRAND.deep}"/>`,
+        `<stop offset="100%" stop-color="${BRAND.night}"/>`,
+        "</radialGradient>",
+      ].join("")
+    : "";
   return [
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEW_BOX} ${VIEW_BOX}" width="${size}" height="${size}">`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${VIEW_BOX} ${VIEW_BOX}">`,
     "<defs>",
-    '<radialGradient id="shell" cx="0.33" cy="0.2" r="1.05">',
-    `<stop offset="0%" stop-color="${BRAND.glow}"/>`,
-    `<stop offset="38%" stop-color="${BRAND.ink}"/>`,
-    `<stop offset="78%" stop-color="${BRAND.deep}"/>`,
-    `<stop offset="100%" stop-color="${BRAND.night}"/>`,
-    "</radialGradient>",
-    '<linearGradient id="gloss" x1="12" y1="0" x2="12" y2="13">',
-    `<stop offset="0%" stop-color="${BRAND.white}" stop-opacity="0.26"/>`,
-    `<stop offset="100%" stop-color="${BRAND.white}" stop-opacity="0"/>`,
-    "</linearGradient>",
-    '<linearGradient id="rim" x1="2" y1="1.5" x2="21" y2="22">',
-    `<stop offset="0%" stop-color="${BRAND.mint}" stop-opacity="0.95"/>`,
-    `<stop offset="45%" stop-color="${BRAND.mint}" stop-opacity="0.12"/>`,
-    `<stop offset="100%" stop-color="${BRAND.white}" stop-opacity="0.22"/>`,
-    "</linearGradient>",
-    `<linearGradient id="letter" x1="${MARK_PAINT.x1}" y1="${MARK_PAINT.y1}" x2="${MARK_PAINT.x2}" y2="${MARK_PAINT.y2}">`,
+    shell,
+    '<linearGradient id="letter" x1="' +
+      MARK_PAINT.x1 +
+      '" y1="' +
+      MARK_PAINT.y1 +
+      '" x2="' +
+      MARK_PAINT.x2 +
+      '" y2="' +
+      MARK_PAINT.y2 +
+      '">',
     ...MARK_PAINT.stops.map((s) => `<stop offset="${s.offset}" stop-color="${s.color}"/>`),
     "</linearGradient>",
     "</defs>",
-    `<rect ${rect} fill="url(#shell)"/>`,
-    `<rect ${rect} fill="url(#gloss)"/>`,
-    `<rect ${rect} fill="none" stroke="url(#rim)" stroke-width="0.55"/>`,
-    `<path d="${MARK.path}" fill="none" stroke="url(#letter)" stroke-width="${MARK.stroke}" stroke-linecap="${MARK.linecap}"/>`,
+    // An opaque cream ground, for platforms that paste the icon onto their own
+    // surface (iOS masks the corners; Android masks the whole shape).
+    opaque ? `<rect x="0" y="0" width="${VIEW_BOX}" height="${VIEW_BOX}" fill="${BRAND.cream}"/>` : "",
+    `<rect ${rect} fill="${detail ? "url(#shell)" : BRAND.deep}"/>`,
+    detail
+      ? `<rect ${rect} fill="none" stroke="${BRAND.white}" stroke-opacity="0.14" stroke-width="0.55"/>`
+      : "",
+    `<path d="${MARK.path}" fill="none" stroke="${
+      detail ? "url(#letter)" : BRAND.mint
+    }" stroke-width="${MARK.stroke}" stroke-linecap="${MARK.linecap}"/>`,
     "</svg>",
   ].join("");
 }
 
-// A favicon.ico wrapping PNG frames (the format browsers accept).
+function renderPng(size, options) {
+  const svg = artSvg(options);
+  const resvg = new Resvg(svg, {
+    fitTo: { mode: "width", value: size },
+    background: "rgba(0,0,0,0)",
+  });
+  return Buffer.from(resvg.render().asPng());
+}
+
+/** A favicon.ico wrapping PNG frames — the format every current browser accepts. */
 function encodeIco(pngs) {
   const header = Buffer.alloc(6);
   header.writeUInt16LE(1, 2); // type: icon
@@ -79,41 +99,19 @@ function encodeIco(pngs) {
   return Buffer.concat([header, ...entries, ...frames]);
 }
 
-const outDir = join(process.cwd(), "public");
-const sizes = [16, 32, 48, 192, 512];
+const frames = [16, 32, 48].map((size) => ({ size, png: renderPng(size, { detail: false }) }));
+writeFileSync(join(OUT, "favicon.ico"), encodeIco(frames));
 
-const browser = await chromium.launch({
-  executablePath: process.env.CHROMIUM_PATH || undefined,
-});
-const page = await browser.newPage();
-
-// One page holds one SVG per size, stacked.
-const body = sizes.map((s) => artSvg(s)).join("");
-await page.setContent(
-  "<!doctype html><html><head>" +
-    "<style>html,body{margin:0;padding:0;background:transparent}svg{display:block}</style>" +
-    "</head><body>" +
-    body +
-    "</body></html>",
-  { waitUntil: "load" },
-);
-
-const svgs = page.locator("svg");
-const pngs = new Map();
-for (let i = 0; i < sizes.length; i += 1) {
-  const png = await svgs.nth(i).screenshot({ omitBackground: true });
-  pngs.set(sizes[i], png);
+const icons = [
+  { file: "icon-192.png", size: 192, options: { detail: true } },
+  { file: "icon-512.png", size: 512, options: { detail: true } },
+  { file: "apple-touch-icon.png", size: 180, options: { detail: true, opaque: true } },
+];
+for (const { file, size, options } of icons) {
+  writeFileSync(join(OUT, file), renderPng(size, options));
 }
-await browser.close();
 
-writeFileSync(join(outDir, "icon-512.png"), pngs.get(512));
-writeFileSync(join(outDir, "icon-192.png"), pngs.get(192));
-writeFileSync(
-  join(outDir, "favicon.ico"),
-  encodeIco([
-    { size: 16, png: pngs.get(16) },
-    { size: 32, png: pngs.get(32) },
-    { size: 48, png: pngs.get(48) },
-  ]),
+console.log(
+  `Pith icons written: favicon.ico (${frames.length} frames), ` +
+    icons.map((i) => `${i.file} @${i.size}`).join(", "),
 );
-console.log("icons written: favicon.ico (16/32/48), icon-192.png, icon-512.png");

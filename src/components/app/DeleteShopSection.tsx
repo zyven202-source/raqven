@@ -88,7 +88,7 @@ export function DeleteShopSection() {
       <NoticeState
         tone="danger"
         title="This deletes the shop and its books, not just the shop"
-        description="Every sale, payment, refund, debtor balance, product, stock movement, expense, staff membership and activity entry belonging to this shop is removed, and it cannot be undone or recovered. Your SAVO account is not deleted — you can open another shop straight away. Export anything you want to keep from Reports first; a report is not a backup."
+        description="Every sale, payment, refund, debtor balance, product, stock movement, expense, staff membership and activity entry belonging to this shop is removed, and it cannot be undone or recovered. Your Pith account is not deleted — you can open another shop straight away. Export anything you want to keep from Reports first; a report is not a backup."
       />
 
       {!open ? (
@@ -209,7 +209,7 @@ function Counts({
       ) : null}
 
       <p className="mt-2.5 text-xs leading-relaxed text-muted-foreground">
-        <span className="font-medium text-foreground">Kept:</span> your SAVO account, and a record
+        <span className="font-medium text-foreground">Kept:</span> your Pith account, and a record
         that this shop was deleted and how many records it held — so there is an answer if anyone
         asks what happened to them later.
         {dataRequestsRetained > 0

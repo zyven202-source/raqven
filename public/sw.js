@@ -1,7 +1,7 @@
 /**
- * SAVO's service worker.
+ * Pith's service worker.
  *
- * What it is for: speed and continuity — never authority. SAVO is an
+ * What it is for: speed and continuity — never authority. Pith is an
  * online-first app: every request tries the network first, and only a failed
  * attempt may touch the cache. The network is the source of truth for every
  * number a shop sees; a cached page must never be what a customer's till
