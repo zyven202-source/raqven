@@ -4,6 +4,7 @@ import {
   Activity,
   BarChart3,
   Boxes,
+  CreditCard,
   HandCoins,
   History,
   House,
@@ -60,6 +61,7 @@ type AppPath =
   | "/app/debtors"
   | "/app/employees"
   | "/app/settings"
+  | "/app/billing"
   | "/app/sync"
   | "/dashboard";
 
@@ -181,6 +183,12 @@ const OWNER_MORE: MoreGroup[] = [
     items: [
       { to: "/app/settings", hash: "shop", label: "Shop settings", icon: Store },
       {
+        to: "/app/billing",
+        label: "Plan and billing",
+        note: "Your Pith subscription and receipts",
+        icon: CreditCard,
+      },
+      {
         to: "/app/settings",
         hash: "receipts",
         label: "Receipt settings",
@@ -230,7 +238,15 @@ const STAFF_MORE: MoreGroup[] = [
   },
   {
     heading: "Shop",
-    items: [{ to: "/dashboard", label: "All my shops", icon: Store }],
+    items: [
+      { to: "/dashboard", label: "All my shops", icon: Store },
+      {
+        to: "/app/billing",
+        label: "Plan and billing",
+        note: "Your Pith subscription and receipts",
+        icon: CreditCard,
+      },
+    ],
   },
   {
     heading: "This device",
