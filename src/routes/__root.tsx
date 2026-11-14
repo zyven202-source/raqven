@@ -208,6 +208,25 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         type: "application/ld+json",
         children: JSON.stringify(siteJsonLd()),
       },
+      /*
+        Google Tag Manager, container GTM-KKFZMGQD. Declared on the root route
+        so it is written once into the head of every page — the landing page,
+        auth, legal and the whole signed-in app. Having it live here rather
+        than in `index.html` is what makes that true for client-side routes
+        too.
+
+        The loader is `async`, so it never blocks first paint; the inline
+        snippet creates `dataLayer` and the `gtag` stub immediately, which is
+        what queues events until the container arrives.
+      */
+      {
+        async: true,
+        src: "https://www.googletagmanager.com/gtm.js?id=GTM-KKFZMGQD",
+      },
+      {
+        children:
+          "window.dataLayer = window.dataLayer || []; function gtag(){dataLayer.push(arguments);} gtag('js', new Date());",
+      },
     ],
   }),
   shellComponent: RootShell,
