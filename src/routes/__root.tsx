@@ -10,7 +10,6 @@ import {
 } from "@tanstack/react-router";
 import { useEffect, type ReactNode } from "react";
 
-import { AshnaWidget } from "@/components/ai/AshnaWidget";
 import { OfflineBanner, UpdateBanner } from "@/components/app/ConnectivityBar";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
@@ -209,7 +208,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         children: JSON.stringify(siteJsonLd()),
       },
       /*
-        Google Tag Manager, container GTM-KKFZMGQD. Declared on the root route
+        Google Tag Manager, container GTM-TJMBKB86. Declared on the root route
         so it is written once into the head of every page — the landing page,
         auth, legal and the whole signed-in app. Having it live here rather
         than in `index.html` is what makes that true for client-side routes
@@ -221,7 +220,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       */
       {
         async: true,
-        src: "https://www.googletagmanager.com/gtm.js?id=GTM-KKFZMGQD",
+        src: "https://www.googletagmanager.com/gtm.js?id=GTM-TJMBKB86",
       },
       {
         children:
@@ -263,8 +262,6 @@ function RootComponent() {
       {/* Required: nested routes render here. Removing <Outlet /> breaks all child routes. */}
       <Outlet />
       <Toaster position="top-center" richColors />
-      {/* An additional assistant, mounted once for the whole product. */}
-      <AshnaWidget />
     </QueryClientProvider>
   );
 }

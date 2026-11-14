@@ -26,8 +26,13 @@ import {
 import { errorResponse, fail, HttpError, json, readJson, corsPreflight } from "./http.ts";
 import { knowledgeBlock, type KnowledgeEntry } from "./knowledge.ts";
 import { FOLLOWUP_SYSTEM, studioBrief, STUDIO_SYSTEM, systemPrompt } from "./prompts.ts";
-import { executeTool, periodRange, TOOL_DEFINITIONS, type ShopRole, type ToolContext } from "./tools.ts";
-import { ashnaCompletion, requireAshnaConfig } from "./ashna.ts";
+import {
+  executeTool,
+  periodRange,
+  TOOL_DEFINITIONS,
+  type ShopRole,
+  type ToolContext,
+} from "./tools.ts";
 
 const MAX_HISTORY_MESSAGES = 12;
 const MAX_MESSAGE_CHARS = 2000;
@@ -71,9 +76,7 @@ function serverClients(accessToken: string | null): {
 
   const user = createClient(url, anonKey, {
     auth: { persistSession: false, autoRefreshToken: false },
-    global: accessToken
-      ? { headers: { Authorization: `Bearer ${accessToken}` } }
-      : {},
+    global: accessToken ? { headers: { Authorization: `Bearer ${accessToken}` } } : {},
   });
 
   return { admin, user };
@@ -545,9 +548,11 @@ async function handleStatus(input: {
   const limits = quotaLimits();
   // The admin RPC is gated by the caller's own claims, which we already proved.
   const { data: usageReport } = await input.user.rpc("admin_ai_usage", { p_days: 1 });
-  const usage = usageReport as
-    | { total_requests?: number; total_tokens?: number; accounts_today?: number }
-    | null;
+  const usage = usageReport as {
+    total_requests?: number;
+    total_tokens?: number;
+    accounts_today?: number;
+  } | null;
 
   return json({
     provider: "groq",
@@ -564,117 +569,6 @@ async function handleStatus(input: {
       tokens: Number(usage?.total_tokens ?? 0),
       accounts: Number(usage?.accounts_today ?? 0),
     },
-  });
-}
-
-// ---------------------------------------------------------------------------
-// live (the Ashna agent, grounded in this shop's own records)
-// ---------------------------------------------------------------------------
-
-/**
- * The reads that make up the snapshot. Each one is an existing tool, so it runs
- * through the caller's own Supabase client and RLS applies exactly as it does
- * in the app — this path cannot widen access. Owner-only figures (costs, profit)
- * are attempted too; a refusal is recorded as unavailable, not as an error.
- */
-const LIVE_READS: Array<[string, Record<string, unknown>]> = [
-  ["get_shop_profile", {}],
-  ["get_sales_summary", { period: "today" }],
-  ["get_sales_summary", { period: "7d" }],
-  ["get_sales_summary", { period: "30d" }],
-  ["get_top_products", { period: "30d" }],
-  ["get_expenses_summary", { period: "30d" }],
-  ["get_low_stock", {}],
-  ["get_debtors", {}],
-  ["get_business_overview", {}],
-];
-
-async function handleLive(input: {
-  body: ChatBody;
-  admin: SupabaseClient;
-  user: SupabaseClient;
-  userId: string;
-  shop: ResolvedShop;
-}): Promise<Response> {
-  const config = requireAshnaConfig();
-  const { admin, user, userId, shop } = input;
-
-  if (!shop.shopId) {
-    return fail("forbidden", "Open a shop to ask about its figures.", 403);
-  }
-
-  const turns = parseTurns(input.body["messages"]);
-
-  // One count per question, sharing the same daily budget as the native chat.
-  const gate = await consumeQuota(admin, userId, { requests: 1, inputTokens: 0, outputTokens: 0 });
-  if (!gate.allowed) {
-    return fail(
-      "rate_limited",
-      `You have used SAVO AI ${gate.requests} times today (limit ${gate.request_limit}). It resets tomorrow.`,
-      429,
-    );
-  }
-
-  const context: ToolContext = {
-    supabase: user,
-    shopId: shop.shopId,
-    role: shop.role,
-    currency: shop.currency,
-    shopName: shop.shopName,
-  };
-
-  const facts: Record<string, unknown> = {};
-  const served: string[] = [];
-  for (const [name, args] of LIVE_READS) {
-    const key = args["period"] ? `${name}:${String(args["period"])}` : name;
-    try {
-      facts[key] = await executeTool(name, args, context);
-      if (!served.includes(name)) served.push(name);
-    } catch (error) {
-      facts[key] = {
-        unavailable:
-          error instanceof HttpError ? error.message : "That figure could not be read.",
-      };
-    }
-  }
-
-  // The snapshot is the agent's only source of figures. Bounded so a large shop
-  // cannot blow up the request; the tools already cap their own row counts.
-  const snapshot = JSON.stringify(facts).slice(0, 6000);
-
-  const system = [
-    `You are SAVO AI inside SAVO, a point-of-sale and record-keeping app for small shops in Kenya, speaking to ${shop.role === "owner" ? "the shop owner" : "shop staff"} of "${shop.shopName ?? "this shop"}".`,
-    `Currency: ${shop.currency}. Today in Nairobi: ${nairobiToday()}.`,
-    "The JSON below was read seconds ago from this shop's own records under the caller's access. It is the only permitted source of figures.",
-    "Answer using those figures only. Name the period you used. Never invent, round up, extrapolate or estimate a number. If something is missing or marked unavailable, say you cannot see it and point to the screen that shows it. Never mention this data block or that you were given data.",
-    `LIVE SHOP DATA (JSON):\n${snapshot}`,
-  ].join("\n\n");
-
-  const completion = await ashnaCompletion({
-    apiKey: config.apiKey,
-    agentId: config.agentId,
-    messages: [
-      { role: "system", content: system },
-      ...turns.map((turn) => ({ role: turn.role, content: turn.content })),
-    ],
-    maxTokens: 800,
-    temperature: 0.2,
-    timeoutMs: 40_000,
-  });
-
-  await consumeQuota(admin, userId, {
-    requests: 0,
-    inputTokens: completion.usage.input,
-    outputTokens: completion.usage.output,
-  });
-
-  return json({
-    reply:
-      completion.content ||
-      "I could not put that into words. Try asking a narrower question.",
-    tools: served,
-    model: completion.model,
-    usage: completion.usage,
   });
 }
 
@@ -712,17 +606,6 @@ Deno.serve(async (req: Request) => {
         body,
         admin: clients.admin,
         userId: user.id,
-      });
-    }
-
-    if (action === "live") {
-      const shop = await resolveShop(clients.user, user.id, body["shopId"]);
-      return await handleLive({
-        body,
-        admin: clients.admin,
-        user: clients.user,
-        userId: user.id,
-        shop,
       });
     }
 

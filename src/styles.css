@@ -653,13 +653,3 @@
   }
 }
 
-/*
-  The Ashna AI widget mounts itself as <ashna-agent-widget> with a closed shadow
-  root, so its internals are not ours to style. The one thing we must control is
-  whether it is on screen: on the till its fixed bottom-right bubble would sit on
-  top of "Take payment". `AshnaWidget` sets the attribute from the router, and
-  this hides the host — shadow content included — wherever it appears.
-*/
-html[data-ashna-hidden="true"] ashna-agent-widget {
-  display: none !important;
-}

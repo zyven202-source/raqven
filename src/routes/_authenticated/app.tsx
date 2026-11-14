@@ -4,6 +4,7 @@ import { Check, ChevronDown, ShieldAlert, Sparkles, Store } from "lucide-react";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
 
+import { SavoAiLauncher } from "@/components/ai/SavoAiLauncher";
 import { CreateShopDialog } from "@/components/app/CreateShopDialog";
 import { FloatingNav } from "@/components/app/FloatingNav";
 import { SwipeArea } from "@/components/app/SwipeArea";
@@ -113,12 +114,10 @@ function AppShell({
 
       <FloatingNav isOwner={role === "owner"} onSignOut={() => void handleSignOut()} />
 
-      {/*
-        One assistant, mounted once in the root layout: the Ashna agent that
-        carries SAVO's own instructions. The native mascot button used to sit
-        here as a second entry point; two bubbles in the same corner offering
-        the same thing is a choice the user should never have to make.
-      */}
+      {/* The assistant floats above the page and below every dialog. It is
+          SAVO AI on Groq, which reads this shop's records through the edge
+          function under the signed-in user's own RLS. */}
+      <SavoAiLauncher />
     </div>
   );
 }
@@ -227,9 +226,7 @@ function ShopBar({
                   >
                     <ShieldAlert className="size-4 shrink-0 text-muted-foreground" />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium">
-                        Platform console
-                      </span>
+                      <span className="block truncate text-sm font-medium">Platform console</span>
                       <span className="block text-xs text-muted-foreground">
                         Accounts, activity and errors across every shop
                       </span>
