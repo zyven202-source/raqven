@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { Link, createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { Check, Copy, KeyRound, Loader2, RefreshCw, UserPlus, X } from "lucide-react";
 import { toast } from "sonner";
@@ -27,6 +27,7 @@ import {
 } from "@/hooks/useShopAdmin";
 import { useActiveShop } from "@/hooks/useActiveShop";
 import { useSession } from "@/hooks/useSession";
+import { useSubscription } from "@/hooks/useSubscription";
 import { formatDateTime } from "@/lib/format";
 import { isAccessCodeTakenElsewhere, suggestAccessCode } from "@/services/shops.service";
 
@@ -50,6 +51,9 @@ function EmployeesPage() {
   const { activeShop } = useActiveShop();
   const shopId = activeShop?.id ?? "";
   const { user } = useSession();
+  // The database decides whether this account may add staff; this only
+  // decides whether to offer the button and the upgrade link.
+  const { accountPro, accessPending } = useSubscription();
 
   const shopQuery = useShopSettings(shopId);
   const membersQuery = useShopMembers(shopId);
@@ -162,6 +166,24 @@ function EmployeesPage() {
         subtitle="One code brings your staff in. Nobody needs a technical account id."
       />
 
+      {/* Staff accounts are the paid feature: the database refuses to mint a
+          new code without Pro, so the screen explains that before the button
+          rather than after a failed tap. Staff already here are unaffected. */}
+      {accessPending ? null : accountPro ? null : (
+        <section className="mb-4 rounded-xl border border-border bg-sunken p-4">
+          <p className="text-sm font-semibold">Staff accounts are part of Pith Pro</p>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            US$7 a month or US$80 a year adds unlimited staff, each with their own access code.
+            Everyone who already works here keeps their access either way.
+          </p>
+          <Button asChild size="sm" className="mt-3">
+            <Link to="/app/billing" search={{ shop: undefined }}>
+              See Pith Pro
+            </Link>
+          </Button>
+        </section>
+      )}
+
       {/* ---------------------------------------------------------- access code */}
       <section className="mb-8">
         <SectionLabel>Access code</SectionLabel>
@@ -231,18 +253,20 @@ function EmployeesPage() {
                 <p className="mt-0.5 text-xs text-muted-foreground">
                   Create a code, then your staff enter it when they sign up.
                 </p>
-                <Button
-                  className="mt-3 h-10"
-                  onClick={() => void createCode()}
-                  disabled={busy === "create"}
-                >
-                  {busy === "create" ? (
-                    <Loader2 className="size-4 animate-spin" />
-                  ) : (
-                    <KeyRound className="size-4" />
-                  )}
-                  Create a code
-                </Button>
+                {accountPro ? (
+                  <Button
+                    className="mt-3 h-10"
+                    onClick={() => void createCode()}
+                    disabled={busy === "create"}
+                  >
+                    {busy === "create" ? (
+                      <Loader2 className="size-4 animate-spin" />
+                    ) : (
+                      <KeyRound className="size-4" />
+                    )}
+                    Create a code
+                  </Button>
+                ) : null}
               </>
             )}
           </div>

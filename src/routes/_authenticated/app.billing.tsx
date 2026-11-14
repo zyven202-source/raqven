@@ -270,8 +270,10 @@ function BillingPage() {
           <span className="text-muted-foreground"> per year</span>
         </p>
         <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-          The yearly plan saves US${PRO_PLAN.yearlySavingUsd} against paying monthly for a year.
-          Your checkout shows the final amount in your own currency before you pay.
+          Pro adds staff accounts with their own access codes and keeps every one of your
+          shop&rsquo;s records available. The yearly plan saves US${PRO_PLAN.yearlySavingUsd}{" "}
+          against paying monthly for a year; your checkout shows the final amount in your own
+          currency.
         </p>
       </section>
 

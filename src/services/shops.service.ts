@@ -342,13 +342,37 @@ export async function isAccessCodeTakenElsewhere(code: string): Promise<boolean>
   return data === true;
 }
 
+/**
+ * The database refused to mint a staff code because the account is not Pro.
+ *
+ * A distinct type rather than a message match in the component: the screen has
+ * to offer an upgrade, not print a Postgres error, and the decision of what
+ * counts as "needs Pro" belongs with the call that can receive it.
+ */
+export class ProRequiredError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "ProRequiredError";
+  }
+}
+
 export async function createAccessCode(shopId: string, code: string): Promise<void> {
   const { error } = await supabase.rpc("create_employee_access_code", {
     p_shop_id: shopId,
     p_label: "Staff access code",
     p_code: code,
   });
-  if (error) throw error;
+  if (!error) return;
+
+  // The gate lives in the database — this only turns its refusal into
+  // something the screen can act on. Regenerating an existing code is never
+  // gated, so a free shop keeps the staff it already has.
+  if (/PITH_PRO_REQUIRED/i.test(error.message)) {
+    throw new ProRequiredError(
+      "Adding staff accounts is part of Pith Pro. Staff who already joined keep their access.",
+    );
+  }
+  throw error;
 }
 
 export async function regenerateAccessCode(shopId: string, code: string): Promise<void> {

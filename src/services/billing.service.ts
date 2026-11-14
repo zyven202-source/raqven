@@ -116,6 +116,25 @@ export function isBillingConfigured(): boolean {
   return readApiKey().length > 0;
 }
 
+/**
+ * Which app user id to bill.
+ *
+ * A signed-in account always wins, because an entitlement has to follow the
+ * person rather than the browser: buying on a laptop and then opening the till
+ * on a phone must show the same plan. RevenueCat's own
+ * `generateRevenueCatAnonymousAppUserId()` is the fallback for the case where
+ * there is no account yet — it is stable for this page load, persisted by the
+ * SDK, and identified as anonymous in the dashboard.
+ */
+let anonymousAppUserId: string | null = null;
+
+function resolveAppUserId(provided?: string): string {
+  const trimmed = (provided ?? "").trim();
+  if (trimmed) return trimmed;
+  anonymousAppUserId ??= Purchases.generateRevenueCatAnonymousAppUserId();
+  return anonymousAppUserId;
+}
+
 /** Which user this module configured the SDK for, so we can spot a switch. */
 let configuredFor: string | null = null;
 
@@ -177,8 +196,9 @@ function toSummaryPackage(pkg: Package): SubscriptionPackage {
  * on the current offering. Everything comes from RevenueCat on each call —
  * there is no local copy of "is this customer paying".
  */
-export async function fetchSubscription(appUserId: string): Promise<SubscriptionSummary> {
-  const purchases = sdk(appUserId);
+export async function fetchSubscription(appUserId?: string): Promise<SubscriptionSummary> {
+  const userId = resolveAppUserId(appUserId);
+  const purchases = sdk(userId);
 
   try {
     const [customerInfo, offerings] = await Promise.all([
@@ -188,7 +208,7 @@ export async function fetchSubscription(appUserId: string): Promise<Subscription
 
     // The SDK's identity is authoritative: if it disagrees with the signed-in
     // user, showing this plan would show somebody else's subscription.
-    if (customerInfo.originalAppUserId !== appUserId) {
+    if (customerInfo.originalAppUserId !== userId) {
       throw new BillingError(
         "This tab is linked to a different subscription account. Reload the page to use this one.",
         "identity_changed",
@@ -224,11 +244,11 @@ export async function fetchSubscription(appUserId: string): Promise<Subscription
 
 /** Buy one package. Opens RevenueCat's checkout as a full-screen overlay. */
 export async function purchasePackage(
-  appUserId: string,
+  appUserId: string | undefined,
   rcPackage: Package,
   htmlTarget?: HTMLElement,
 ): Promise<PurchaseResult> {
-  const purchases = sdk(appUserId);
+  const purchases = sdk(resolveAppUserId(appUserId));
   try {
     return await purchases.purchase({
       rcPackage,
@@ -245,10 +265,10 @@ export async function purchasePackage(
  * customer is back in the app (or has closed it).
  */
 export async function presentPaywall(
-  appUserId: string,
+  appUserId: string | undefined,
   htmlTarget?: HTMLElement,
 ): Promise<PurchaseResult> {
-  const purchases = sdk(appUserId);
+  const purchases = sdk(resolveAppUserId(appUserId));
   try {
     return await purchases.presentPaywall(htmlTarget ? { htmlTarget } : {});
   } catch (error) {
@@ -260,7 +280,7 @@ export async function presentPaywall(
  * Re-read customer info. On the web there is no "restore purchases" call: the
  * purchase is already tied to the app user id, so refreshing *is* the restore.
  */
-export async function refreshSubscription(appUserId: string): Promise<SubscriptionSummary> {
+export async function refreshSubscription(appUserId?: string): Promise<SubscriptionSummary> {
   return fetchSubscription(appUserId);
 }
 
@@ -281,24 +301,41 @@ export function isEntitledToPro(customerInfo: CustomerInfo): boolean {
  * as "not comped", which is the safe direction for a paid feature; the console
  * keeps the reason visible instead of silently paying for nothing.
  */
-export async function fetchComplimentaryAccess(): Promise<boolean> {
+export type AccountAccess = {
+  /** On the complimentary list: never billed. */
+  comped: boolean;
+  /** Pro by the database's own reckoning (gold, or an active entitlement). */
+  pro: boolean;
+};
+
+/**
+ * What this account is entitled to, answered by Postgres.
+ *
+ * `public.my_plan()` compares the caller's own verified JWT email against the
+ * complimentary list and checks the entitlement rows the RevenueCat webhook
+ * writes. The browser has no grant on either table, so this is the only read
+ * path — and the same function the database's own enforcement agrees with.
+ *
+ * On failure both flags are false: for a paid feature the safe direction is to
+ * deny, and the console keeps the reason visible.
+ */
+export async function fetchAccountAccess(): Promise<AccountAccess> {
   /**
    * `my_plan` was added by migration 20261114120000, after the generated
    * Supabase types in `src/integrations/supabase/` were last produced, so the
    * client does not know the name yet. The cast is the narrowest way to call it
-   * without regenerating (and churning) the whole types file for one function;
-   * regenerate the types and this cast can go.
+   * without regenerating (and churning) the whole types file for one function.
    */
   const rpc = supabase.rpc as unknown as (
     fn: string,
   ) => Promise<{ data: unknown; error: { message: string } | null }>;
   const { data, error } = await rpc("my_plan");
   if (error) {
-    console.warn("[billing] Could not read complimentary status:", error.message);
-    return false;
+    console.warn("[billing] Could not read the account's plan:", error.message);
+    return { comped: false, pro: false };
   }
-  const payload = data as { comped?: boolean } | null;
-  return payload?.comped === true;
+  const payload = data as { comped?: boolean; pro?: boolean } | null;
+  return { comped: payload?.comped === true, pro: payload?.pro === true };
 }
 
 function mapError(error: unknown): BillingError {
