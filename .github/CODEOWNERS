@@ -1,0 +1,28 @@
+# SAVO code ownership
+#
+# Every file in this repository is owned by the maintainer. Read together with
+# the `Protect SAVO code` ruleset (see docs/repository-protection.md), this is
+# what makes "nobody changes code without the owner" true rather than a promise:
+#
+#   * `CODEOWNERS` decides *who* must review a pull request that touches a path.
+#   * The ruleset decides that a pull request is the only way onto `main`.
+#
+# Neither is a courtesy. A review request that nobody can satisfy blocks the
+# merge, so keep this list to people who actually maintain the project.
+#
+# Syntax: <pattern> <owner>...   (later, more specific lines win)
+
+# Everything, by default.
+*                       @zyven202-source
+
+# The rules that protect the code are themselves code. Changing them changes the
+# guarantee, so they are called out separately to make such a pull request
+# obvious in review.
+/.github/               @zyven202-source
+/scripts/protect-repo.mjs @zyven202-source
+/docs/repository-protection.md @zyven202-source
+
+# Anything that can reach data or secrets deserves a slower read.
+/supabase/              @zyven202-source
+/src/services/          @zyven202-source
+/src/integrations/      @zyven202-source
