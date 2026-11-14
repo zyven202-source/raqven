@@ -12,7 +12,7 @@ import { SITE_URL } from "@/lib/seo";
  *
  * Value: Google's HTML-tag `content` token, provided by the site owner.
  */
-export const SEARCH_CONSOLE_VERIFICATION_TOKEN = "SixuvE-EGJeNyHq9UQyg4gh_BOQwX6zmyqIsiNzylmE";
+export const SEARCH_CONSOLE_VERIFICATION_TOKEN = "DK94bsBhDbnsFUdSbABs6PYu8WbLx_4oiYG6geoBfXU";
 
 /**
  * # Google Play: the data-deletion disclosure
