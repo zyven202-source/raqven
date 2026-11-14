@@ -9,6 +9,10 @@ import { HOME_HEADLINE, HOME_META, SITE_URL, webApplicationJsonLd } from "@/lib/
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [...HOME_META],
+    // The legal pages derive a canonical from `pageMeta`; the home page is the
+    // one URL a crawler is most likely to reach through a variant (trailing
+    // slash, campaign parameter, shared link), so it declares its own too.
+    links: [{ rel: "canonical", href: `${SITE_URL}/` }],
     /*
       Structured data is emitted from `head()` rather than from a `<script>`
       tag in the component, and it goes in `scripts` rather than `meta`.

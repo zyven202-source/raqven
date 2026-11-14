@@ -10,12 +10,17 @@
  * expressed as schema.org.
  *
  * **What is deliberately absent.** No `aggregateRating`, no `review`, no
- * `offers`, no `keywords` meta. The first three are priced claims: this product
- * has no published ratings and no billing integration, and inventing either is
- * both dishonest and something Google penalises. `keywords` has been ignored by
- * every engine that matters for two decades, so listing our own search terms
- * would only advertise what we hope to rank for. Every property below is a fact
- * about the application that can be demonstrated from the code.
+ * `offers`. Those are priced claims: this product has no published ratings and
+ * no billing integration, and inventing either is both dishonest and something
+ * Google penalises. Every property below is a fact about the application that
+ * can be demonstrated from the code.
+ *
+ * **On `keywords`.** Google has ignored the meta keyword tag for two decades
+ * and the page ranks on its title, description and body copy instead. It is
+ * still emitted because it is harmless, some smaller engines and site search
+ * tools do read it, and `KEYWORDS` is also the honest list of the phrases this
+ * page is actually written to answer — nothing here is a term the copy does not
+ * cover.
  */
 
 /** Absolute origin. Open Graph and JSON-LD both reject relative URLs. */
@@ -33,6 +38,31 @@ export const SITE_URL = "https://savo.freebuff.page";
 
 /** The one term a shop owner in Kenya would actually type to find this. */
 export const PRIMARY_KEYWORD = "Kenyan shop POS";
+
+/**
+ * The phrases the landing page is written to answer, in the words a shop owner
+ * actually uses. Ordered by intent: what the product is, then the jobs it does,
+ * then the hardware and payment habits around it. Every entry appears in the
+ * page's own copy, so this list describes the page rather than aspirational
+ * ranking targets.
+ */
+export const KEYWORDS = [
+  "Kenyan shop POS",
+  "shop POS Kenya",
+  "point of sale Kenya",
+  "duka POS system",
+  "stock book app",
+  "inventory app Kenya",
+  "M-Pesa POS",
+  "sales and stock records",
+  "debtors book Kenya",
+  "receipt app for shops",
+  "small business POS",
+  "SAVO POS",
+] as const;
+
+/** The `keywords` meta value, built from the one list above. */
+export const KEYWORDS_META = KEYWORDS.join(", ");
 
 export const SITE_NAME = "SAVO";
 
@@ -55,7 +85,7 @@ export const HOME_HEADLINE = "SAVO is the Kenyan shop POS that keeps every sale,
 /** The square app icon, which is the only large image the product ships. */
 export const OG_IMAGE_URL = `${SITE_URL}/icon-512.png`;
 export const OG_IMAGE_ALT =
-  "The SAVO app icon: the SAVO monogram with its gold fold, on a deep green tile.";
+  "The SAVO app icon: a mint receipt and the word savo on a shelf label, on a deep green tile.";
 
 /** Every meta descriptor the home page needs, in the order crawlers read them. */
 export const HOME_META = [
@@ -66,6 +96,7 @@ export const HOME_META = [
     content: "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1",
   },
   { name: "application-name", content: SITE_NAME },
+  { name: "keywords", content: KEYWORDS_META },
   { property: "og:site_name", content: SITE_NAME },
   { property: "og:title", content: SEO_TITLE },
   { property: "og:description", content: SEO_DESCRIPTION },
@@ -130,6 +161,7 @@ export function pageMeta({
     meta: [
       { title },
       { name: "description", content: description },
+      { name: "keywords", content: KEYWORDS_META },
       {
         name: "robots",
         content: noindex

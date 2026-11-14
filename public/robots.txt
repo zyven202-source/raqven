@@ -1,8 +1,22 @@
+# SAVO — https://savo.freebuff.page
+#
+# Public pages are open to every crawler. The signed-in application is not: it
+# redirects a crawler to the sign-in screen and carries `noindex`, so letting it
+# be crawled only fills Search Console with "page with redirect" noise. The
+# password-recovery pair is `noindex` for the same reason and is disallowed here
+# rather than listed in the sitemap.
+
 User-agent: Googlebot
 Allow: /
+Disallow: /app
+Disallow: /dashboard
+Disallow: /auth/forgot-password
+Disallow: /auth/reset-password
 
 User-agent: Bingbot
 Allow: /
+Disallow: /app
+Disallow: /dashboard
 
 User-agent: Twitterbot
 Allow: /
@@ -12,5 +26,9 @@ Allow: /
 
 User-agent: *
 Allow: /
+Disallow: /app
+Disallow: /dashboard
+Disallow: /auth/forgot-password
+Disallow: /auth/reset-password
 
 Sitemap: https://savo.freebuff.page/sitemap.xml
