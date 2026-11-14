@@ -1,0 +1,34 @@
+[
+  {
+    "question": "Is SAVO really free?",
+    "answer": "Yes. Every screen works on one free account: sales, stock, debtors, expenses, reports and staff access codes. There is no paid plan to upgrade to, no trial that runs out and no card details asked for."
+  },
+  {
+    "question": "What do I need to run it?",
+    "answer": "A phone, tablet or laptop with a browser — Android, iPhone or desktop. SAVO installs to the home screen so it opens like an app, and it shows a banner when the connection drops."
+  },
+  {
+    "question": "Which payments can I record?",
+    "answer": "Cash, M-Pesa, card and credit. A credit sale creates a debtor with a balance rather than a note in a book, so part payments and repayments update themselves."
+  },
+  {
+    "question": "How do my staff get access?",
+    "answer": "You create one staff access code in the app. Your staff sign up with it and land inside your shop — there are no accounts for you to set up. What an employee may see and do is enforced in the database, not just hidden on screen."
+  },
+  {
+    "question": "Can I run more than one shop?",
+    "answer": "Yes. One login can own or work in several shops, and you switch between them from the shop bar at the top of the app. Each shop keeps its own separate records."
+  },
+  {
+    "question": "Who else can see my shop's figures?",
+    "answer": "Only the people in that shop. Every record carries its shop and is readable only by that shop's members, enforced by row-level security in PostgreSQL — another shop cannot reach your numbers even by changing the request. SAVO shows no adverts and runs no tracking scripts of its own."
+  },
+  {
+    "question": "Does it print receipts?",
+    "answer": "Yes. A sale produces a receipt carrying your shop's name and logo, which you can print or share with the customer."
+  },
+  {
+    "question": "What is SAVO AI?",
+    "answer": "An assistant built into the app that reads your shop's own records — today's takings, low stock, who owes you — and answers questions about them. It runs under your account, so it can only see what you can see."
+  }
+]

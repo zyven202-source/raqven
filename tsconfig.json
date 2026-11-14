@@ -13,6 +13,9 @@
     "types": ["vite/client"],
 
     "moduleResolution": "Bundler",
+    // `src/lib/faq.json` is the shared source of the pricing page copy and its
+    // FAQPage markup, so the app imports JSON as data.
+    "resolveJsonModule": true,
     "allowImportingTsExtensions": true,
     "verbatimModuleSyntax": false,
     "noEmit": true,

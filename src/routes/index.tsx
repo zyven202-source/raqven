@@ -9,10 +9,6 @@ import { HOME_HEADLINE, HOME_META, SITE_URL, webApplicationJsonLd } from "@/lib/
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [...HOME_META],
-    // The legal pages derive a canonical from `pageMeta`; the home page is the
-    // one URL a crawler is most likely to reach through a variant (trailing
-    // slash, campaign parameter, shared link), so it declares its own too.
-    links: [{ rel: "canonical", href: `${SITE_URL}/` }],
     /*
       Structured data is emitted from `head()` rather than from a `<script>`
       tag in the component, and it goes in `scripts` rather than `meta`.
@@ -43,6 +39,9 @@ export const Route = createFileRoute("/")({
         children: JSON.stringify(webApplicationJsonLd()),
       },
     ],
+    // The home page is the URL a crawler is most likely to reach through a
+    // variant — a trailing slash, a campaign parameter, a shared link — so it
+    // names its own canonical rather than relying on the host to normalise.
     links: [{ rel: "canonical", href: `${SITE_URL}/` }],
   }),
   component: Landing,
@@ -68,6 +67,9 @@ function Landing() {
             <Logo />
           </Link>
           <div className="flex items-center gap-1">
+            <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex">
+              <Link to="/pricing">Pricing</Link>
+            </Button>
             <Button asChild variant="ghost" size="sm">
               <Link to="/auth/login">Sign in</Link>
             </Button>
@@ -220,7 +222,10 @@ function Landing() {
             non-essential tracking to consent to — the Privacy Policy says so
             in those words rather than leaving a reader to work it out.
           */}
-          <nav aria-label="Policies" className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+          <nav aria-label="Pages" className="mt-5 flex flex-wrap gap-x-6 gap-y-2 text-sm">
+            <Link to="/pricing" className="text-muted-foreground hover:text-ink hover:underline">
+              Pricing and features
+            </Link>
             <Link
               to="/legal/privacy"
               className="text-muted-foreground hover:text-ink hover:underline"

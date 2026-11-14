@@ -37,6 +37,7 @@ function fail(message) {
 
 /** Routes that build their head with `pageMeta()` and must ship their own. */
 const ROUTE_FILES = [
+  "src/routes/pricing.tsx",
   "src/routes/legal.privacy.tsx",
   "src/routes/legal.terms.tsx",
   "src/routes/legal.refunds.tsx",
@@ -184,6 +185,39 @@ for (const file of ROUTE_FILES) {
     `<link rel="canonical" href="${escapeHtml(url)}"/>`,
     `${pagePath} canonical`,
   );
+
+  // `/pricing` is the one public page with structured data of its own. Every
+  // clone starts as the home shell, which carries the landing page's
+  // `WebApplication` block — on this page that block would claim the pricing
+  // page *is* the app at the site root, and the page's own FAQ markup would
+  // never reach a crawler. So the block is replaced, from the same `faq.json`
+  // the page renders, and the result is checked below rather than trusted.
+  if (pagePath === "/pricing") {
+    const faq = JSON.parse(read("src/lib/faq.json"));
+    const faqSchema = {
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      mainEntity: faq.map((item) => ({
+        "@type": "Question",
+        name: item.question,
+        acceptedAnswer: { "@type": "Answer", text: item.answer },
+      })),
+    };
+    const json = JSON.stringify(faqSchema).replace(/</g, "\\u003c").replace(/&/g, "\\u0026");
+    html = replaceTag(
+      html,
+      /<script type="application\/ld\+json">\{"@context":"https:\/\/schema\.org","@type":"WebApplication"[\s\S]*?<\/script>/,
+      `<script type="application/ld+json">${json}</script>`,
+      `${pagePath} FAQPage`,
+    );
+
+    const schemas = html.match(/<script type="application\/ld\+json">/g)?.length ?? 0;
+    if (schemas !== 2) fail(`${pagePath}: shipped ${schemas} JSON-LD blocks, expected 2`);
+    if (!html.includes('"@type":"FAQPage"')) fail(`${pagePath}: FAQPage block was not written`);
+    if (html.includes('"@type":"WebApplication"')) {
+      fail(`${pagePath}: still carries the home page's WebApplication block`);
+    }
+  }
 
   // The served file has to agree with itself: one canonical, one og:url, both
   // this page's, and the title a reader sees.
