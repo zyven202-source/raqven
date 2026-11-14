@@ -31,14 +31,14 @@ import { methodLabel } from "@/services/transactions.service";
 import type { Debtor, PaymentMethod } from "@/types/savo";
 
 export const Route = createFileRoute("/_authenticated/app/debtors")({
-  head: () => ({ meta: [{ title: "Pith — Debtors" }] }),
+  head: () => ({ meta: [{ title: "SAVO — Debtors" }] }),
   component: DebtorsPage,
 });
 
 /**
  * Debtors are not customers. A person is on this screen because they took
  * goods on credit, and they leave it when the balance reaches zero. There is no
- * "add customer" anywhere in Pith.
+ * "add customer" anywhere in SAVO.
  */
 function DebtorsPage() {
   const { activeShop } = useActiveShop();
@@ -73,13 +73,13 @@ function DebtorsPage() {
       {/*
         A debtor record is personal data about a real person, and this screen is
         the shop&rsquo;s own notice of what it is holding and why. The shop — not
-        Pith — is the party that decided to collect it, so this is the shop
-        explaining itself to its own customer, not a consent box Pith could
+        SAVO — is the party that decided to collect it, so this is the shop
+        explaining itself to its own customer, not a consent box SAVO could
         collect on someone else's behalf.
       */}
       <p className="mb-4 text-xs leading-relaxed text-muted-foreground">
         A name and phone number on this screen is {activeShop?.name ?? "your shop"}&rsquo;s record
-        of who owes money. Everyone in the shop can see it, nothing is sent to Pith&rsquo;s servers
+        of who owes money. Everyone in the shop can see it, nothing is sent to SAVO&rsquo;s servers
         beyond this shop&rsquo;s own database, and it stays until you delete the record.
       </p>
 

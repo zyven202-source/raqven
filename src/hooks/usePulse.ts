@@ -1,5 +1,5 @@
 /**
- * Pith Pulse — the data hook.
+ * SAVO Pulse — the data hook.
  *
  * One place that owns: which windows are selected, which queries serve them,
  * how obsolete work is cancelled, and where the pure engine runs. The rules

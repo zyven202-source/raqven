@@ -1,9 +1,9 @@
 /**
- * Pith Pulse — "Understand your shop. Know your next move."
+ * SAVO Pulse — "Understand your shop. Know your next move."
  *
  * The owner's business-intelligence screen. Every figure on it comes from the
  * shop's own recorded rows, read through the same owner-only `shop_report`
- * function and the same row-level security as the rest of Pith — the database
+ * function and the same row-level security as the rest of SAVO — the database
  * refuses an employee here, it is not merely a hidden tab.
  *
  * The screen's contract with the shopkeeper:
@@ -65,9 +65,9 @@ import type {
 } from "@/lib/pulse/types";
 
 export const Route = createFileRoute("/_authenticated/app/pulse")({
-  head: () => ({ meta: [{ title: "Pith — Pulse" }] }),
+  head: () => ({ meta: [{ title: "SAVO — Pulse" }] }),
   component: () => (
-    <OwnerOnly title="Pith Pulse">
+    <OwnerOnly title="SAVO Pulse">
       <PulsePage />
     </OwnerOnly>
   ),
@@ -170,7 +170,7 @@ function PulsePage() {
   return (
     <PageContainer>
       <header className="mb-1">
-        <PageHeader title="Pith Pulse" subtitle="Understand your shop. Know your next move." />
+        <PageHeader title="SAVO Pulse" subtitle="Understand your shop. Know your next move." />
       </header>
 
       {/* ------------------------------------------------------- freshness */}
@@ -571,7 +571,7 @@ function SalesSection({
         <SectionLabel>Sales intelligence</SectionLabel>
         <EmptyState
           title="No recorded sales in this window"
-          description="Pick a longer period, or ring up a sale — Pulse reads what Pith records and never fills the gaps with guesses."
+          description="Pick a longer period, or ring up a sale — Pulse reads what SAVO records and never fills the gaps with guesses."
         />
       </section>
     );
@@ -780,7 +780,7 @@ function RadarSection({ forecasts }: { forecasts: ForecastRow[] }) {
 
           <p className="text-xs leading-relaxed text-muted-foreground">
             Estimates use the last 14 days of recorded sales and assume {COVER_DAYS} days of cover
-            for a suggested order. No supplier lead time is configured in Pith, so none is assumed —
+            for a suggested order. No supplier lead time is configured in SAVO, so none is assumed —
             and nothing is reordered automatically. Review the quantity before receiving stock.
           </p>
         </>

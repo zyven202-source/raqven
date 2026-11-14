@@ -63,7 +63,7 @@ async function probeNetwork(): Promise<boolean> {
 /**
  * Probe-confirmed connectivity on its own, with no service-worker or sync
  * side effects — for screens that only need to know whether the figures on
- * screen can still be refreshed (Pith Pulse labels its numbers live or
+ * screen can still be refreshed (SAVO Pulse labels its numbers live or
  * stale-with-timestamp accordingly).
  *
  * Deliberately separate from `useServiceWorker`: importing that hook to read

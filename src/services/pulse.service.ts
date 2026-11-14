@@ -1,8 +1,8 @@
 /**
- * Pith Pulse — data access.
+ * SAVO Pulse — data access.
  *
  * Every read here is scoped to one shop and rides the same row-level security
- * as the rest of Pith: the queries name `shop_id` so PostgREST has an index to
+ * as the rest of SAVO: the queries name `shop_id` so PostgREST has an index to
  * use, but the database is what refuses a shop the signed-in member does not
  * belong to. The headline aggregates reuse `shop_report` — the owner-only
  * function the Reports screen already uses — so Pulse and Reports cannot

@@ -75,7 +75,7 @@ export function csvText(value: unknown): string {
 /**
  * A money or quantity value: two decimal places, no separators, never quoted.
  *
- * Two places because every currency Pith deals in has two. Non-finite input
+ * Two places because every currency SAVO deals in has two. Non-finite input
  * becomes an empty cell rather than `NaN`, which a spreadsheet would show as
  * text and quietly sort to the end of a column.
  */

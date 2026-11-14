@@ -28,7 +28,7 @@ import { kindLabel } from "@/services/transactions.service";
 import type { Product } from "@/types/savo";
 
 export const Route = createFileRoute("/_authenticated/app/overview")({
-  head: () => ({ meta: [{ title: "Pith — Dashboard" }] }),
+  head: () => ({ meta: [{ title: "SAVO — Dashboard" }] }),
   component: () => (
     <OwnerOnly title="Today">
       <OverviewPage />
@@ -374,7 +374,7 @@ function OverviewPage() {
             <Activity className="size-5" />
           </span>
           <span className="min-w-0 flex-1">
-            <span className="block text-sm font-semibold">Pith Pulse</span>
+            <span className="block text-sm font-semibold">SAVO Pulse</span>
             <span className="block text-xs leading-snug text-muted-foreground">
               Understand your shop. Know your next move.
             </span>

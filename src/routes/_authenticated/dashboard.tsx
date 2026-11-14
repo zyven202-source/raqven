@@ -18,7 +18,7 @@ import { STORAGE_BUCKETS } from "@/types/savo";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "Pith — Your shops" },
+      { title: "SAVO — Your shops" },
       { name: "description", content: "Open a shop to manage its sales, stock and numbers." },
     ],
   }),

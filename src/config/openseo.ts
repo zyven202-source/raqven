@@ -1,5 +1,5 @@
 /**
- * OpenSEO integration configuration for Pith.
+ * OpenSEO integration configuration for SAVO.
  *
  * OpenSEO is wired as a long-lived MCP client that connects to the hosted
  * OpenSEO endpoint at https://app.openseo.so. This module lives in the

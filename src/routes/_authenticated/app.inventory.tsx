@@ -54,14 +54,14 @@ import { formatMoney } from "@/lib/format";
 import { STORAGE_BUCKETS, type Product } from "@/types/savo";
 
 export const Route = createFileRoute("/_authenticated/app/inventory")({
-  // `q` is the deep-link prefill: Pith Pulse's restock actions open this
+  // `q` is the deep-link prefill: SAVO Pulse's restock actions open this
   // screen already searching for the product they named. Typing in the box
   // does NOT write it back to the URL — this is a one-way inbound link, not
   // history spam.
   validateSearch: (search: Record<string, unknown>): { q?: string | undefined } => ({
     q: typeof search["q"] === "string" ? search["q"] : undefined,
   }),
-  head: () => ({ meta: [{ title: "Pith — Inventory" }] }),
+  head: () => ({ meta: [{ title: "SAVO — Inventory" }] }),
   component: InventoryPage,
 });
 

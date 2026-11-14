@@ -1,10 +1,10 @@
 /**
- * Pith Pulse — period math and metric aggregation.
+ * SAVO Pulse — period math and metric aggregation.
  *
  * Definitions, stated once, so every screen that quotes a number agrees:
  *
  *   Gross sales        `sales.total_amount` summed over the window. This is
- *                      Pith's established figure — the same sum `shop_report`
+ *                      SAVO's established figure — the same sum `shop_report`
  *                      returns and the Reports screen shows as "takings".
  *   Net sales          Gross sales less refunds recorded (not rejected) in
  *                      the window. Discounts are already inside

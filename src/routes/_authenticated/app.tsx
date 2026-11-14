@@ -115,7 +115,7 @@ function AppShell({
 
       {/*
         One assistant, mounted once in the root layout: the Ashna agent that
-        carries Pith's own instructions. The native mascot button used to sit
+        carries SAVO's own instructions. The native mascot button used to sit
         here as a second entry point; two bubbles in the same corner offering
         the same thing is a choice the user should never have to make.
       */}
@@ -244,7 +244,7 @@ function ShopBar({
                   >
                     <Sparkles className="size-4 shrink-0 text-muted-foreground" />
                     <span className="min-w-0 flex-1">
-                      <span className="block truncate text-sm font-medium">Pith AI</span>
+                      <span className="block truncate text-sm font-medium">SAVO AI</span>
                       <span className="block text-xs text-muted-foreground">
                         Provider status, usage and approved help text
                       </span>

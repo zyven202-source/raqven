@@ -36,7 +36,7 @@ export function LegalPage({
     <div className="flex min-h-dvh flex-col bg-background/30">
       <header className="border-b border-border">
         <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-5 py-3.5">
-          <Link to="/" aria-label="Pith home">
+          <Link to="/" aria-label="SAVO home">
             <Logo />
           </Link>
           <Link to="/auth/signup" className="text-sm font-medium text-ink hover:underline">
@@ -63,7 +63,7 @@ export function LegalPage({
                 Some details below are still marked{" "}
                 <span className="font-medium text-caution">&ldquo;not yet set&rdquo;</span>. They
                 are placeholders, not real values, and they must be filled in before this page is
-                published as Pith&rsquo;s policy. See{" "}
+                published as SAVO&rsquo;s policy. See{" "}
                 <LegalAnchor href="/legal/terms#not-legal-advice">what that means</LegalAnchor>.
               </p>
             </div>

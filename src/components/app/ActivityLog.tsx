@@ -179,7 +179,7 @@ function describeAction(action: string): string {
  * the honest label is "a member who has since left", not a stale name.
  */
 function actorLabel(actorId: string | null, names: Map<string, string> | undefined): string {
-  if (!actorId) return "By a member who has since left Pith";
+  if (!actorId) return "By a member who has since left SAVO";
   const name = names?.get(actorId);
   return name ? `By ${name}` : "By a team member who has since left the shop";
 }

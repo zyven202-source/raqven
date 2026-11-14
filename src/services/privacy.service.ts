@@ -8,7 +8,7 @@
  *
  * Three things are deliberately absent:
  *
- *  * **No cookie or tracking consent.** Pith runs no analytics, no pixels and
+ *  * **No cookie or tracking consent.** SAVO runs no analytics, no pixels and
  *    no behavioural SDK (§4 of the readiness pass). A consent toggle for
  *    technology that does not exist is theatre. The only consent recorded is
  *    the terms/privacy acceptance at sign-up and an optional product-updates
@@ -158,7 +158,7 @@ export interface PersonalDataExport {
 }
 
 /**
- * Builds the complete copy of what Pith holds about the signed-in person.
+ * Builds the complete copy of what SAVO holds about the signed-in person.
  *
  * Scope: the account, its profile, the shops it belongs to, its memberships,
  * its consent history and its own requests. It deliberately does **not** dump
@@ -253,7 +253,7 @@ function assemble(
     consent,
     data_requests: requests,
     not_included: [
-      "Your password. It is hashed by the authentication service and is never readable by Pith.",
+      "Your password. It is hashed by the authentication service and is never readable by SAVO.",
       "The sales, stock, expense and debtor records of the shops you belong to. Those are the shop's business records, not your personal data — the shop's owner exports them as CSV from the Reports screen.",
       "Files uploaded to a shop (logos, product images, expense receipts). Those belong to the shop.",
       "Records of shops you were removed from. You no longer have access to them.",

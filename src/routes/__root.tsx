@@ -68,7 +68,7 @@ function NotFoundComponent() {
           </Button>
           {signedIn ? (
             <Button asChild variant="outline" className="h-11 px-5">
-              <Link to="/">Pith home</Link>
+              <Link to="/">SAVO home</Link>
             </Button>
           ) : null}
         </div>

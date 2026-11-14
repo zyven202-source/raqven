@@ -1,5 +1,5 @@
 /**
- * Pith's local database — IndexedDB, one versioned schema.
+ * SAVO's local database — IndexedDB, one versioned schema.
  *
  * This is durable storage for records the server has not acknowledged yet and
  * for the catalogue the till needs to keep selling when the network is gone.

@@ -32,9 +32,9 @@ const _playAnchorCheck: typeof ACCOUNT_DELETION_URL extends `${string}#delete-my
 export const Route = createFileRoute("/legal/privacy")({
   head: () =>
     pageMeta({
-      title: "Pith — Privacy policy",
+      title: "SAVO — Privacy policy",
       description:
-        "What Pith collects, why, who else can see it, how long it is kept, and how to get a copy of it or ask for it to be removed.",
+        "What SAVO collects, why, who else can see it, how long it is kept, and how to get a copy of it or ask for it to be removed.",
       path: "/legal/privacy",
     }),
   component: PrivacyPage,
@@ -44,7 +44,7 @@ function PrivacyPage() {
   return (
     <LegalPage
       title="Privacy policy"
-      intro="This says what Pith actually does with information — not what a policy template says it could do. It is written for a shopkeeper, not a lawyer. If a sentence here is unclear to you, that is a defect in this page; please tell us."
+      intro="This says what SAVO actually does with information — not what a policy template says it could do. It is written for a shopkeeper, not a lawyer. If a sentence here is unclear to you, that is a defect in this page; please tell us."
     >
       {/* ------------------------------------------------- delete my account */}
       {/*
@@ -56,7 +56,7 @@ function PrivacyPage() {
       */}
       <LegalSection id="delete-my-account" title="Delete my account">
         <p>
-          This page is the account-deletion link Pith publishes. You have two ways to have your
+          This page is the account-deletion link SAVO publishes. You have two ways to have your
           account deleted, and they remove the same data:
         </p>
         <ol>
@@ -90,7 +90,7 @@ function PrivacyPage() {
       {/* ------------------------------------------------------- the basics */}
       <LegalSection id="who-we-are" title="Who is publishing this">
         <p>
-          This policy covers the Pith point-of-sale and stock-keeping application, and the websites
+          This policy covers the SAVO point-of-sale and stock-keeping application, and the websites
           at <a href={SITE_URL}>{SITE_URL}</a> and its subpages.
         </p>
         <p>The business behind it is:</p>
@@ -137,16 +137,16 @@ function PrivacyPage() {
       </LegalSection>
 
       {/* -------------------------------------------------------------- what */}
-      <LegalSection id="what-we-collect" title="What Pith collects">
+      <LegalSection id="what-we-collect" title="What SAVO collects">
         <p>
-          Pith is a till and a stock book. Almost everything it holds is a business record, and most
+          SAVO is a till and a stock book. Almost everything it holds is a business record, and most
           of it is about a shop rather than about a person. Personal information enters the system
           in a small number of places. The table below is the complete list — not an example.
         </p>
         <div className="mt-4 overflow-x-auto">
           <table className="w-full border-collapse text-left text-[0.875rem]">
             <caption className="sr-only">
-              Every category of personal information Pith collects, why, who can see it, and how
+              Every category of personal information SAVO collects, why, who can see it, and how
               long it is kept.
             </caption>
             <thead>
@@ -180,10 +180,10 @@ function PrivacyPage() {
           </table>
         </div>
 
-        <LegalSubhead title="What Pith deliberately does not collect">
+        <LegalSubhead title="What SAVO deliberately does not collect">
           <p>
             Data you are not asked for is data that cannot leak, cannot be subpoenaed by accident,
-            and cannot be misused. Pith is built so that most of the following is simply true:
+            and cannot be misused. SAVO is built so that most of the following is simply true:
           </p>
           <ul>
             {NOT_COLLECTED.map((item) => (
@@ -191,7 +191,7 @@ function PrivacyPage() {
             ))}
           </ul>
           <p>
-            <strong>On children&rsquo;s data:</strong> Pith is built for people running shops, and
+            <strong>On children&rsquo;s data:</strong> SAVO is built for people running shops, and
             it has no feature that needs a date of birth, an age, or anything about a minor. It does
             not ask for one. If a future version introduces a feature involving children, that
             version will get its own privacy review before it ships, and this policy will be updated
@@ -203,13 +203,13 @@ function PrivacyPage() {
       {/* ------------------------------------------------------------- why */}
       <LegalSection id="why" title="Why it is collected, and what it is used for">
         <p>
-          Pith processes information for the following purposes and no others. There is no secondary
+          SAVO processes information for the following purposes and no others. There is no secondary
           use, no product improvement mining and no profiling.
         </p>
         <ul>
           <li>
             <strong>To let you sign in.</strong> Your email address and password are checked by the
-            authentication service on every request. Your password is never readable by Pith.
+            authentication service on every request. Your password is never readable by SAVO.
           </li>
           <li>
             <strong>To keep one shop separate from another.</strong> Your membership is checked in
@@ -235,7 +235,7 @@ function PrivacyPage() {
           </li>
         </ul>
         <p>
-          Pith does not sell personal information, does not rent mailing lists, and does not share
+          SAVO does not sell personal information, does not rent mailing lists, and does not share
           your shop&rsquo;s data with advertisers. There are no advertising networks in this
           product.
         </p>
@@ -244,7 +244,7 @@ function PrivacyPage() {
       {/* ------------------------------------------------------------- who */}
       <LegalSection id="processors" title="Who else processes it">
         <p>
-          Pith does not try to run a database, an authentication service, a font server and a web
+          SAVO does not try to run a database, an authentication service, a font server and a web
           host in-house. Three outside services touch the system, and this is the complete list:
         </p>
         <ul>
@@ -264,12 +264,12 @@ function PrivacyPage() {
       {/* ------------------------------------------------------------ cookies */}
       <LegalSection id="cookies" title="Cookies and tracking">
         <p>
-          <strong>Pith sets no tracking cookies and runs no analytics.</strong> There is no Google
+          <strong>SAVO sets no tracking cookies and runs no analytics.</strong> There is no Google
           Analytics, no Facebook pixel, no advertising tag, no session recorder, no A/B testing tool
           and no fingerprinting. Nothing about your visit is measured and sold.
         </p>
         <p>
-          The only browser storage Pith uses is your sign-in session, kept in this browser&rsquo;s
+          The only browser storage SAVO uses is your sign-in session, kept in this browser&rsquo;s
           local storage so you stay signed in, and your choice of shop. It contains no identifier
           that follows you to another site, and it is not readable by any other website.
         </p>
@@ -347,7 +347,7 @@ function PrivacyPage() {
             them.
           </li>
           <li>
-            <strong>Passwords are hashed</strong> by the authentication service. Pith cannot read
+            <strong>Passwords are hashed</strong> by the authentication service. SAVO cannot read
             them and cannot recover them for you.
           </li>
           <li>
@@ -409,7 +409,7 @@ function PrivacyPage() {
           </li>
         </ul>
         <p>
-          You do not need to give a reason, and Pith will not ask you for one. Requests are handled
+          You do not need to give a reason, and SAVO will not ask you for one. Requests are handled
           free of charge. Under Kenyan law a data controller has statutory deadlines for responding;
           the exact deadline, and the escalation route to the Office of the Data Protection
           Commissioner, should be confirmed by a qualified Kenyan lawyer before launch and are
@@ -422,7 +422,7 @@ function PrivacyPage() {
         <p>
           Some records cannot be deleted on request, because deleting them would either destroy
           somebody&rsquo;s accounting record or remove the evidence that a person agreed to
-          something. Pith says which, rather than quietly keeping everything.
+          something. SAVO says which, rather than quietly keeping everything.
         </p>
         <ul>
           <li>
@@ -444,7 +444,7 @@ function PrivacyPage() {
           </li>
           <li>
             <strong>Debtor balances.</strong> If you owe a shop money, the balance is the
-            shop&rsquo;s claim. The shop, not Pith, decides when to write it off.
+            shop&rsquo;s claim. The shop, not SAVO, decides when to write it off.
           </li>
         </ul>
         <p>
@@ -463,7 +463,7 @@ function PrivacyPage() {
           answer to &ldquo;which version did I agree to?&rdquo;.
         </p>
         <p>
-          If a change affects what Pith does with your data, the change does not take effect
+          If a change affects what SAVO does with your data, the change does not take effect
           silently: it is announced in the app before it applies, and material changes require you
           to accept them before you continue using the affected feature.
         </p>
@@ -476,12 +476,12 @@ function PrivacyPage() {
       {/* --------------------------------------------------------- children */}
       <LegalSection id="children" title="Children">
         <p>
-          Pith is not directed at children and is not intended for use by anyone under the age of
+          SAVO is not directed at children and is not intended for use by anyone under the age of
           18. The product does not ask for an age, a date of birth, or any information that would
           identify a minor, and it has no feature that requires one.
         </p>
         <p>
-          A shopkeeper in Kenya may of course employ or trade with people of any age, and Pith will
+          A shopkeeper in Kenya may of course employ or trade with people of any age, and SAVO will
           record what a real business transaction requires. It will not build a feature that
           collects children&rsquo;s data as a matter of course. Any future feature that would
           require collecting a child&rsquo;s information is subject to a dedicated privacy and legal
@@ -490,8 +490,8 @@ function PrivacyPage() {
       </LegalSection>
 
       {/* ------------------------------------------------------------ email */}
-      <LegalSection id="email" title="Email Pith sends you">
-        <p>Pith separates two kinds of message, and does not confuse them.</p>
+      <LegalSection id="email" title="Email SAVO sends you">
+        <p>SAVO separates two kinds of message, and does not confuse them.</p>
         <ul>
           <li>
             <strong>Account and service messages</strong> — a password reset, a confirmation, a
@@ -500,13 +500,13 @@ function PrivacyPage() {
             to get into your own shop.
           </li>
           <li>
-            <strong>Product updates</strong> — news about Pith itself. These are optional, switched
+            <strong>Product updates</strong> — news about SAVO itself. These are optional, switched
             off unless you turn them on, and every one of them carries a one-tap unsubscribe.
             Turning them off does not affect the app.
           </li>
         </ul>
         <p>
-          Pith does not sell, rent or share an email address, and does not send a shop&rsquo;s
+          SAVO does not sell, rent or share an email address, and does not send a shop&rsquo;s
           customer or debtor data to anyone.
         </p>
       </LegalSection>

@@ -1,7 +1,5 @@
 import { cn } from "@/lib/utils";
 
-import { MARK, VIEW_BOX } from "./mark-geometry";
-
 interface LogoProps {
   className?: string;
   tone?: "ink" | "light";
@@ -12,17 +10,15 @@ interface LogoProps {
 }
 
 /**
- * Pith's logo: the P monogram beside the wordmark.
+ * SAVO's logo: the app icon beside the wordmark.
  *
- * `tone` selects the ground, because a forest mark on a dark bar is invisible
- * and a mint mark on a white receipt is a smudge:
+ * The icon is the identity — the green tile, the mint receipt and the SAVO
+ * shelf label — so the logo uses the very image the browser installs, rather
+ * than a second, hand-drawn version of it. `compact` returns the tile alone,
+ * which is what dense chrome (the shop bar, the till header) should use: a
+ * wordmark at 36 pixels is noise.
  *
- *   - `ink` — the plain mark in forest green, for paper grounds.
- *   - `light` — the reversed mark in mint, with a cream wordmark, for forest
- *     grounds such as the install screen or a dark receipt header.
- *
- * `compact` returns the monogram alone, which is what dense chrome (the shop
- * bar, the till header) should use — a wordmark at 40 pixels is noise.
+ * `tone` only decides the wordmark colour, for a light or a forest ground.
  */
 export function Logo({
   className,
@@ -35,32 +31,10 @@ export function Logo({
 
   const tile = (
     <span
-      className={cn(
-        "grid shrink-0 place-items-center rounded-xl",
-        markSize,
-        reversed ? "bg-ink-deep text-mint" : "bg-mint text-ink",
-      )}
+      className={cn("grid shrink-0 place-items-center overflow-hidden rounded-xl", markSize)}
       aria-hidden
     >
-      <svg
-        viewBox={`0 0 ${VIEW_BOX} ${VIEW_BOX}`}
-        className="size-full"
-        fill="none"
-        xmlns="http://www.w3.org/2000/svg"
-      >
-        {/*
-          The mark is drawn in the tile's text colour, one ink and no gradient.
-          The full app icon can afford a lit tile; at 36 pixels beside a
-          wordmark a highlight is only a muddy edge, and mint-on-mint would not
-          read at all.
-        */}
-        <path
-          d={MARK.path}
-          stroke="currentColor"
-          strokeWidth={MARK.stroke}
-          strokeLinecap={MARK.linecap}
-        />
-      </svg>
+      <img src="/icon-192.png" alt="" className="size-full object-cover" draggable={false} />
     </span>
   );
 
@@ -76,7 +50,7 @@ export function Logo({
             reversed ? "text-cream" : "text-ink",
           )}
         >
-          Pith
+          SAVO
         </span>
         {showTagline ? (
           <span
@@ -85,7 +59,7 @@ export function Logo({
               reversed ? "text-mint/85" : "text-muted-foreground",
             )}
           >
-            Run. Track. Grow.
+            Every sale. Every stock. Every number.
           </span>
         ) : null}
       </span>

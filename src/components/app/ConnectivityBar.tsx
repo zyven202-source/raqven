@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 /**
  * Two slivers of truth, one place.
  *
- * `OfflineBanner` — the network is gone. Pith is online-first: pages you
+ * `OfflineBanner` — the network is gone. SAVO is online-first: pages you
  * have already opened may still render, but reads and writes that need
  * Supabase will fail until it returns, and pretending otherwise would be a
  * lie with a ledger's worth of damage. Rendered only while the offline state

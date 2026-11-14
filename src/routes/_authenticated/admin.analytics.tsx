@@ -31,7 +31,7 @@ import {
 } from "@/services/analytics.service";
 
 export const Route = createFileRoute("/_authenticated/admin/analytics")({
-  head: () => ({ meta: [{ title: "Pith — Platform console" }] }),
+  head: () => ({ meta: [{ title: "SAVO — Platform console" }] }),
   component: AdminAnalyticsPage,
 });
 
@@ -516,7 +516,7 @@ function ActivityTab({ range }: { range: { from: string; to: string } }) {
             body={
               search
                 ? "No activity matches that search in this range."
-                : "The stream fills as people use Pith. Screens and real actions are recorded as they happen."
+                : "The stream fills as people use SAVO. Screens and real actions are recorded as they happen."
             }
           />
         </div>

@@ -32,7 +32,7 @@ import { BUSINESS_TYPES } from "@/services/shops.service";
 import { STORAGE_BUCKETS } from "@/types/savo";
 
 export const Route = createFileRoute("/_authenticated/app/settings")({
-  head: () => ({ meta: [{ title: "Pith — Settings" }] }),
+  head: () => ({ meta: [{ title: "SAVO — Settings" }] }),
   component: () => (
     <OwnerOnly title="Settings">
       <SettingsPage />

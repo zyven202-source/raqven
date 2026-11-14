@@ -1,5 +1,5 @@
 /**
- * Pith Pulse — the restock radar.
+ * SAVO Pulse — the restock radar.
  *
  * A deliberately plain, explainable baseline. There is no machine learning
  * here and the screen never claims any: the estimate is the recorded units
@@ -21,7 +21,7 @@
  *   Suggested quantity   Enough to cover `COVER_DAYS` of demand on top of what
  *                        is on the shelf, floored at the product's own
  *                        configured reorder threshold. No supplier lead time
- *                        is invented: none is configured in Pith, so none is
+ *                        is invented: none is configured in SAVO, so none is
  *                        assumed. The cover target is a stated constant and
  *                        the screen says so.
  *   Never automatic      Nothing here writes stock. The action opens the

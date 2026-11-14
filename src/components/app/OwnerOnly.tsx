@@ -24,7 +24,7 @@ export function OwnerOnly({ title, children }: { title: string; children: ReactN
           <NoticeState
             icon={<Lock className="size-4" aria-hidden />}
             title="Owners only"
-            description="Ask the shop owner if you need this. Pith keeps these settings with the owner so they cannot be changed from the counter."
+            description="Ask the shop owner if you need this. SAVO keeps these settings with the owner so they cannot be changed from the counter."
           />
         </div>
       </PageContainer>

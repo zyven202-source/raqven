@@ -21,5 +21,5 @@ export function isBrowserStorageAvailable(): boolean {
 }
 
 export const STORAGE_BLOCKED_MESSAGE =
-  "This browser is blocking website storage, so Pith cannot keep you signed in. " +
-  "Open Pith in a normal browser tab (not inside an embedded preview) and sign in again.";
+  "This browser is blocking website storage, so SAVO cannot keep you signed in. " +
+  "Open SAVO in a normal browser tab (not inside an embedded preview) and sign in again.";

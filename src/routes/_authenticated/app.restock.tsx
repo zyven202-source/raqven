@@ -24,7 +24,7 @@ import { formatMoney } from "@/lib/format";
 import type { Product } from "@/types/savo";
 
 export const Route = createFileRoute("/_authenticated/app/restock")({
-  head: () => ({ meta: [{ title: "Pith — Receive stock" }] }),
+  head: () => ({ meta: [{ title: "SAVO — Receive stock" }] }),
   component: RestockPage,
 });
 

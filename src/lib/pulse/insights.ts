@@ -1,5 +1,5 @@
 /**
- * Pith Pulse — the insight engine.
+ * SAVO Pulse — the insight engine.
  *
  * Deterministic by construction: every insight is a named rule over figures
  * already computed from the shop's own rows. There is no randomness, no model

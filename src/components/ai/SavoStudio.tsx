@@ -13,7 +13,7 @@ import {
 } from "@/services/ai.service";
 
 /**
- * Pith Studio — the advertising writer.
+ * SAVO Studio — the advertising writer.
  *
  * The model is given a brief and returns structured JSON (script, scenes,
  * captions, prompts). Everything is editable through another brief, and every
@@ -70,7 +70,7 @@ const FEATURES: Option[] = [
   { value: "Receipts", label: "Receipts" },
   { value: "Refunds", label: "Refunds" },
   { value: "Reports", label: "Reports" },
-  { value: "Pith Pulse", label: "Pith Pulse" },
+  { value: "SAVO Pulse", label: "SAVO Pulse" },
   { value: "Employee access", label: "Employee access" },
   { value: "Multiple shops", label: "Multiple shops" },
   { value: "Offline selling", label: "Offline selling" },
@@ -102,7 +102,7 @@ const inputClass =
 
 function draftToMarkdown(draft: AiStudioDraft): string {
   const lines: string[] = [];
-  lines.push(`# ${draft.title || "Pith Studio draft"}`);
+  lines.push(`# ${draft.title || "SAVO Studio draft"}`);
   lines.push("");
   if (draft.format) lines.push(`**Format:** ${draft.format}`);
   lines.push("");
@@ -148,7 +148,7 @@ function draftToMarkdown(draft: AiStudioDraft): string {
     lines.push("");
   }
   lines.push("---");
-  lines.push("Written with Pith Studio. Claims are limited to Pith's real features.");
+  lines.push("Written with SAVO Studio. Claims are limited to SAVO's real features.");
   return lines.join("\n");
 }
 
@@ -175,7 +175,7 @@ function slug(value: string): string {
 }
 
 export function SavoStudio({ isOwner, shopId }: { isOwner: boolean; shopId: string | null }) {
-  const [goal, setGoal] = useState("Get more shop owners to try Pith");
+  const [goal, setGoal] = useState("Get more shop owners to try SAVO");
   const [audience, setAudience] = useState("Kenyan shop owners running one or two shops");
   const [platform, setPlatform] = useState(PLATFORMS[0]?.value ?? "Instagram Reels");
   const [format, setFormat] = useState(FORMATS[0]?.value ?? "Short video script");
@@ -238,7 +238,7 @@ export function SavoStudio({ isOwner, shopId }: { isOwner: boolean; shopId: stri
   return (
     <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain px-3.5 py-3">
       <p className="text-xs leading-relaxed text-muted-foreground">
-        Write an advert, caption or video script for Pith. Studio only claims features Pith really
+        Write an advert, caption or video script for SAVO. Studio only claims features SAVO really
         has — it will not invent statistics, testimonials or discounts.
       </p>
 
@@ -506,7 +506,7 @@ export function SavoStudio({ isOwner, shopId }: { isOwner: boolean; shopId: stri
                 variant="outline"
                 size="sm"
                 onClick={() =>
-                  download("savo-ai-mascot.svg", mascotSvgMarkup("idle", "Pith AI mascot"), "image/svg+xml")
+                  download("savo-ai-mascot.svg", mascotSvgMarkup("idle", "SAVO AI mascot"), "image/svg+xml")
                 }
               >
                 <Download /> SVG
@@ -523,7 +523,7 @@ export function SavoStudio({ isOwner, shopId }: { isOwner: boolean; shopId: stri
       <p className="mt-3 text-[11px] leading-relaxed text-muted-foreground">
         {shopId && isOwner
           ? "Studio is separate from your shop's figures — nothing from your records is sent with a brief."
-          : "Studio writes advertising copy for Pith. It does not read or change shop records."}
+          : "Studio writes advertising copy for SAVO. It does not read or change shop records."}
       </p>
     </div>
   );

@@ -11,7 +11,7 @@ import { useSession } from "@/hooks/useSession";
 import { useMyShops } from "@/hooks/useShops";
 
 export const Route = createFileRoute("/_authenticated/onboarding")({
-  head: () => ({ meta: [{ title: "Pith — Set up" }] }),
+  head: () => ({ meta: [{ title: "SAVO — Set up" }] }),
   component: OnboardingPage,
 });
 
@@ -62,7 +62,7 @@ function OnboardingPage() {
       </header>
 
       <PageContainer className="flex-1 pb-16 pt-4">
-        <h1 className="text-[1.5rem] leading-tight">How will you use Pith?</h1>
+        <h1 className="text-[1.5rem] leading-tight">How will you use SAVO?</h1>
         <p className="mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
           This decides what you set up next. You can always add the other one later.
         </p>

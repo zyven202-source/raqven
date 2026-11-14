@@ -1,5 +1,5 @@
 /**
- * Pith's brand data, in one place.
+ * SAVO's brand data, in one place.
  *
  * The identity is a drawn monogram, not a typeset letter: one continuous
  * stroke that forms a P — a straight stem and a single round bowl — with the
@@ -26,7 +26,7 @@ export const CONTAINER = {
 
 /**
  * The brand colours, by name, for anything that cannot read CSS variables.
- * The palette is Pith's: forest green, deep green, soft mint, warm cream.
+ * The palette is SAVO's: forest green, deep green, soft mint, warm cream.
  */
 export const BRAND = {
   /** Deep forest — the darkest ground. #09291F */
@@ -84,10 +84,14 @@ export const MARK_PAINT = {
  * browser and in a receipt file printed from a phone with no network.
  */
 export const MARK = {
-  /** The path of the mark, in viewBox units. */
-  path: "M8.1 20.2V4.1h4.4c4.05 0 6.9 1.85 6.9 4.4s-2.85 4.4-6.9 4.4H8.1",
+  /**
+   * A receipt, drawn as one stroked path on the 24-unit grid: the paper, its
+   * torn lower edge, and three ruled lines. It is what the product is — a
+   * record of a sale — and it prints in one ink on a thermal receipt.
+   */
+  path: "M6.5 3.2h11v16.6l-2.2-1.5-2.2 1.5-2.2-1.5-2.2 1.5L6.5 19.8z M9.4 8.2h5.2 M9.4 11.4h5.2 M9.4 14.6h3.4",
   /** Stroke width in viewBox units. */
-  stroke: 3.1,
-  /** Flat terminals: the slant comes from the tangent, not from a font. */
-  linecap: "butt" as const,
+  stroke: 1.5,
+  /** Rounded terminals: a printed mark, not a typeface. */
+  linecap: "round" as const,
 } as const;

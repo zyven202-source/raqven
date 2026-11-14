@@ -1,7 +1,7 @@
 /**
  * A UUID for an operation id.
  *
- * `crypto.randomUUID()` is the right tool and is what runs everywhere Pith
+ * `crypto.randomUUID()` is the right tool and is what runs everywhere SAVO
  * targets (secure context: HTTPS, localhost, the installed PWA). The fallback
  * exists only so a non-secure origin does not throw mid-checkout — it draws
  * from `crypto.getRandomValues`, never `Math.random`, because this value is a

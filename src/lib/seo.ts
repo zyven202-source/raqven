@@ -34,28 +34,28 @@ export const SITE_URL = "https://savo.freebuff.page";
 /** The one term a shop owner in Kenya would actually type to find this. */
 export const PRIMARY_KEYWORD = "Kenyan shop POS";
 
-export const SITE_NAME = "Pith";
+export const SITE_NAME = "SAVO";
 
-export const SITE_TAGLINE = "Run. Track. Grow.";
+export const SITE_TAGLINE = "Every sale. Every stock. Every number.";
 
 /** 51 characters — inside the ~60 a search result will show in full. */
-export const SEO_TITLE = "Pith — Kenyan Shop POS with Stock, Debtors & M-Pesa";
+export const SEO_TITLE = "SAVO — Kenyan Shop POS with Stock, Debtors & M-Pesa";
 
 /** 147 characters — inside the ~150 a search result will show before truncating. */
 export const SEO_DESCRIPTION =
-  "Pith is the Kenyan shop POS and stock book: record sales, take M-Pesa, track stock, " +
+  "SAVO is the Kenyan shop POS and stock book: record sales, take M-Pesa, track stock, " +
   "chase debtors and read profit from the counter or the back office.";
 
 /**
  * The home page's `<h1>`: the primary keyword, phrased as a sentence rather
  * than stuffed into one. A heading exists to be read first and indexed second.
  */
-export const HOME_HEADLINE = "Pith is the Kenyan shop POS that keeps every sale, stock and number.";
+export const HOME_HEADLINE = "SAVO is the Kenyan shop POS that keeps every sale, stock and number.";
 
 /** The square app icon, which is the only large image the product ships. */
 export const OG_IMAGE_URL = `${SITE_URL}/icon-512.png`;
 export const OG_IMAGE_ALT =
-  "The Pith app icon: the Pith monogram with its gold fold, on a deep green tile.";
+  "The SAVO app icon: the SAVO monogram with its gold fold, on a deep green tile.";
 
 /** Every meta descriptor the home page needs, in the order crawlers read them. */
 export const HOME_META = [
@@ -92,7 +92,7 @@ export const HOME_META = [
  *
  * **Why this exists.** Every route used to write its own `meta` array, and the
  * only place `og:url` was declared was the root head — with the home page's URL
- * hard-coded. So `/legal/privacy` rendered "Pith — Privacy policy" as its
+ * hard-coded. So `/legal/privacy` rendered "SAVO — Privacy policy" as its
  * `<title>` and, one line below it, an `og:url` and `og:title` claiming to be
  * the home page. A crawler reads both; a chat app unfurls the second. The fix
  * is not to remember the extra tags on each page, it is to make one function

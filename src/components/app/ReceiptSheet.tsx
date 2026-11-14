@@ -315,7 +315,7 @@ export function ReceiptSheet({
               <p className="text-center text-neutral-600">
                 {payload.settings?.footer_text || "Asante kwa biashara!"}
               </p>
-              <p className="text-center text-neutral-600">Powered by Pith</p>
+              <p className="text-center text-neutral-600">Powered by SAVO</p>
             </div>
 
             {/* ----------------------------------------------------- actions */}

@@ -30,7 +30,7 @@ import {
 } from "@/services/ai.service";
 
 /**
- * Platform console → Pith AI.
+ * Platform console → SAVO AI.
  *
  * Every figure on this page is returned by the `savo-ai` function or by an admin
  * RPC that re-checks `app.platform_admins` itself. Nothing is estimated, and no
@@ -43,7 +43,7 @@ import {
  */
 
 export const Route = createFileRoute("/_authenticated/admin/ai")({
-  head: () => ({ meta: [{ title: "Pith — AI console" }] }),
+  head: () => ({ meta: [{ title: "SAVO — AI console" }] }),
   component: AdminAiPage,
 });
 
@@ -51,7 +51,7 @@ const TEMPLATES: { name: string; brief: string }[] = [
   {
     name: "Reel: know your day",
     brief:
-      "30-second Reel for Instagram. Goal: show a shop owner that Pith already knows what sold today. Audience: owners with one shop and a paper book. Feature: reports. Tone: warm, plain English. No statistics.",
+      "30-second Reel for Instagram. Goal: show a shop owner that SAVO already knows what sold today. Audience: owners with one shop and a paper book. Feature: reports. Tone: warm, plain English. No statistics.",
   },
   {
     name: "WhatsApp Status: stock-out",
@@ -118,7 +118,7 @@ function AiHeader() {
         <Logo compact />
         <div className="min-w-0 flex-1">
           <p className="eyebrow">Platform</p>
-          <h1 className="truncate text-[1.0625rem] leading-tight">Pith AI</h1>
+          <h1 className="truncate text-[1.0625rem] leading-tight">SAVO AI</h1>
         </div>
         <Button asChild variant="ghost" className="h-9 gap-1.5 px-2.5 text-sm">
           <Link to="/admin/analytics">
@@ -229,7 +229,7 @@ function StatusPanel({ status, onRefresh, refreshing }: {
 function FeatureList() {
   const features = [
     { name: "Assistant chat", on: true, note: "Read-only tools, shop-scoped" },
-    { name: "Pith Studio", on: true, note: "Scripts, captions, prompts" },
+    { name: "SAVO Studio", on: true, note: "Scripts, captions, prompts" },
     { name: "Shop data tools", on: true, note: "Owner and employee, per RLS" },
     { name: "Image generation", on: false, note: "No provider connected" },
     { name: "Voice generation", on: false, note: "No provider connected" },
@@ -442,7 +442,7 @@ function MascotPanel() {
         size="sm"
         className="mt-3"
         onClick={() => {
-          const blob = new Blob([mascotSvgMarkup("idle", "Pith AI mascot")], {
+          const blob = new Blob([mascotSvgMarkup("idle", "SAVO AI mascot")], {
             type: "image/svg+xml",
           });
           const url = URL.createObjectURL(blob);
@@ -541,7 +541,7 @@ function Console() {
               A question is sent to Groq for processing. Shop figures are read live under the
               caller&apos;s own access and are not stored by the assistant.
             </li>
-            <li>Pith keeps a daily request and token counter per account — no message content.</li>
+            <li>SAVO keeps a daily request and token counter per account — no message content.</li>
             <li>Nothing is used to train an external model.</li>
             <li>The assistant is read-only: it cannot change prices, stock, balances or permissions.</li>
           </ul>

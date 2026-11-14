@@ -131,7 +131,7 @@ for (const required of [
 ]) {
   check(`the head declares ${required}`, keys.includes(required));
 }
-check("the brand is declared once, not invented per route", SITE_NAME === "Pith");
+check("the brand is declared once, not invented per route", SITE_NAME === "SAVO");
 const absoluteValues = HOME_META.filter(
   (descriptor) =>
     descriptor.property === "og:url" ||

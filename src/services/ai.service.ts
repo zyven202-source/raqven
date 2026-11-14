@@ -1,5 +1,5 @@
 /**
- * Pith AI data access.
+ * SAVO AI data access.
  *
  * The browser never talks to Groq. It calls one Supabase Edge Function
  * (`savo-ai`), which verifies the caller's access token, resolves the active
@@ -88,10 +88,10 @@ async function describeFailure(error: unknown): Promise<AiError> {
   }
 
   if (error instanceof Error && /fetch|network|load failed/i.test(error.message)) {
-    return new AiError("Pith AI could not be reached. Check your connection.", "network");
+    return new AiError("SAVO AI could not be reached. Check your connection.", "network");
   }
 
-  return new AiError("Pith AI could not answer that. Try again.", "internal");
+  return new AiError("SAVO AI could not answer that. Try again.", "internal");
 }
 
 async function invoke<T>(body: Record<string, unknown>): Promise<T> {

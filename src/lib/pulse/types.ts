@@ -1,5 +1,5 @@
 /**
- * Pith Pulse — shared shapes.
+ * SAVO Pulse — shared shapes.
  *
  * Every type here describes something computed from the shop's own recorded
  * rows. Nothing in Pulse is generated, scored or guessed: the engine is a set
@@ -162,7 +162,7 @@ export interface Insight {
   evidence: { label: string; value: string }[];
   /** When this insight was calculated. */
   computedAtIso: string;
-  /** An optional next step, always leading into an existing Pith workflow. */
+  /** An optional next step, always leading into an existing SAVO workflow. */
   action?: {
     label: string;
     to: "/app/inventory" | "/app/restock" | "/app/debtors" | "/app/expenses";

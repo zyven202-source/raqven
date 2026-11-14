@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * Pith design system (see :root below for the palette).
+ * SAVO design system (see :root below for the palette).
  *
  * Principles this file encodes:
  *   1. Structure is drawn with hairlines and rows, not with stacked rounded
@@ -118,7 +118,7 @@
 }
 
 /* ---------------------------------------------------------------------------
- * Pith design system.
+ * SAVO design system.
  *
  * A light, paper-like product: a warm cream page, white surfaces drawn with
  * hairlines, forest green only where something is brand-owned or positive.

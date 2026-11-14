@@ -1,7 +1,7 @@
 /**
  * The transaction ledger.
  *
- * Pith keeps money and stock in separate, purpose-built tables — that is what
+ * SAVO keeps money and stock in separate, purpose-built tables — that is what
  * makes the balances verifiable. The ledger is a read model over them: one row
  * per business event, newest first, each one traceable back to the row that
  * produced it.

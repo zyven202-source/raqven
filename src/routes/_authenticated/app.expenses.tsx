@@ -35,7 +35,7 @@ import { PAYMENT_METHODS } from "@/services/shops.service";
 import type { PaymentMethod } from "@/types/savo";
 
 export const Route = createFileRoute("/_authenticated/app/expenses")({
-  head: () => ({ meta: [{ title: "Pith — Expenses" }] }),
+  head: () => ({ meta: [{ title: "SAVO — Expenses" }] }),
   component: ExpensesPage,
 });
 

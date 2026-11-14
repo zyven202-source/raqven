@@ -26,7 +26,6 @@ import { Route as LegalTermsRouteImport } from './routes/legal.terms'
 import { Route as AuthenticatedAdminAiRouteImport } from './routes/_authenticated/admin.ai'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
-import { Route as AuthenticatedAppBillingRouteImport } from './routes/_authenticated/app.billing'
 import { Route as AuthenticatedAppDebtorsRouteImport } from './routes/_authenticated/app.debtors'
 import { Route as AuthenticatedAppEmployeesRouteImport } from './routes/_authenticated/app.employees'
 import { Route as AuthenticatedAppExpensesRouteImport } from './routes/_authenticated/app.expenses'
@@ -126,11 +125,6 @@ const AuthenticatedAppIndexRoute = AuthenticatedAppIndexRouteImport.update({
   path: '/',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
-const AuthenticatedAppBillingRoute = AuthenticatedAppBillingRouteImport.update({
-  id: '/billing',
-  path: '/billing',
-  getParentRoute: () => AuthenticatedAppRoute,
-} as any)
 const AuthenticatedAppDebtorsRoute = AuthenticatedAppDebtorsRouteImport.update({
   id: '/debtors',
   path: '/debtors',
@@ -219,7 +213,6 @@ export interface FileRoutesByFullPath {
   '/legal/terms': typeof LegalTermsRoute
   '/admin/ai': typeof AuthenticatedAdminAiRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
-  '/app/billing': typeof AuthenticatedAppBillingRoute
   '/app/debtors': typeof AuthenticatedAppDebtorsRoute
   '/app/employees': typeof AuthenticatedAppEmployeesRoute
   '/app/expenses': typeof AuthenticatedAppExpensesRoute
@@ -250,7 +243,6 @@ export interface FileRoutesByTo {
   '/legal/terms': typeof LegalTermsRoute
   '/admin/ai': typeof AuthenticatedAdminAiRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
-  '/app/billing': typeof AuthenticatedAppBillingRoute
   '/app/debtors': typeof AuthenticatedAppDebtorsRoute
   '/app/employees': typeof AuthenticatedAppEmployeesRoute
   '/app/expenses': typeof AuthenticatedAppExpensesRoute
@@ -284,7 +276,6 @@ export interface FileRoutesById {
   '/legal/terms': typeof LegalTermsRoute
   '/_authenticated/admin/ai': typeof AuthenticatedAdminAiRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
-  '/_authenticated/app/billing': typeof AuthenticatedAppBillingRoute
   '/_authenticated/app/debtors': typeof AuthenticatedAppDebtorsRoute
   '/_authenticated/app/employees': typeof AuthenticatedAppEmployeesRoute
   '/_authenticated/app/expenses': typeof AuthenticatedAppExpensesRoute
@@ -318,7 +309,6 @@ export interface FileRouteTypes {
     | '/legal/terms'
     | '/admin/ai'
     | '/admin/analytics'
-    | '/app/billing'
     | '/app/debtors'
     | '/app/employees'
     | '/app/expenses'
@@ -349,7 +339,6 @@ export interface FileRouteTypes {
     | '/legal/terms'
     | '/admin/ai'
     | '/admin/analytics'
-    | '/app/billing'
     | '/app/debtors'
     | '/app/employees'
     | '/app/expenses'
@@ -382,7 +371,6 @@ export interface FileRouteTypes {
     | '/legal/terms'
     | '/_authenticated/admin/ai'
     | '/_authenticated/admin/analytics'
-    | '/_authenticated/app/billing'
     | '/_authenticated/app/debtors'
     | '/_authenticated/app/employees'
     | '/_authenticated/app/expenses'
@@ -527,13 +515,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppIndexRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
-    '/_authenticated/app/billing': {
-      id: '/_authenticated/app/billing'
-      path: '/billing'
-      fullPath: '/app/billing'
-      preLoaderRoute: typeof AuthenticatedAppBillingRouteImport
-      parentRoute: typeof AuthenticatedAppRoute
-    }
     '/_authenticated/app/debtors': {
       id: '/_authenticated/app/debtors'
       path: '/debtors'
@@ -629,7 +610,6 @@ declare module '@tanstack/react-router' {
 }
 
 interface AuthenticatedAppRouteChildren {
-  AuthenticatedAppBillingRoute: typeof AuthenticatedAppBillingRoute
   AuthenticatedAppDebtorsRoute: typeof AuthenticatedAppDebtorsRoute
   AuthenticatedAppEmployeesRoute: typeof AuthenticatedAppEmployeesRoute
   AuthenticatedAppExpensesRoute: typeof AuthenticatedAppExpensesRoute
@@ -647,7 +627,6 @@ interface AuthenticatedAppRouteChildren {
 }
 
 const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
-  AuthenticatedAppBillingRoute: AuthenticatedAppBillingRoute,
   AuthenticatedAppDebtorsRoute: AuthenticatedAppDebtorsRoute,
   AuthenticatedAppEmployeesRoute: AuthenticatedAppEmployeesRoute,
   AuthenticatedAppExpensesRoute: AuthenticatedAppExpensesRoute,

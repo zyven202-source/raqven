@@ -14,8 +14,8 @@ import { AuthHeading, AuthSwitchLink, SubmitButton } from "./-auth-parts";
 export const Route = createFileRoute("/auth/login")({
   head: () =>
     pageMeta({
-      title: "Pith — Sign in",
-      description: "Sign in to Pith to manage your shop's sales, stock and daily numbers.",
+      title: "SAVO — Sign in",
+      description: "Sign in to SAVO to manage your shop's sales, stock and daily numbers.",
       path: "/auth/login",
     }),
   component: LoginPage,
@@ -123,7 +123,7 @@ function LoginPage() {
         ) : null}
       </form>
 
-      <AuthSwitchLink leading="New to Pith?" to="/auth/signup" linkLabel="Create an account" />
+      <AuthSwitchLink leading="New to SAVO?" to="/auth/signup" linkLabel="Create an account" />
     </>
   );
 }

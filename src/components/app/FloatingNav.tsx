@@ -4,7 +4,6 @@ import {
   Activity,
   BarChart3,
   Boxes,
-  CreditCard,
   HandCoins,
   History,
   House,
@@ -61,7 +60,6 @@ type AppPath =
   | "/app/debtors"
   | "/app/employees"
   | "/app/settings"
-  | "/app/billing"
   | "/app/sync"
   | "/dashboard";
 
@@ -157,7 +155,7 @@ const OWNER_MORE: MoreGroup[] = [
     items: [
       {
         to: "/app/pulse",
-        label: "Pith Pulse",
+        label: "SAVO Pulse",
         note: "Understand your shop. Know your next move.",
         icon: Activity,
         ownerOnly: true,
@@ -182,12 +180,6 @@ const OWNER_MORE: MoreGroup[] = [
     heading: "Settings",
     items: [
       { to: "/app/settings", hash: "shop", label: "Shop settings", icon: Store },
-      {
-        to: "/app/billing",
-        label: "Plan and billing",
-        note: "Your Pith subscription and receipts",
-        icon: CreditCard,
-      },
       {
         to: "/app/settings",
         hash: "receipts",
@@ -240,12 +232,6 @@ const STAFF_MORE: MoreGroup[] = [
     heading: "Shop",
     items: [
       { to: "/dashboard", label: "All my shops", icon: Store },
-      {
-        to: "/app/billing",
-        label: "Plan and billing",
-        note: "Your Pith subscription and receipts",
-        icon: CreditCard,
-      },
     ],
   },
   {
