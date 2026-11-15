@@ -2,7 +2,7 @@ import { useCallback, useMemo, useState } from "react";
 import { Check, Copy, Download, Loader2, RotateCcw, Wand2 } from "lucide-react";
 import { toast } from "sonner";
 
-import { SavoMascot, mascotSvgMarkup } from "@/components/ai/SavoMascot";
+import { ASSISTANT_ICON_DOWNLOAD, ASSISTANT_ICON_SRC, SavoMascot } from "@/components/ai/SavoMascot";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import {
@@ -488,28 +488,19 @@ export function SavoStudio({ isOwner, shopId }: { isOwner: boolean; shopId: stri
         {assetsOpen ? (
           <div className="mt-2.5">
             <div className="flex items-center gap-3">
-              {(["idle", "happy", "thinking"] as const).map((expression) => (
-                <div key={expression} className="flex-1 text-center">
-                  <div className="grid aspect-square place-items-center rounded-lg bg-emerald-950/40 ring-1 ring-glass-line">
-                    <SavoMascot className="block size-12 [&>svg]:size-full" expression={expression} />
-                  </div>
-                  <p className="mt-1 text-[10px] capitalize text-muted-foreground">{expression}</p>
-                </div>
-              ))}
+              <div className="grid size-14 shrink-0 place-items-center rounded-lg bg-emerald-950/40 ring-1 ring-glass-line">
+                <SavoMascot className="size-12" />
+              </div>
+              <p className="text-[11px] leading-relaxed text-muted-foreground">
+                The assistant&rsquo;s artwork, used unchanged at every size. Use it whole — no crops,
+                no recolours.
+              </p>
             </div>
-            <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-              Emerald body, gold antenna and ear pads, teal-navy visor. Keep proportions identical in
-              every placement; only the eyes change.
-            </p>
             <div className="mt-2 flex flex-wrap gap-1.5">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() =>
-                  download("savo-ai-mascot.svg", mascotSvgMarkup("idle", "SAVO AI mascot"), "image/svg+xml")
-                }
-              >
-                <Download /> SVG
+              <Button asChild variant="outline" size="sm">
+                <a href={ASSISTANT_ICON_SRC} download={ASSISTANT_ICON_DOWNLOAD}>
+                  <Download /> PNG
+                </a>
               </Button>
             </div>
             <p className="mt-1.5 text-[11px] text-muted-foreground">

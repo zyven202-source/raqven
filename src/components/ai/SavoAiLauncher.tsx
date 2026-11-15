@@ -3,6 +3,7 @@ import { useRouterState } from "@tanstack/react-router";
 import { motion, useReducedMotion } from "framer-motion";
 
 import { SavoMascot } from "@/components/ai/SavoMascot";
+import { canUseStudio } from "@/lib/ai-access";
 import { useActiveShop } from "@/hooks/useActiveShop";
 import { useSession } from "@/hooks/useSession";
 
@@ -122,6 +123,7 @@ export function SavoAiLauncher() {
               shopName={activeShop?.name ?? null}
               isOwner={role === "owner"}
               signedIn={Boolean(user)}
+              studioAllowed={canUseStudio(user?.email)}
               onClose={() => {
                 setOpen(false);
                 // Put focus back where the user left it.

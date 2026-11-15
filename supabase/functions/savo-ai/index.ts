@@ -82,6 +82,18 @@ function serverClients(accessToken: string | null): {
   return { admin, user };
 }
 
+/**
+ * Studio — the advertisement and copy generator — is limited to one account, at
+ * the owner's request. This mirrors `src/lib/ai-access.ts` (the UI uses it to
+ * hide the tab), and it is the half that matters: a request can be crafted
+ * without the UI, but it cannot skip this check.
+ */
+const STUDIO_EMAIL = "mahircade341@gmail.com";
+
+function canUseStudio(email: string | null): boolean {
+  return (email ?? "").trim().toLowerCase() === STUDIO_EMAIL;
+}
+
 async function authenticate(
   admin: SupabaseClient,
   accessToken: string | null,
@@ -602,6 +614,13 @@ Deno.serve(async (req: Request) => {
     }
 
     if (action === "studio") {
+      if (!canUseStudio(user.email)) {
+        return fail(
+          "forbidden",
+          "Studio is only available on the account it was enabled for.",
+          403,
+        );
+      }
       return await handleStudio({
         body,
         admin: clients.admin,

@@ -42,12 +42,20 @@ export function SavoAiPanel({
   shopName,
   isOwner,
   signedIn,
+  studioAllowed,
 }: {
   onClose: () => void;
   shopId: string | null;
   shopName: string | null;
   isOwner: boolean;
   signedIn: boolean;
+  /**
+   * Whether this account may open Studio. Decided by `canUseStudio()` from the
+   * signed-in address; an unlisted account sees the assistant without the tab.
+   * The edge function refuses the action regardless, so hiding it here is
+   * presentation, not the control.
+   */
+  studioAllowed: boolean;
 }) {
   const [tab, setTab] = useState<Tab>("ask");
   const { turns, pending, error, started, send, retry, clear, dismissError } = useSavoAi(shopId);
@@ -163,7 +171,7 @@ export function SavoAiPanel({
           {(
             [
               { key: "ask", label: "Ask" },
-              { key: "studio", label: "Studio" },
+              ...(studioAllowed ? [{ key: "studio", label: "Studio" } as const] : []),
             ] as const
           ).map((entry) => (
             <button
@@ -188,7 +196,7 @@ export function SavoAiPanel({
           ))}
         </div>
 
-        {tab === "studio" ? (
+        {tab === "studio" && studioAllowed ? (
           <SavoStudio isOwner={isOwner} shopId={shopId} />
         ) : (
           <>
@@ -215,22 +223,24 @@ export function SavoAiPanel({
                   <div className="space-y-1.5 pl-0.5">
                     <p className="eyebrow">Try one of these</p>
                     <div className="flex flex-wrap gap-1.5">
-                      {suggestions.map((suggestion) => (
-                        <button
-                          key={suggestion.label}
-                          type="button"
-                          onClick={() => {
-                            if (suggestion.prompt) {
-                              void send(suggestion.prompt);
-                            } else {
-                              setTab("studio");
-                            }
-                          }}
-                          className="press rounded-full border border-glass-line bg-glass-2 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
-                        >
-                          {suggestion.label}
-                        </button>
-                      ))}
+                      {suggestions
+                        .filter((entry) => entry.prompt || studioAllowed)
+                        .map((suggestion) => (
+                          <button
+                            key={suggestion.label}
+                            type="button"
+                            onClick={() => {
+                              if (suggestion.prompt) {
+                                void send(suggestion.prompt);
+                              } else if (studioAllowed) {
+                                setTab("studio");
+                              }
+                            }}
+                            className="press rounded-full border border-glass-line bg-glass-2 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                          >
+                            {suggestion.label}
+                          </button>
+                        ))}
                     </div>
                   </div>
                 </div>

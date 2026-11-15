@@ -1,27 +1,23 @@
 # SAVO AI — brand and mascot specification
 
 The single reference for SAVO AI. Any asset used in the app, a store listing, a
-tutorial or an advert must match this document. The code that draws the character
-is `src/components/ai/SavoMascot.tsx`; it is the source of truth and the artwork
-the Studio download button writes.
+tutorial or an advert must match this document.
 
 ## The character
 
-SAVO AI is a small technology mascot: **a sphere on a short rounded torso**.
+SAVO AI's face is **one supplied illustration**, not a drawing in code. It ships
+as `public/assistant-icon.png` (256 px) with `public/assistant-icon-512.png` for
+larger placements, and `src/components/ai/SavoMascot.tsx` renders that file
+wherever the assistant appears — the launcher, the messages, the Studio preview
+and the download button.
 
-| Part | Description |
-| --- | --- |
-| Head | Circle, forest emerald, subtle top-left highlight |
-| Visor | Rounded teal-navy panel across the head — the face |
-| Eyes | Two pale rounded bars; no mouth, no nose |
-| Antenna | Single stem with a gold bead, faint gold aura |
-| Ear pads | One gold disc on each side of the head |
-| Collar | One gold line across the torso |
-| Chest | Small pale dot, low opacity |
+The illustration has transparent corners and is used whole: no crops, no
+recolours, no filters, and no redrawing it in SVG. It replaced an earlier
+hand-drawn robot, and the old SVG generator was removed rather than kept beside
+it, because two canonical versions of one character is how a brand drifts.
 
-The silhouette is deliberately simple so it survives at 16 px (favicon), 54 px
-(the launcher) and full width (an advert). Never add limbs, hair, clothes, teeth
-or a second accessory.
+There is one expression. Anything that used to ask for `idle`, `happy` or
+`thinking` gets the same picture.
 
 ## Colour
 

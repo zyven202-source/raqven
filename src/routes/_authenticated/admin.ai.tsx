@@ -16,7 +16,7 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { ErrorState, LoadingState, StateBlock } from "@/components/app/AppChrome";
-import { SavoMascot, mascotSvgMarkup, type MascotExpression } from "@/components/ai/SavoMascot";
+import { ASSISTANT_ICON_DOWNLOAD, ASSISTANT_ICON_SRC, SavoMascot } from "@/components/ai/SavoMascot";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -417,15 +417,13 @@ function MascotPanel() {
       <h2 className="text-sm font-semibold">Mascot reference</h2>
       <p className="text-xs text-muted-foreground">The one approved character. Do not restyle it.</p>
 
-      <div className="mt-3 flex gap-3">
-        {(["idle", "happy", "thinking"] as MascotExpression[]).map((expression) => (
-          <div key={expression} className="flex-1 text-center">
-            <div className="grid aspect-square place-items-center rounded-lg bg-sunken ring-1 ring-border">
-              <SavoMascot className="block size-12 [&>svg]:size-full" expression={expression} />
-            </div>
-            <p className="mt-1 text-[10px] capitalize text-muted-foreground">{expression}</p>
-          </div>
-        ))}
+      <div className="mt-3 flex items-center gap-3">
+        <div className="grid size-16 place-items-center rounded-lg bg-sunken ring-1 ring-border">
+          <SavoMascot className="size-14" />
+        </div>
+        <p className="text-[11px] leading-relaxed text-muted-foreground">
+          One supplied illustration, used at every size. It has no expression variants.
+        </p>
       </div>
 
       <ul className="mt-3 space-y-1 text-[11px] leading-relaxed text-muted-foreground">
@@ -437,25 +435,10 @@ function MascotPanel() {
         ))}
       </ul>
 
-      <Button
-        variant="outline"
-        size="sm"
-        className="mt-3"
-        onClick={() => {
-          const blob = new Blob([mascotSvgMarkup("idle", "SAVO AI mascot")], {
-            type: "image/svg+xml",
-          });
-          const url = URL.createObjectURL(blob);
-          const link = document.createElement("a");
-          link.href = url;
-          link.download = "savo-ai-mascot.svg";
-          document.body.appendChild(link);
-          link.click();
-          link.remove();
-          URL.revokeObjectURL(url);
-        }}
-      >
-        <Download /> Download SVG
+      <Button asChild variant="outline" size="sm" className="mt-3">
+        <a href={ASSISTANT_ICON_SRC} download={ASSISTANT_ICON_DOWNLOAD}>
+          <Download /> Download PNG
+        </a>
       </Button>
     </section>
   );
