@@ -35,6 +35,9 @@ const STATIC_PAGES = new Set([
   "/legal/refunds",
   "/legal/terms",
   "/pricing",
+  "/features",
+  "/about",
+  "/support",
 ]);
 
 export default {

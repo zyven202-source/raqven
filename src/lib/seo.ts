@@ -77,10 +77,20 @@ export const SEO_DESCRIPTION =
   "chase debtors and read profit from the counter or the back office.";
 
 /**
- * The home page's `<h1>`: the primary keyword, phrased as a sentence rather
- * than stuffed into one. A heading exists to be read first and indexed second.
+ * The home page's `<h1>`: a sentence about the shop, not a keyword string.
+ *
+ * It used to carry the search term itself. The redesign moved the term into the
+ * eyebrow above it, where it reads as a label rather than as a headline that was
+ * written for a crawler — and the word still appears in the title, the meta
+ * description and the first paragraph, which is what actually ranks.
  */
-export const HOME_HEADLINE = "SAVO is the Kenyan shop POS that keeps every sale, stock and number.";
+export const HOME_HEADLINE = "Your shop deserves more than guesswork.";
+
+/**
+ * The label above the headline. This is the page's search term, in the words a
+ * shop owner in Kenya would use, and it is visible rather than hidden.
+ */
+export const HOME_EYEBROW = PRIMARY_KEYWORD;
 
 /** The square app icon, which is the only large image the product ships. */
 export const OG_IMAGE_URL = `${SITE_URL}/icon-512.png`;
