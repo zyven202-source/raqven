@@ -83,7 +83,11 @@ function RestockPage() {
 
   return (
     <PageContainer>
-      <PageHeader title="Receive stock" subtitle="Book in what came from the supplier." />
+      <PageHeader
+        eyebrow="Inventory"
+        title="Receive stock"
+        subtitle="Book in what came from the supplier."
+      />
 
       <div className="sticky top-14 z-20 -mx-4 space-y-2 bg-background/95 px-4 pb-2.5 pt-1 backdrop-blur-md sm:-mx-5 sm:px-5">
         <div className="flex gap-2">

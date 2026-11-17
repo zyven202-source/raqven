@@ -21,9 +21,57 @@ export function SectionLabel({
   action?: ReactNode;
 }) {
   return (
-    <div className={cn("mb-2 flex items-center justify-between gap-3", className)}>
+    <div className={cn("mb-3 flex items-baseline justify-between gap-3", className)}>
       <h2 className="eyebrow">{children}</h2>
       {action}
+    </div>
+  );
+}
+
+/**
+ * The one figure a section is about, on its own surface.
+ *
+ * Different from `Stat` on purpose. `Stat` is a label/value pair that lives
+ * inside a row or a header; `MetricCard` is a surface with a job — the top of a
+ * dashboard, the totals beside a table — and it is opaque, because a number
+ * inside glass over a moving page is a number you have to work to read.
+ *
+ * `hint` is for a comparison that is genuinely computable ("vs previous 7 days",
+ * "of which 3 overdue"); it is never a decorative arrow, and when there is no
+ * comparison the prop is simply omitted.
+ */
+export function MetricCard({
+  label,
+  value,
+  hint,
+  tone = "default",
+  icon,
+  className,
+}: {
+  label: string;
+  value: ReactNode;
+  hint?: ReactNode;
+  tone?: "default" | "positive" | "negative" | "caution";
+  icon?: ReactNode;
+  className?: string | undefined;
+}) {
+  return (
+    <div className={cn("card-surface px-4 py-3.5", className)}>
+      <div className="flex items-center justify-between gap-2">
+        <p className="eyebrow">{label}</p>
+        {icon ? <span className="text-muted-foreground">{icon}</span> : null}
+      </div>
+      <p
+        className={cn(
+          "tnum mt-1.5 font-display text-[1.45rem] font-semibold leading-none tracking-tight",
+          tone === "positive" && "text-positive",
+          tone === "negative" && "text-negative",
+          tone === "caution" && "text-caution",
+        )}
+      >
+        {value}
+      </p>
+      {hint ? <p className="mt-1.5 text-xs text-muted-foreground">{hint}</p> : null}
     </div>
   );
 }
@@ -49,9 +97,9 @@ export function Row({
 }) {
   const interactive = Boolean(onClick || href);
   const base = cn(
-    "flex w-full items-center gap-3 px-4 py-3 text-left",
+    "flex w-full items-center gap-3 px-4 py-3.5 text-left",
     "min-h-11 transition-colors",
-    interactive && "hover:bg-sunken active:bg-sunken",
+    interactive && "hover:bg-accent/45 active:bg-accent/60",
     className,
   );
 
@@ -115,11 +163,13 @@ export function Stat({
 }) {
   return (
     <div className="min-w-0">
-      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className="text-[11px] font-medium uppercase tracking-[0.08em] text-muted-foreground">
+        {label}
+      </p>
       <p
         className={cn(
-          "tnum mt-0.5 font-semibold leading-tight",
-          size === "lg" ? "text-2xl" : "text-base",
+          "tnum mt-1 font-semibold leading-tight tracking-tight",
+          size === "lg" ? "font-display text-[1.85rem] leading-none" : "text-base",
           tone === "positive" && "text-positive",
           tone === "negative" && "text-negative",
           tone === "caution" && "text-caution",

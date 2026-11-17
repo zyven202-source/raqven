@@ -70,7 +70,7 @@ function ReportsPage() {
   if (reportQuery.isError) {
     return (
       <PageContainer>
-        <PageHeader title="Reports" />
+        <PageHeader eyebrow="Insight" title="Reports" />
         <div className="mt-4">
           <ErrorState
             message={reportQuery.error.message}
@@ -85,7 +85,7 @@ function ReportsPage() {
   if (!report) {
     return (
       <PageContainer>
-        <PageHeader title="Reports" />
+        <PageHeader eyebrow="Insight" title="Reports" />
         <div className="mt-4">
           <ErrorState
             message="The report came back empty. Try loading it again."
@@ -103,6 +103,7 @@ function ReportsPage() {
   return (
     <PageContainer>
       <PageHeader
+        eyebrow="Insight"
         title="Reports"
         subtitle="Figures taken straight from your records."
         action={
@@ -209,7 +210,7 @@ function ReportsPage() {
           <Line
             label="Taken at the till"
             value={formatMoney(report.collected, currency)}
-            note="Cash, M-Pesa and card"
+            note="Cash, card and mobile money"
           />
           <Line
             label="Collected from debtors"

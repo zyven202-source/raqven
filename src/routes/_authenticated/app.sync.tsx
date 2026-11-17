@@ -60,6 +60,7 @@ function SyncPage() {
   return (
     <PageContainer>
       <PageHeader
+        eyebrow="Device"
         title="Sync & offline"
         subtitle="What is saved on this device, and what still needs the server."
         action={

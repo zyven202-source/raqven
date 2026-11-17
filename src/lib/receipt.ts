@@ -113,7 +113,7 @@ export function receiptText(payload: ReceiptPayload, currency = "KES") {
   }
 
   lines.push(rule());
-  lines.push(centre(settings?.footer_text || "Asante kwa biashara!"));
+  lines.push(centre(settings?.footer_text || "Thank you for your business!"));
   lines.push(centre("Powered by SAVO"));
 
   return lines.join("\n");
@@ -270,7 +270,7 @@ export function receiptHtml(
   }
   <hr />
   <footer>
-    <p>${esc(settings?.footer_text || "Asante kwa biashara!")}</p>
+    <p>${esc(settings?.footer_text || "Thank you for your business!")}</p>
     <p class="muted">Powered by SAVO</p>
   </footer>
 </body>

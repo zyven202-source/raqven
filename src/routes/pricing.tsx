@@ -35,9 +35,9 @@ import { pageMeta } from "@/lib/seo";
 export const Route = createFileRoute("/pricing")({
   head: () =>
     pageMeta({
-      title: "SAVO Pricing — a free shop POS for Kenyan shops",
+      title: "SAVO Pricing — free retail management software",
       description:
-        "SAVO costs nothing: sales, stock, debtors, expenses, receipts, staff codes and reports on one free account. No subscription, no trial, no card. See what is included.",
+        "SAVO costs nothing: sales, inventory, customer accounts, expenses, receipts, staff access and reports on one free account. No subscription, no trial, no card.",
       path: "/pricing",
     }),
   component: Pricing,
@@ -59,7 +59,7 @@ function Pricing() {
     <SiteShell>
       <PageHero
         eyebrow="Pricing"
-        title="A free shop POS, with nothing held back for a paid plan."
+        title="Free retail software, with nothing held back for a paid plan."
         aside={
           <div className="savo-glass-a rounded-3xl p-6">
             <p className="font-display text-5xl font-semibold text-cream">Free</p>
@@ -131,7 +131,7 @@ function Pricing() {
                   {
                     icon: Banknote,
                     title: "The counter",
-                    body: "Sales, M-Pesa, card, credit and receipts — with no limit on how many.",
+                    body: "Sales, cash, card, mobile money, credit and receipts — with no limit on how many.",
                   },
                   {
                     icon: Boxes,
@@ -140,7 +140,7 @@ function Pricing() {
                   },
                   {
                     icon: HandCoins,
-                    title: "The debts",
+                    title: "The accounts",
                     body: "Customer balances, part payments and reminders, kept with the sale that created them.",
                   },
                   {

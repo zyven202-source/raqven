@@ -16,7 +16,11 @@ import { useState } from "react";
 import { toast } from "sonner";
 
 import { ErrorState, LoadingState, StateBlock } from "@/components/app/AppChrome";
-import { ASSISTANT_ICON_DOWNLOAD, ASSISTANT_ICON_SRC, SavoMascot } from "@/components/ai/SavoMascot";
+import {
+  ASSISTANT_ICON_DOWNLOAD,
+  ASSISTANT_ICON_SRC,
+  SavoMascot,
+} from "@/components/ai/SavoMascot";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -144,7 +148,11 @@ function StatusRow({ label, value, ok }: { label: string; value: string; ok?: bo
   );
 }
 
-function StatusPanel({ status, onRefresh, refreshing }: {
+function StatusPanel({
+  status,
+  onRefresh,
+  refreshing,
+}: {
   status: AiStatus;
   onRefresh: () => void;
   refreshing: boolean;
@@ -158,9 +166,7 @@ function StatusPanel({ status, onRefresh, refreshing }: {
       <div className="mb-2 flex items-start justify-between gap-3">
         <div>
           <h2 className="text-sm font-semibold">Provider</h2>
-          <p className="text-xs text-muted-foreground">
-            Groq · OpenAI-compatible chat completions
-          </p>
+          <p className="text-xs text-muted-foreground">Groq · OpenAI-compatible chat completions</p>
         </div>
         <Button variant="outline" size="sm" onClick={onRefresh} disabled={refreshing}>
           {refreshing ? <Loader2 className="animate-spin" /> : <RefreshCw />}
@@ -168,7 +174,11 @@ function StatusPanel({ status, onRefresh, refreshing }: {
         </Button>
       </div>
 
-      <StatusRow label="Configured" value={status.configured ? "Yes" : "No"} ok={status.configured} />
+      <StatusRow
+        label="Configured"
+        value={status.configured ? "Yes" : "No"}
+        ok={status.configured}
+      />
       <StatusRow label="Configured model" value={status.model ?? "Not set"} />
       <StatusRow
         label="Model available on account"
@@ -206,8 +216,8 @@ function StatusPanel({ status, onRefresh, refreshing }: {
       {!status.configured ? (
         <p className="mt-3 rounded-lg border border-caution/30 bg-caution-soft/50 px-3 py-2 text-xs leading-relaxed">
           Set <code className="font-mono">GROQ_API_KEY</code> and{" "}
-          <code className="font-mono">GROQ_MODEL</code> as function secrets
-          (<code className="font-mono">supabase secrets set</code>), then ask a question. The key is
+          <code className="font-mono">GROQ_MODEL</code> as function secrets (
+          <code className="font-mono">supabase secrets set</code>), then ask a question. The key is
           never returned to this page.
         </p>
       ) : null}
@@ -415,7 +425,9 @@ function MascotPanel() {
   return (
     <section className="rounded-xl border border-border bg-card/60 p-4">
       <h2 className="text-sm font-semibold">Mascot reference</h2>
-      <p className="text-xs text-muted-foreground">The one approved character. Do not restyle it.</p>
+      <p className="text-xs text-muted-foreground">
+        The one approved character. Do not restyle it.
+      </p>
 
       <div className="mt-3 flex items-center gap-3">
         <div className="grid size-16 place-items-center rounded-lg bg-sunken ring-1 ring-border">
@@ -526,7 +538,9 @@ function Console() {
             </li>
             <li>SAVO keeps a daily request and token counter per account — no message content.</li>
             <li>Nothing is used to train an external model.</li>
-            <li>The assistant is read-only: it cannot change prices, stock, balances or permissions.</li>
+            <li>
+              The assistant is read-only: it cannot change prices, stock, balances or permissions.
+            </li>
           </ul>
         </section>
       </main>

@@ -83,7 +83,7 @@ export function SavoAiLauncher() {
           <motion.div
             initial={reduceMotion ? false : { opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mr-1 max-w-[13rem] rounded-lg rounded-br-sm border border-glass-line bg-[var(--glass-3)] px-2.5 py-1.5 text-xs leading-snug shadow-[var(--shadow-pop)] backdrop-blur-md"
+            className="mr-1 hidden max-w-[13rem] rounded-lg rounded-br-sm border border-glass-line bg-[var(--glass-3)] px-2.5 py-1.5 text-xs leading-snug shadow-[var(--shadow-pop)] backdrop-blur-md sm:block"
           >
             <span className="font-medium">Ask SAVO AI</span>
             <span className="block text-muted-foreground">
@@ -102,10 +102,15 @@ export function SavoAiLauncher() {
           initial={reduceMotion ? false : { opacity: 0, scale: 0.86, y: 10 }}
           animate={{ opacity: 1, scale: 1, y: 0 }}
           {...(reduceMotion ? {} : { whileTap: { scale: 0.95 } })}
-          transition={reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 26 }}
+          transition={
+            reduceMotion ? { duration: 0 } : { type: "spring", stiffness: 380, damping: 26 }
+          }
           className="press group relative grid size-[54px] place-items-center rounded-full bg-positive text-background shadow-[0_8px_22px_-8px_oklch(0_0_0_/_0.65)] ring-1 ring-white/20 outline-none transition-shadow hover:shadow-[0_10px_26px_-8px_oklch(0_0_0_/_0.7)] focus-visible:ring-2 focus-visible:ring-champagne focus-visible:ring-offset-2 focus-visible:ring-offset-background sm:size-[60px]"
         >
-          <SavoMascot className="block size-[38px] [&>svg]:size-full sm:size-[42px]" expression={open ? "happy" : "idle"} />
+          <SavoMascot
+            className="block size-[38px] [&>svg]:size-full sm:size-[42px]"
+            expression={open ? "happy" : "idle"}
+          />
           <span className="sr-only">SAVO AI</span>
           {/* A single gold dot: brand, not a notification badge, and it never animates. */}
           <span

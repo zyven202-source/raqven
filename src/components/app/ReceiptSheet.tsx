@@ -313,7 +313,7 @@ export function ReceiptSheet({
 
               <div className="my-2.5 border-t border-dashed border-neutral-400" />
               <p className="text-center text-neutral-600">
-                {payload.settings?.footer_text || "Asante kwa biashara!"}
+                {payload.settings?.footer_text || "Thank you for your business!"}
               </p>
               <p className="text-center text-neutral-600">Powered by SAVO</p>
             </div>

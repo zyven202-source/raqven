@@ -176,7 +176,7 @@ function slug(value: string): string {
 
 export function SavoStudio({ isOwner, shopId }: { isOwner: boolean; shopId: string | null }) {
   const [goal, setGoal] = useState("Get more shop owners to try SAVO");
-  const [audience, setAudience] = useState("Kenyan shop owners running one or two shops");
+  const [audience, setAudience] = useState("independent retailers running one or two shops");
   const [platform, setPlatform] = useState(PLATFORMS[0]?.value ?? "Instagram Reels");
   const [format, setFormat] = useState(FORMATS[0]?.value ?? "Short video script");
   const [duration, setDuration] = useState(DURATIONS[1]?.value ?? "30 seconds");

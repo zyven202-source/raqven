@@ -120,8 +120,8 @@
 /* ---------------------------------------------------------------------------
  * SAVO design system.
  *
- * A light, paper-like product: a warm cream page, white surfaces drawn with
- * hairlines, forest green only where something is brand-owned or positive.
+ * A light, paper-like product on emerald-tinted paper: white surfaces drawn
+ * with hairlines, emerald only where something is brand-owned or positive.
  * The values below are the brand palette, and nothing in a component hardcodes
  * a colour — change the brand here and the whole product follows.
  *
@@ -136,9 +136,9 @@
   --radius: 0.625rem;
 
   /* Brand */
-  --ink: #123c2d; /* Forest — headings, primary actions, the tile */
+  --ink: #10382a; /* Forest — headings, primary actions, the tile */
   --ink-deep: #09291f; /* Deep forest — pressed states, the darkest ground */
-  --ink-soft: #236b49; /* Supporting green — links, figures, marks */
+  --ink-soft: #2a6f51; /* Supporting green — links, figures, marks */
   --champagne: #b45309; /* Amber — attention, never decoration */
   --champagne-deep: #7c3a06;
   --cream: #f7f5ee;
@@ -146,28 +146,28 @@
   --forest: #123c2d;
 
   /* The page is warm paper; surfaces are white sitting on it. */
-  --background: #f7f5ee;
-  --foreground: #17231d;
+  --background: #f2f6f3;
+  --foreground: #15251c;
   --card: #ffffff;
-  --card-foreground: #17231d;
+  --card-foreground: #15251c;
   --popover: #ffffff;
-  --popover-foreground: #17231d;
-  --sunken: #f1f0e7;
+  --popover-foreground: #15251c;
+  --sunken: #e9efe9;
 
-  --primary: #123c2d;
+  --primary: #176a49;
   --primary-foreground: #ffffff;
-  --secondary: #edf1ec;
-  --secondary-foreground: #123c2d;
-  --muted: #eff2ec;
-  --muted-foreground: #68756d;
-  --accent: #ddebdd;
-  --accent-foreground: #09291f;
+  --secondary: #e3eee7;
+  --secondary-foreground: #0e3b2a;
+  --muted: #ecf2ee;
+  --muted-foreground: #5b6b62;
+  --accent: #d7eee1;
+  --accent-foreground: #0a3323;
   --destructive: #b42318;
   --destructive-foreground: #ffffff;
 
   /* Status. Soft tints carry the chip; the solid hue carries the text. */
-  --positive: #1b7a4a;
-  --positive-soft: #e3f1e7;
+  --positive: #157146;
+  --positive-soft: #e0f1e7;
   --caution: #b45309;
   --caution-soft: #fdf0dc;
   --negative: #b42318;
@@ -175,19 +175,19 @@
   --info: #1f5fa8;
   --info-soft: #e8f1fa;
 
-  --border: #e3e8e1;
-  --line-strong: #c9d2c8;
-  --input: #d3dad2;
-  --ring: #236b49;
+  --border: #dde7e1;
+  --line-strong: #c3d1c8;
+  --input: #ccd9d2;
+  --ring: #176a49;
 
   --sidebar: #ffffff;
-  --sidebar-foreground: #17231d;
-  --sidebar-primary: #123c2d;
+  --sidebar-foreground: #15251c;
+  --sidebar-primary: #176a49;
   --sidebar-primary-foreground: #ffffff;
-  --sidebar-accent: #ddebdd;
-  --sidebar-accent-foreground: #09291f;
-  --sidebar-border: #e3e8e1;
-  --sidebar-ring: #236b49;
+  --sidebar-accent: #d7eee1;
+  --sidebar-accent-foreground: #0a3323;
+  --sidebar-border: #dde7e1;
+  --sidebar-ring: #176a49;
 
   /*
    * Surfaces. The three glass levels keep their names because components
@@ -195,19 +195,19 @@
    * laid on cream — opaque enough to carry body text, ruled with a hairline.
    */
   --glass-1: #ffffff;
-  --glass-1-line: #e3e8e1;
+  --glass-1-line: #dde7e1;
   --glass-1-sheen: rgb(255 255 255 / 0.6);
 
-  --glass-2: #fbfcfa;
-  --glass-2-line: #e8ece5;
+  --glass-2: #f8fbf9;
+  --glass-2-line: #e3ece6;
   --glass-2-sheen: rgb(255 255 255 / 0.5);
 
   --glass-3: #ffffff;
-  --glass-3-line: #dfe5dd;
+  --glass-3-line: #d9e4dd;
   --glass-3-sheen: rgb(255 255 255 / 0.6);
 
   /** The border a hovered surface takes: one step of green, never a jump. */
-  --hover-line: rgb(35 107 73 / 0.4);
+  --hover-line: rgb(23 106 73 / 0.42);
 
   /* Depth: a contact shadow plus a wide soft one. Small on purpose. */
   --depth-1: 0 1px 2px rgb(23 35 29 / 0.04), 0 1px 1px rgb(23 35 29 / 0.03);
@@ -218,11 +218,11 @@
   /* The floating navigation and top bar. */
   --glass: rgb(255 255 255 / 0.9);
   --glass-strong: rgb(255 255 255 / 0.98);
-  --glass-line: #e3e8e1;
+  --glass-line: #dde7e1;
   --glass-sheen: rgb(255 255 255 / 0.75);
-  --glass-tile: #ddebdd;
-  --glass-tile-line: #c9dccb;
-  --glass-sunk: #f4f5f0;
+  --glass-tile: #d7eee1;
+  --glass-tile-line: #bcdcca;
+  --glass-sunk: #eef4f0;
 }
 
 /*
@@ -574,6 +574,50 @@
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: var(--color-muted-foreground);
+}
+
+/**
+ * An app page's title.
+ *
+ * The display face at a size that can carry a screen, tight tracking, and a
+ * line height that works for one or two lines. Screens that want an eyebrow use
+ * `PageHeader`'s prop rather than repeating the small-caps block themselves.
+ */
+@utility app-title {
+  font-family: var(--font-display);
+  font-size: 1.7rem;
+  line-height: 1.08;
+  letter-spacing: -0.015em;
+  font-weight: 600;
+  color: var(--foreground);
+  text-wrap: balance;
+}
+
+/** A card that is a surface rather than a glass pane: quiet, opaque, ruled. */
+@utility card-surface {
+  background-color: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 0.875rem;
+  box-shadow: var(--depth-1);
+}
+
+/**
+ * The emerald band a screen can open with — one decision per screen, used for
+ * the dashboard's summary and the POS header. Deep enough for cream text, and
+ * deliberately not translucent: money must sit on something solid.
+ */
+@utility band-emerald {
+  background-color: var(--ink-deep);
+  background-image:
+    radial-gradient(120% 140% at 88% -20%, oklch(0.62 0.11 161 / 0.38) 0%, oklch(0 0 0 / 0) 55%),
+    radial-gradient(90% 90% at 8% 120%, oklch(0.5 0.09 165 / 0.28) 0%, oklch(0 0 0 / 0) 60%),
+    linear-gradient(180deg, oklch(1 0 0 / 0.04) 0%, oklch(0 0 0 / 0) 40%);
+  color: var(--cream);
+}
+
+/** A hairline that separates two groups inside one surface. */
+@utility rule-soft {
+  border-top: 1px solid var(--border);
 }
 
 @utility text-balance-tight {

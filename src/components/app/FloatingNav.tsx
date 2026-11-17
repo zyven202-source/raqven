@@ -126,7 +126,7 @@ const OWNER_MORE: MoreGroup[] = [
     items: [
       {
         to: "/app/debtors",
-        label: "Debtors",
+        label: "Customer accounts",
         note: "Credit customers and repayments",
         icon: HandCoins,
       },
@@ -207,7 +207,7 @@ const STAFF_MORE: MoreGroup[] = [
     items: [
       {
         to: "/app/debtors",
-        label: "Debtors",
+        label: "Customer accounts",
         note: "Credit customers and repayments",
         icon: HandCoins,
       },
@@ -230,9 +230,7 @@ const STAFF_MORE: MoreGroup[] = [
   },
   {
     heading: "Shop",
-    items: [
-      { to: "/dashboard", label: "All my shops", icon: Store },
-    ],
+    items: [{ to: "/dashboard", label: "All my shops", icon: Store }],
   },
   {
     heading: "This device",

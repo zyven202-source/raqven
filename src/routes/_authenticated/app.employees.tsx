@@ -158,6 +158,7 @@ function EmployeesPage() {
   return (
     <PageContainer>
       <PageHeader
+        eyebrow="Team"
         title="Staff access"
         subtitle="One code brings your staff in. Nobody needs a technical account id."
       />

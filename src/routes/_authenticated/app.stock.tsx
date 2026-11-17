@@ -65,6 +65,7 @@ function StockLedgerPage() {
   return (
     <PageContainer>
       <PageHeader
+        eyebrow="Inventory"
         title="Stock movements"
         subtitle="Every quantity change, and why it happened."
         action={

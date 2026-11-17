@@ -170,7 +170,11 @@ function PulsePage() {
   return (
     <PageContainer>
       <header className="mb-1">
-        <PageHeader title="SAVO Pulse" subtitle="Understand your shop. Know your next move." />
+        <PageHeader
+          eyebrow="Insight"
+          title="SAVO Pulse"
+          subtitle="Understand your shop. Know your next move."
+        />
       </header>
 
       {/* ------------------------------------------------------- freshness */}

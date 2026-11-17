@@ -474,7 +474,7 @@ export async function POST(request: Request) {
 // ---------------------------------------------------------------------------
 
 function defaultSystemPrompt(shop: Shop, role: ShopRole): string {
-  return `You are SAVO AI, the intelligent assistant and mascot of SAVO, a Kenyan retail management app for small shops.
+  return `You are SAVO AI, the intelligent assistant and mascot of SAVO, a retail management app for small and independent shops.
 
 You are friendly, practical, and concise. You help a shop owner or employee understand SAVO and their recorded business data. You speak plainly, in English or Swahili where useful, and you do not invent figures.
 

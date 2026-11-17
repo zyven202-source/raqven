@@ -19,9 +19,9 @@ import { pageMeta } from "@/lib/seo";
 export const Route = createFileRoute("/features")({
   head: () =>
     pageMeta({
-      title: "SAVO Features — POS, stock, debtors and reports",
+      title: "SAVO Features — POS, inventory, customer accounts and reports",
       description:
-        "What SAVO does: point of sale with M-Pesa and credit, a stock ledger that records why every unit moved, debtors with part payments, expenses, receipts and reports.",
+        "What SAVO does: point of sale with cash, card, mobile money and credit, a stock ledger that records why every unit moved, customer accounts with part payments, expenses, receipts and reports.",
       path: "/features",
     }),
   component: FeaturesPage,
@@ -46,14 +46,14 @@ const FEATURES = [
     icon: ScanLine,
     eyebrow: "Point of sale",
     title: "The counter, at the speed of the queue.",
-    body: "Scan a barcode or tap the product. Choose cash, M-Pesa, card or credit, and the sale is written once — stock deducted, receipt produced, balance updated if it was credit.",
+    body: "Scan a barcode or tap the product. Choose cash, card, mobile money or credit, and the sale is written once — stock deducted, receipt produced, balance updated if it was credit.",
     points: [
       "Search by name or scan the barcode",
-      "Cash, M-Pesa, card and credit on the same screen",
+      "Cash, card, mobile money and credit on the same screen",
       "A duplicate tap cannot create a second sale",
       "The receipt prints or shares from the same record",
     ],
-    note: "M-Pesa is recorded as a payment method. SAVO does not move money or confirm a mobile-money transfer with the network.",
+    note: "Mobile money is recorded as a payment method. SAVO does not move money or confirm a transfer with any network.",
   },
   {
     id: "stock",
@@ -72,7 +72,7 @@ const FEATURES = [
   {
     id: "debtors",
     icon: HandCoins,
-    eyebrow: "Debtors",
+    eyebrow: "Customer accounts",
     title: "Credit that stays attached to the sale that created it.",
     body: "A credit sale becomes a customer balance rather than a line in a notebook. Part payments and repayments adjust the balance, and the history shows what was bought and what has been paid.",
     points: [
@@ -199,8 +199,8 @@ function FeaturesPage() {
         }
       >
         <p>
-          SAVO is a point of sale, a stock book, a debtors ledger and a report — built for Kenyan
-          shopkeepers who need the day&rsquo;s numbers to be defensible, not decorated.
+          SAVO is a point of sale, an inventory ledger, a customer-accounts book and a reporting
+tool — built for retailers who need the day&rsquo;s numbers to be defensible, not decorated.
         </p>
         <div className="mt-7 flex flex-wrap gap-3">
           <Link

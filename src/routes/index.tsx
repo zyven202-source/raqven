@@ -10,8 +10,8 @@ import {
   Store,
 } from "lucide-react";
 
-import { ClosingCta, TillScene } from "@/components/marketing/Scene";
-import { PageHero, SiteShell } from "@/components/marketing/SiteShell";
+import { ClosingCta } from "@/components/marketing/Scene";
+import { SiteShell } from "@/components/marketing/SiteShell";
 import { PAGE_BODY, SectionHeading } from "@/components/marketing/Sections";
 import { HOME_EYEBROW, HOME_HEADLINE, HOME_META, SITE_URL, webApplicationJsonLd } from "@/lib/seo";
 
@@ -24,19 +24,18 @@ export const Route = createFileRoute("/")({
 
       Both choices are forced by how this app builds. It prerenders a static
       shell, and that shell carries the `head()` descriptors but **not** the
-      route's rendered markup — a `<script>` written inside `Landing` would only
-      exist after JavaScript ran, which is no use to a crawler that does not
-      execute it. And the router types `head().meta` as React `<meta>` props,
-      where the `script:ld+json` descriptor does not fit; `head().scripts` maps
-      to `headScripts`, which is rendered by one shared function for the
+      route's rendered markup — a `<script>` written inside the route component
+      would only exist after JavaScript ran, which is no use to a crawler that
+      does not execute it. And the router types `head().meta` as React `<meta>`
+      props, where the `script:ld+json` descriptor does not fit; `head().scripts`
+      maps to `headScripts`, which is rendered by one shared function for the
       prerender and for the client, so the tag in the static HTML and the tag
       React hydrates are the same element by construction.
 
       The JSON has to arrive as a string `children`, not as a
       `dangerouslySetInnerHTML` attribute. The router renders a src-less head
       script only when `children` is a string, so the attribute form is dropped
-      in silence — no tag in the HTML, no error anywhere, and the structured data
-      simply does not exist.
+      in silence — no tag in the HTML, no error anywhere.
     */
     scripts: [
       {
@@ -44,9 +43,6 @@ export const Route = createFileRoute("/")({
         children: JSON.stringify(webApplicationJsonLd()),
       },
     ],
-    // The home page is the URL a crawler is most likely to reach through a
-    // variant — a trailing slash, a campaign parameter, a shared link — so it
-    // names its own canonical rather than relying on the host to normalise.
     links: [{ rel: "canonical", href: `${SITE_URL}/` }],
   }),
   component: Landing,
@@ -55,53 +51,107 @@ export const Route = createFileRoute("/")({
 /**
  * The public home page.
  *
- * The composition is deliberate: an emerald hero with one object in focus, then
- * paper sections where the reading happens, then the field again to close. The
- * page alternates ground so a visitor can feel where one movement ends and the
- * next begins — the same reason a printed prospectus changes stock between
- * chapters.
+ * **The photograph.** A real, licensed shop interior — a ceramics and homeware
+ * store lit by a single paper lantern — carries the whole opening. It is not a
+ * decorative gradient behind a headline: the warm light is the focal point, the
+ * shelves of real stock are the subject, and the deep shadow at the left of the
+ * frame is where the copy sits. Two crops are shipped so neither screen gets a
+ * bad one: a 2000×1250 landscape for desktop, where the lantern and the shelves
+ * both survive, and the tall original for phones, where the lantern stays in
+ * frame instead of being cropped to a strip.
  *
- * **One `<h1>`.** It is the human sentence, not a keyword list; the search term
- * lives in the eyebrow, the title tag and the copy, which is where it can be
- * read by a person and still indexed.
+ * The photograph is by Jason Leung on Unsplash, used under the Unsplash License
+ * (free for commercial use, no attribution required). The credit is shown in
+ * the hero anyway, because a photograph is somebody's work.
  *
  * **Nothing here invents a number.** No customer counts, no testimonials, no
- * fake dashboard figures. Every claim below is a property of the code.
+ * fake dashboard figures, and no simulated product screenshot. Every claim
+ * below is a property of the code.
  */
 function Landing() {
   return (
     <SiteShell>
-      <PageHero eyebrow={HOME_EYEBROW} title={HOME_HEADLINE} aside={<TillScene />}>
-        <p>
-          SAVO is the Kenyan shop POS that brings sales, stock, expenses and customer debts into one
-          dependable workspace — on the phone behind the counter, or the laptop in the back office.
-        </p>
-        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-          <Link
-            to="/auth/signup"
-            className="group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--savo-mint)] px-6 text-[0.9375rem] font-semibold text-[var(--savo-night)] transition-transform duration-200 hover:-translate-y-0.5"
-          >
-            Open your shop
-            <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
-          </Link>
-          <Link
-            to="/features"
-            className="inline-flex h-12 items-center justify-center rounded-full border border-white/20 px-6 text-[0.9375rem] font-medium text-cream transition-colors hover:bg-white/8"
-          >
-            See what&rsquo;s inside
-          </Link>
+      <section className="relative isolate overflow-hidden bg-[var(--savo-night)] text-cream">
+        {/* ---------------------------------------------------- photograph */}
+        <div aria-hidden className="absolute inset-0 -z-10">
+          <picture>
+            <source media="(min-width: 1024px)" srcSet="/hero/shop-wide.jpg" />
+            <img
+              src="/hero/shop-tall.jpg"
+              alt=""
+              width={1100}
+              height={1468}
+              fetchPriority="high"
+              decoding="async"
+              className="size-full object-cover object-[56%_62%] lg:object-center"
+            />
+          </picture>
+
+          {/*
+            The overlays are doing two jobs, and they are separate on purpose.
+            The first is legibility: cream text over a photograph needs a floor
+            under it, and on a phone that floor has to sit at the bottom where
+            the copy is. The second is composition: on desktop the gradient runs
+            left to right, so the headline stands on the shadowed shelving while
+            the lantern and the shop stay fully visible on the right.
+          */}
+          <div className="absolute inset-0 bg-[linear-gradient(to_top,var(--savo-night)_6%,color-mix(in_oklab,var(--savo-night)_86%,transparent)_42%,color-mix(in_oklab,var(--savo-night)_40%,transparent)_74%,color-mix(in_oklab,var(--savo-night)_22%,transparent)_100%)] lg:hidden" />
+          <div className="absolute inset-0 hidden bg-[linear-gradient(96deg,var(--savo-night)_0%,color-mix(in_oklab,var(--savo-night)_95%,transparent)_34%,color-mix(in_oklab,var(--savo-night)_80%,transparent)_56%,color-mix(in_oklab,var(--savo-night)_26%,transparent)_78%,transparent_94%)] lg:block" />
+          {/* A last, very light scrim: pulls the mid-tones down without dimming
+              the lantern, so the highlight still reads as a light source. */}
+          <div className="absolute inset-0 bg-[var(--savo-night)]/18" />
         </div>
-        <p className="mt-5 text-[13px] text-cream/55">
-          Free to use. No subscription, no trial clock, no card.
-        </p>
-      </PageHero>
+
+        <div className="mx-auto flex min-h-[88svh] w-full max-w-6xl flex-col justify-end px-5 pb-16 pt-24 sm:min-h-[86svh] lg:min-h-[92vh] lg:justify-center lg:pb-24 lg:pt-28">
+          <div className="max-w-xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--savo-mint)]">
+              {HOME_EYEBROW}
+            </p>
+            <h1 className="mt-4 text-balance-tight font-display text-[2.6rem] font-semibold leading-[1.02] tracking-[-0.025em] sm:text-6xl lg:text-[4.25rem]">
+              {HOME_HEADLINE}
+            </h1>
+            <p className="mt-5 max-w-md text-[1.0625rem] leading-relaxed text-cream/80">
+              Manage sales, inventory, expenses and customer accounts in one connected workspace —
+              from the counter, the stockroom or wherever the day takes you.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+              <Link
+                to="/auth/signup"
+                className="group inline-flex h-12 items-center justify-center gap-2 rounded-full bg-[var(--savo-mint)] px-6 text-[0.9375rem] font-semibold text-[var(--savo-night)] transition-transform duration-200 hover:-translate-y-0.5"
+              >
+                Start free
+                <ArrowRight className="size-4 transition-transform duration-200 group-hover:translate-x-0.5" />
+              </Link>
+              <Link
+                to="/features"
+                className="inline-flex h-12 items-center justify-center rounded-full border border-white/25 bg-[color-mix(in_oklab,var(--savo-night)_40%,transparent)] px-6 text-[0.9375rem] font-medium text-cream backdrop-blur-sm transition-colors hover:bg-white/10"
+              >
+                See how it works
+              </Link>
+            </div>
+            <p className="mt-5 text-[13px] text-cream/60">
+              No subscription, no trial clock, no card.
+            </p>
+          </div>
+        </div>
+
+        {/* Attribution — discreet, and a real link to the photographer's page. */}
+        <a
+          href="https://unsplash.com/photos/cozy-shop-interior-with-shelves-and-warm-lighting-uGPIn14r0GM"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="absolute right-4 bottom-3 z-10 text-[10px] text-cream/45 underline-offset-2 transition-colors hover:text-cream/80 hover:underline"
+        >
+          Photograph: Jason Leung / Unsplash
+        </a>
+      </section>
 
       {/* ------------------------------------------------------------ promise */}
       <section className="border-b border-border bg-background">
         <div className="mx-auto grid w-full max-w-6xl gap-x-8 gap-y-5 px-5 py-8 sm:grid-cols-2 lg:grid-cols-4">
           {[
-            { icon: Store, label: "Built for Kenyan shops" },
-            { icon: ScanLine, label: "Sell from any phone" },
+            { icon: Store, label: "For shops of any size" },
+            { icon: ScanLine, label: "Sell from any device" },
             { icon: Boxes, label: "A stock ledger, not a guess" },
             { icon: ShieldCheck, label: "One shop, one set of books" },
           ].map((item) => (
@@ -118,8 +168,8 @@ function Landing() {
         <div className="mx-auto w-full max-w-6xl px-5 py-16 sm:py-20">
           <SectionHeading
             eyebrow="A day at the counter"
-            title="The order things happen in is the order they happen at the shop."
-            description="SAVO follows the day rather than asking the shop to follow the software. Each step below is a screen that already exists."
+            title="The order things happen in is the order they happen in the business."
+            description="SAVO follows the working day rather than asking the business to follow the software. Each step below is a screen that already exists."
           />
 
           <div className="mt-12 space-y-14">
@@ -155,6 +205,8 @@ function Landing() {
                     <step.icon className="size-4" aria-hidden />
                     {step.screen}
                   </div>
+                  {/* Illustrative structure only — no invented figures, no fake
+                      transactions, nothing that reads as a live dashboard. */}
                   <div className="mt-5 space-y-2.5">
                     {[72, 88, 64, 80].map((width, rowIndex) => (
                       <div
@@ -196,7 +248,7 @@ function Landing() {
           <SectionHeading
             eyebrow="Numbers you can defend"
             title="Every figure can be traced back to what caused it."
-            description="Not a dashboard that looks busy — a record that answers the question a shop owner actually asks: why is this number what it is?"
+            description="Not a dashboard that looks busy — a record that answers the question a business owner actually asks: why is this number what it is?"
           />
           <div className="mt-10 grid gap-5 md:grid-cols-3">
             {[
@@ -207,13 +259,13 @@ function Landing() {
               },
               {
                 icon: HandCoins,
-                title: "Debt is a balance, not a note",
-                body: "A credit sale creates a debtor with a balance. Part payments and repayments update it, and the original sale stays attached.",
+                title: "Credit is a balance, not a note",
+                body: "A credit sale creates a customer balance. Part payments and repayments update it, and the original sale stays attached.",
               },
               {
                 icon: Banknote,
                 title: "Expenses sit beside takings",
-                body: "Rent, transport, packaging. The day's result is worked out with what was spent, not just what came in.",
+                body: "Rent, transport, packaging. The period's result is worked out with what was spent, not just what came in.",
               },
             ].map((card) => (
               <div key={card.title} className="rounded-2xl border border-border bg-card p-6">
@@ -233,7 +285,7 @@ function Landing() {
             <SectionHeading
               eyebrow="Pricing"
               title="One account. Nothing to upgrade."
-              description="Sales, stock, debtors, expenses, receipts, staff codes and reports all work on the free account. There is no paid tier to be sold later."
+              description="Sales, inventory, customer accounts, expenses, receipts, staff access and reports all work on the free account. There is no paid tier to be sold later."
             />
             <Link
               to="/pricing"
@@ -252,7 +304,7 @@ function Landing() {
             <ul className="mt-6 space-y-2.5 text-sm text-ink">
               {[
                 "Unlimited sales and products",
-                "Stock, debtors and expenses",
+                "Inventory, customer accounts and expenses",
                 "Receipts and CSV reports",
                 "Staff access codes with roles",
                 "SAVO AI included",
@@ -268,8 +320,8 @@ function Landing() {
       </section>
 
       <ClosingCta
-        title="Run your shop with greater clarity."
-        description="Open a shop, add a few products and make the first sale. SAVO keeps the stock, the debts and the numbers from there."
+        title="Run your business with greater clarity."
+        description="Open an account, add a few products and record the first sale. SAVO keeps the stock, the balances and the numbers from there."
       />
     </SiteShell>
   );

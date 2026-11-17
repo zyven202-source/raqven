@@ -11,6 +11,10 @@ import { Button } from "@/components/ui/button";
  * The bottom padding is the navigation's clearance. The bar floats, so nothing
  * about it can push the page down — the space has to be reserved here instead,
  * and it has to include the phone's gesture-bar inset.
+ *
+ * The column widens once there is room for it. At `max-w-2xl` every screen was
+ * a phone column on a 27-inch display, which made a reports table look like a
+ * receipt and left the desktop rail floating in empty space.
  */
 export function PageContainer({
   className,
@@ -22,7 +26,7 @@ export function PageContainer({
   return (
     <div
       className={cn(
-        "mx-auto w-full max-w-2xl px-4 pb-[calc(env(safe-area-inset-bottom)+6rem)] pt-3 sm:px-5",
+        "mx-auto w-full max-w-2xl px-4 pb-[calc(env(safe-area-inset-bottom)+6rem)] pt-4 sm:px-5 lg:max-w-3xl lg:pt-6",
         className,
       )}
     >
@@ -32,25 +36,44 @@ export function PageContainer({
 }
 
 /**
- * Page title. `meta` is the one line of orientation a screen genuinely needs;
- * subtitles that restate the title are removed rather than reworded.
+ * Page title.
+ *
+ * **Why the eyebrow.** A screen's name ("Inventory") and its answer ("412
+ * products, 9 low on stock") are different jobs, and running them together as
+ * "Inventory — 412 products" made every header a sentence. The eyebrow names
+ * the section the screen belongs to, the title names the screen, and the
+ * subtitle carries the state. Three levels, each doing one thing.
+ *
+ * The title is set in the display face at `app-title` size. That is the single
+ * strongest visual change in the app: the same screens now open with an
+ * editorial heading rather than a bold browser-default `<h1>`.
  */
 export function PageHeader({
   title,
+  eyebrow,
   subtitle,
   action,
 }: {
   title: string;
+  /** The section this screen belongs to, e.g. "Money" or "Stock". */
+  eyebrow?: string | undefined;
   subtitle?: string | undefined;
   action?: React.ReactNode | undefined;
 }) {
   return (
-    <header className="mb-4 flex items-start justify-between gap-3">
-      <div className="min-w-0">
-        <h1 className="text-[1.375rem] leading-tight">{title}</h1>
-        {subtitle ? <p className="mt-0.5 text-sm text-muted-foreground">{subtitle}</p> : null}
+    <header className="mb-5">
+      {eyebrow ? <p className="eyebrow">{eyebrow}</p> : null}
+      <div className={cn("flex items-start justify-between gap-3", eyebrow && "mt-1.5")}>
+        <div className="min-w-0">
+          <h1 className="app-title">{title}</h1>
+          {subtitle ? (
+            <p className="mt-1.5 max-w-prose text-sm leading-relaxed text-muted-foreground">
+              {subtitle}
+            </p>
+          ) : null}
+        </div>
+        {action ? <div className="shrink-0 pt-1">{action}</div> : null}
       </div>
-      {action ? <div className="shrink-0 pt-0.5">{action}</div> : null}
     </header>
   );
 }

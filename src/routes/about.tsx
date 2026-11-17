@@ -9,9 +9,9 @@ import { pageMeta } from "@/lib/seo";
 export const Route = createFileRoute("/about")({
   head: () =>
     pageMeta({
-      title: "About SAVO — shop software for Kenyan retailers",
+      title: "About SAVO — retail management software",
       description:
-        "Why SAVO exists: a shop's records should belong to the shop, stay readable on a cheap phone, and be honest about what they show.",
+        "Why SAVO exists: a business's records should belong to that business, stay readable on an ordinary phone, and be honest about what they show.",
       path: "/about",
     }),
   component: AboutPage,
@@ -30,7 +30,7 @@ function AboutPage() {
     <SiteShell>
       <PageHero
         eyebrow="About"
-        title="A shop's records should belong to the shop."
+        title="A business's records should belong to the business."
         aside={
           <div className="savo-glass-a rounded-3xl p-6">
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cream/50">
@@ -38,10 +38,10 @@ function AboutPage() {
             </p>
             <dl className="mt-4 space-y-4">
               {[
-                { term: "Built for", detail: "Shops and small retailers in Kenya" },
+                { term: "Built for", detail: "Independent shops and small retail teams" },
                 { term: "Cost", detail: "Free — no tier, no trial, no card" },
                 { term: "Data", detail: "Visible only to that shop's members" },
-                { term: "Based", detail: "Nairobi, Kenya" },
+                { term: "Deployment", detail: "Runs in the browser, installs as an app" },
               ].map((item) => (
                 <div key={item.term}>
                   <dt className="text-[11px] uppercase tracking-[0.14em] text-cream/40">
@@ -122,7 +122,7 @@ function AboutPage() {
           <ul className="mt-5 space-y-3 text-[0.9375rem] leading-relaxed text-muted-foreground">
             {[
               "Not an accounting package. It keeps the shop's records; your accountant still does the accounts.",
-              "Not a payments processor. It records M-Pesa, cash, card and credit; it does not move money.",
+              "Not a payments processor. It records cash, card, mobile money and credit; it does not move money.",
               "Not a forecasting tool. It reports what happened, not what might.",
               "Not a marketplace. There is nothing to buy here except the software, and that is free.",
             ].map((line) => (

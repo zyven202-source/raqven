@@ -142,6 +142,7 @@ function InventoryPage() {
   return (
     <PageContainer>
       <PageHeader
+        eyebrow="Inventory"
         title="Stock"
         action={
           <Button

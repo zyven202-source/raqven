@@ -113,7 +113,7 @@ function SupportPage() {
               {CONTACT_PHONE.replace(/^(\d{4})(\d{3})(\d{3})$/, "$1 $2 $3")}
             </a>
             <p className="mt-4 border-t border-white/10 pt-3 text-xs leading-relaxed text-cream/55">
-              Working hours in Nairobi. Leave the shop name and what you were doing.
+              Replies come during working hours. Leave the shop name and what you were doing.
             </p>
           </div>
         }
@@ -200,8 +200,8 @@ function SupportPage() {
                 </a>
               </div>
               <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-                This is a small team. Replies come during working hours in Nairobi, as soon as
-                someone can look properly at the problem.
+                This is a small team. Replies come during working hours, as soon as someone can
+                look properly at the problem.
               </p>
             </div>
 

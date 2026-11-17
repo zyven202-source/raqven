@@ -114,7 +114,7 @@ function SettingsPage() {
   if (shopQuery.isError) {
     return (
       <PageContainer>
-        <PageHeader title="Settings" />
+        <PageHeader eyebrow="Workspace" title="Settings" />
         <div className="mt-4">
           <ErrorState message={shopQuery.error.message} onRetry={() => void shopQuery.refetch()} />
         </div>
@@ -190,7 +190,7 @@ function SettingsPage() {
 
   return (
     <PageContainer>
-      <PageHeader title="Settings" />
+      <PageHeader eyebrow="Workspace" title="Settings" />
 
       {/* ------------------------------------------------------------ shop */}
       <form onSubmit={saveShop} id="shop" className="scroll-mt-20 space-y-4">
@@ -228,7 +228,7 @@ function SettingsPage() {
               id="settings-location"
               value={location}
               onChange={(event) => setLocation(event.target.value)}
-              placeholder="Gikomba"
+              placeholder="City centre"
               className="h-12"
               autoComplete="off"
             />
@@ -239,7 +239,7 @@ function SettingsPage() {
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
               inputMode="tel"
-              placeholder="0712 345 678"
+              placeholder="+1 555 0100"
               className="h-12"
               autoComplete="tel"
             />
@@ -323,7 +323,7 @@ function SettingsPage() {
             id="settings-footer"
             value={footerText}
             onChange={(event) => setFooterText(event.target.value)}
-            placeholder="Asante kwa biashara!"
+            placeholder="Thank you for your business!"
             className="h-12"
             autoComplete="off"
           />

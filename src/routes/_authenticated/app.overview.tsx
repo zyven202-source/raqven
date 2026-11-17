@@ -13,7 +13,7 @@ import {
 import { useState } from "react";
 
 import { EmptyState, ErrorState, LoadingState, PageContainer } from "@/components/app/AppChrome";
-import { Money, SectionLabel } from "@/components/app/primitives";
+import { MetricCard, Money, SectionLabel } from "@/components/app/primitives";
 import { OwnerOnly } from "@/components/app/OwnerOnly";
 import { StockMoveSheet } from "@/components/app/StockMoveSheet";
 import { Button } from "@/components/ui/button";
@@ -151,78 +151,97 @@ function OverviewPage() {
 
   return (
     <PageContainer>
+      {/*
+        The opening band.
+
+        This is the screen's one emerald surface — the day's takings, on a ground
+        dark enough that the figure is the brightest thing on it. The rest of the
+        dashboard is paper and hairlines. That contrast is what makes the number
+        read as the answer to "how is today going?" rather than as one card among
+        many, and it is the only place the palette goes this dark in the app.
+      */}
       <header className="mb-5">
-        <p className="text-sm text-muted-foreground">
-          {new Intl.DateTimeFormat("en-KE", {
-            weekday: "long",
-            day: "numeric",
-            month: "long",
-          }).format(new Date())}
-        </p>
-        <h1 className="mt-0.5 text-[1.375rem] leading-tight">Today in {activeShop?.name}</h1>
+        <p className="eyebrow">Dashboard</p>
+        <div className="mt-1.5 flex items-start justify-between gap-3">
+          <div className="min-w-0">
+            <h1 className="app-title truncate">Today in {activeShop?.name}</h1>
+            <p className="mt-1.5 text-sm text-muted-foreground">
+              {new Intl.DateTimeFormat("en-GB", {
+                weekday: "long",
+                day: "numeric",
+                month: "long",
+              }).format(new Date())}
+            </p>
+          </div>
+          <Button asChild size="sm" className="h-9 shrink-0">
+            <Link to="/app/pos" search={{ shop: undefined }}>
+              <ScanLine className="size-3.5" aria-hidden /> Sell
+            </Link>
+          </Button>
+        </div>
       </header>
 
       {/* --------------------------------------------------- the day's headline */}
       <section className="mb-6">
-        <SectionLabel>Takings</SectionLabel>
         {report ? (
-          <div className="glass-1 rounded-xl backdrop-blur-2xl backdrop-saturate-150 p-4">
-            <p className="tnum text-[2.25rem] font-semibold leading-none">
-              {formatMoney(report.grossSales, currency)}
-            </p>
-            <p className="mt-2 text-sm text-muted-foreground">
-              {report.salesCount > 0
-                ? `from ${report.salesCount} sale${report.salesCount === 1 ? "" : "s"} today`
-                : "No sales recorded yet today"}
-            </p>
-            {report.discounts > 0 ? (
-              <p className="mt-1 text-xs text-muted-foreground">
-                after {formatMoney(report.discounts, currency)} of discounts
-              </p>
+          <div className="band-emerald rounded-2xl px-5 py-5">
+            <div className="flex items-start justify-between gap-3">
+              <div className="min-w-0">
+                <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-cream/55">
+                  Takings today
+                </p>
+                <p className="tnum mt-2 font-display text-[2.55rem] font-semibold leading-none tracking-tight">
+                  {formatMoney(report.grossSales, currency)}
+                </p>
+                <p className="mt-2 text-sm text-cream/70">
+                  {report.salesCount > 0
+                    ? `from ${report.salesCount} sale${report.salesCount === 1 ? "" : "s"} today`
+                    : "No sales recorded yet today"}
+                  {report.discounts > 0
+                    ? ` · after ${formatMoney(report.discounts, currency)} of discounts`
+                    : ""}
+                </p>
+              </div>
+              <Link
+                to="/app/transactions"
+                search={{ shop: undefined }}
+                className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/20 px-3 py-1.5 text-xs font-medium text-cream/85 hover:bg-white/10"
+              >
+                Sales
+                <ArrowUpRight className="size-3" aria-hidden />
+              </Link>
+            </div>
+
+            {grossProfit !== null && netResult !== null ? (
+              <dl className="mt-5 grid grid-cols-3 gap-3 border-t border-white/15 pt-4">
+                {[
+                  { term: "Gross profit", value: formatMoney(grossProfit, currency) },
+                  { term: "Expenses", value: `− ${formatMoney(report.expenses, currency)}` },
+                  { term: "Net result", value: formatMoney(netResult, currency) },
+                ].map((item) => (
+                  <div key={item.term} className="min-w-0">
+                    <dt className="text-[10px] uppercase tracking-[0.12em] text-cream/50">
+                      {item.term}
+                    </dt>
+                    <dd className="tnum mt-1 truncate text-sm font-semibold text-cream">
+                      {item.value}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
             ) : null}
+
+            <p className="mt-3 text-[11px] leading-relaxed text-cream/50">
+              Profit is an estimate: it uses the buying price recorded on each product, not what you
+              paid on the last delivery.
+              {report.refunds > 0
+                ? ` Refunds paid out today: ${formatMoney(report.refunds, currency)}.`
+                : ""}
+            </p>
           </div>
         ) : (
           reportPlaceholder
         )}
-      </section>
-
-      {/* ------------------------------------------- money in, money out, result */}
-      <section className="mb-6">
-        <SectionLabel>The day's result</SectionLabel>
-        {report && grossProfit !== null && netResult !== null ? (
-          <>
-            <dl className="list-divided">
-              <Line
-                label="Gross profit (estimate)"
-                value={formatMoney(grossProfit, currency)}
-                note="Takings less what the goods cost you"
-                tone={grossProfit < 0 ? "negative" : "default"}
-              />
-              <Line
-                label="Expenses"
-                value={`− ${formatMoney(report.expenses, currency)}`}
-                note={report.expenses > 0 ? "Logged today" : "Nothing logged today"}
-              />
-              <Line
-                label="Net result (estimate)"
-                value={formatMoney(netResult, currency)}
-                note="Gross profit less expenses"
-                tone={netResult < 0 ? "negative" : "positive"}
-                emphasis
-              />
-              {report.refunds > 0 ? (
-                <Line
-                  label="Refunds paid out"
-                  value={`− ${formatMoney(report.refunds, currency)}`}
-                />
-              ) : null}
-            </dl>
-            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-              Profit is an estimate: it uses the buying price recorded on each product, not what you
-              actually paid on the last delivery.
-            </p>
-          </>
-        ) : null}
       </section>
 
       {/* -------------------------------------------------------- the numbers say */}
@@ -268,26 +287,26 @@ function OverviewPage() {
       <section className="mb-6">
         <SectionLabel>Where the shop stands</SectionLabel>
         {report ? (
-          <div className="grid grid-cols-2 gap-x-4 gap-y-4">
-            <Figure
-              label="Money owed to you"
+          <div className="grid grid-cols-2 gap-2.5">
+            <MetricCard
+              label="Owed to you"
               value={formatMoney(report.outstandingCredit, currency)}
-              note="Across all debtors"
+              hint="Across all customer accounts"
             />
-            <Figure
+            <MetricCard
               label="Stock at cost"
               value={formatMoney(report.stockValue, currency)}
-              note="What the shelves are worth"
+              hint="What the shelves are worth"
             />
-            <Figure
-              label="Cash and mobile money taken"
+            <MetricCard
+              label="Collected today"
               value={formatMoney(report.collected, currency)}
-              note="Excludes credit sales"
+              hint="Cash, card and mobile money"
             />
-            <Figure
-              label="Debt collected"
+            <MetricCard
+              label="Credit repaid"
               value={formatMoney(report.debtCollected, currency)}
-              note="Repayments received today"
+              hint="Repayments received today"
             />
           </div>
         ) : null}
@@ -497,48 +516,6 @@ function trendSentence(
   )} versus ${format(yesterday)}.`;
 }
 
-function Line({
-  label,
-  value,
-  note,
-  tone = "default",
-  emphasis = false,
-}: {
-  label: string;
-  value: string;
-  note?: string;
-  tone?: "default" | "positive" | "negative";
-  emphasis?: boolean;
-}) {
-  return (
-    <div className="flex items-start justify-between gap-4 py-3">
-      <div className="min-w-0">
-        <p className={emphasis ? "text-sm font-semibold" : "text-sm"}>{label}</p>
-        {note ? <p className="mt-0.5 text-xs text-muted-foreground">{note}</p> : null}
-      </div>
-      <p
-        className={
-          "tnum shrink-0 text-right " +
-          (emphasis ? "text-base font-semibold " : "text-sm ") +
-          (tone === "positive" ? "text-positive" : tone === "negative" ? "text-negative" : "")
-        }
-      >
-        {value}
-      </p>
-    </div>
-  );
-}
-
-function Figure({ label, value, note }: { label: string; value: string; note: string }) {
-  return (
-    <div>
-      <p className="text-xs text-muted-foreground">{label}</p>
-      <p className="tnum mt-0.5 text-base font-semibold">{value}</p>
-      <p className="mt-0.5 text-[11px] text-muted-foreground">{note}</p>
-    </div>
-  );
-}
-
 function QuickAction({
   to,
   icon: Icon,
@@ -552,7 +529,7 @@ function QuickAction({
     <Link
       to={to}
       search={{ shop: undefined }}
-      className="glass-2 press hover-glass flex min-h-12 items-center gap-2.5 rounded-lg px-3 py-2.5 text-sm font-medium backdrop-blur-md backdrop-saturate-150"
+      className="card-surface press flex min-h-14 items-center gap-2.5 rounded-xl px-3 py-3 text-sm font-medium transition-colors hover:border-ink/25 hover:bg-accent/30"
     >
       <Icon className="size-4 shrink-0 text-ink-soft" aria-hidden />
       {label}

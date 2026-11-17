@@ -45,10 +45,10 @@ export const PLAY_LISTING = {
    */
   developerName: "Abdirahman Hilowle Adan",
   /** 30 characters max on Play. */
-  appName: "SAVO — Shop POS Kenya",
+  appName: "SAVO — Retail Management",
   /** 80 characters max on Play. */
   shortDescription:
-    "Sales, stock, M-Pesa, debtors and expenses for Kenyan shops — offline-tolerant.",
+    "Sales, inventory, customer accounts and expenses for retail businesses — offline-tolerant.",
   /** The Play Privacy Policy URL field. Points at the published policy. */
   privacyPolicyUrl: `${SITE_URL}/legal/privacy`,
   /** The Play "Account deletion" URL field, as the policy requires. */

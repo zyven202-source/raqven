@@ -36,8 +36,14 @@
  */
 export const SITE_URL = "https://savo.freebuff.page";
 
-/** The one term a shop owner in Kenya would actually type to find this. */
-export const PRIMARY_KEYWORD = "Kenyan shop POS";
+/**
+ * The one term a retailer would actually type to find this.
+ *
+ * It describes the product — retail management software — rather than a market.
+ * SAVO is sold internationally, and a geographic phrase would be a claim about
+ * where it works, not a description of what it does.
+ */
+export const PRIMARY_KEYWORD = "retail management software";
 
 /**
  * The phrases the landing page is written to answer, in the words a shop owner
@@ -47,18 +53,17 @@ export const PRIMARY_KEYWORD = "Kenyan shop POS";
  * ranking targets.
  */
 export const KEYWORDS = [
-  "Kenyan shop POS",
-  "shop POS Kenya",
-  "point of sale Kenya",
-  "duka POS system",
-  "stock book app",
-  "inventory app Kenya",
-  "M-Pesa POS",
-  "sales and stock records",
-  "debtors book Kenya",
-  "receipt app for shops",
+  "retail management software",
+  "point of sale system",
+  "inventory management software",
+  "sales tracking app",
+  "retail POS",
+  "stock management software",
+  "customer credit ledger",
+  "expense tracking for retail",
   "small business POS",
-  "SAVO POS",
+  "retail reports",
+  "SAVO",
 ] as const;
 
 /** The `keywords` meta value, built from the one list above. */
@@ -69,12 +74,12 @@ export const SITE_NAME = "SAVO";
 export const SITE_TAGLINE = "Every sale. Every stock. Every number.";
 
 /** 51 characters — inside the ~60 a search result will show in full. */
-export const SEO_TITLE = "SAVO — Kenyan Shop POS with Stock, Debtors & M-Pesa";
+export const SEO_TITLE = "SAVO — Retail Management Software, POS & Inventory";
 
 /** 147 characters — inside the ~150 a search result will show before truncating. */
 export const SEO_DESCRIPTION =
-  "SAVO is the Kenyan shop POS and stock book: record sales, take M-Pesa, track stock, " +
-  "chase debtors and read profit from the counter or the back office.";
+  "Retail management software for sales, inventory, expenses and customer accounts — " +
+  "one workspace for the counter, the stockroom and the numbers.";
 
 /**
  * The home page's `<h1>`: a sentence about the shop, not a keyword string.
@@ -84,13 +89,13 @@ export const SEO_DESCRIPTION =
  * written for a crawler — and the word still appears in the title, the meta
  * description and the first paragraph, which is what actually ranks.
  */
-export const HOME_HEADLINE = "Your shop deserves more than guesswork.";
+export const HOME_HEADLINE = "Run your business with clarity.";
 
 /**
- * The label above the headline. This is the page's search term, in the words a
- * shop owner in Kenya would use, and it is visible rather than hidden.
+ * The label above the headline. The product's category, visible rather than
+ * hidden, so the headline itself can be a sentence.
  */
-export const HOME_EYEBROW = PRIMARY_KEYWORD;
+export const HOME_EYEBROW = "Retail management software";
 
 /** The square app icon, which is the only large image the product ships. */
 export const OG_IMAGE_URL = `${SITE_URL}/icon-512.png`;
@@ -112,7 +117,7 @@ export const HOME_META = [
   { property: "og:description", content: SEO_DESCRIPTION },
   { property: "og:type", content: "website" },
   { property: "og:url", content: `${SITE_URL}/` },
-  { property: "og:locale", content: "en_KE" },
+  { property: "og:locale", content: "en" },
   { property: "og:image", content: OG_IMAGE_URL },
   { property: "og:image:type", content: "image/png" },
   { property: "og:image:width", content: "512" },
@@ -183,7 +188,7 @@ export function pageMeta({
       { property: "og:description", content: description },
       { property: "og:type", content: type },
       { property: "og:url", content: url },
-      { property: "og:locale", content: "en_KE" },
+      { property: "og:locale", content: "en" },
       { property: "og:image", content: OG_IMAGE_URL },
       { property: "og:image:type", content: "image/png" },
       { property: "og:image:width", content: "512" },
@@ -227,7 +232,6 @@ export function siteJsonLd() {
           height: 512,
           caption: OG_IMAGE_ALT,
         },
-        areaServed: { "@type": "Country", name: "Kenya" },
       },
       {
         "@type": "WebSite",
@@ -235,7 +239,7 @@ export function siteJsonLd() {
         url: `${SITE_URL}/`,
         name: SITE_NAME,
         description: SEO_DESCRIPTION,
-        inLanguage: "en-KE",
+        inLanguage: "en",
         publisher: { "@id": organizationId },
       },
     ],
@@ -265,10 +269,9 @@ export function webApplicationJsonLd() {
     url: `${SITE_URL}/`,
     description: SEO_DESCRIPTION,
     image: OG_IMAGE_URL,
-    inLanguage: "en-KE",
-    areaServed: { "@type": "Country", name: "Kenya" },
+    inLanguage: "en",
     featureList: [
-      "Point of sale with barcode scanning and cash, M-Pesa, card or credit payment",
+      "Point of sale with barcode scanning and cash, card, mobile money or credit payment",
       "Stock ledger where every movement states its reason",
       "Debtors book with part payments and repayments",
       "Expense recording beside the day's takings",

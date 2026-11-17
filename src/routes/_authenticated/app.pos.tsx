@@ -413,8 +413,20 @@ function PosPage() {
 
   return (
     <PageContainer className="pb-[calc(var(--glass-bar-clearance)+5.75rem)]">
+      {/* The counter's own heading: small, because the screen is the working
+          surface and the product grid should start high on the page. */}
+      <div className="mb-3 flex items-end justify-between gap-3">
+        <div className="min-w-0">
+          <p className="eyebrow">Counter</p>
+          <h1 className="app-title mt-1 text-[1.5rem]">Point of sale</h1>
+        </div>
+        <p className="shrink-0 text-xs text-muted-foreground">
+          {products.length} product{products.length === 1 ? "" : "s"}
+        </p>
+      </div>
+
       {/* ------------------------------------------------------------ search */}
-      <div className="sticky top-14 z-20 -mx-4 mb-3 bg-background/95 px-4 pb-2.5 pt-2.5 backdrop-blur-md sm:-mx-5 sm:px-5">
+      <div className="sticky top-14 z-20 -mx-4 mb-3 border-b border-border/70 bg-background/92 px-4 pb-2.5 pt-2.5 backdrop-blur-md sm:-mx-5 sm:px-5">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search
@@ -470,7 +482,7 @@ function PosPage() {
           }
         />
       ) : (
-        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 lg:grid-cols-4">
           {products.map((product) => {
             const quantity = Number(product.quantity);
             const out = quantity <= 0;
@@ -483,17 +495,27 @@ function PosPage() {
                 disabled={out}
                 onClick={() => addToCart(product)}
                 className={cn(
-                  "press flex min-h-[4.75rem] flex-col justify-between rounded-lg border p-2.5 text-left",
+                  "press group relative flex min-h-[6.25rem] flex-col justify-between rounded-xl border p-3 text-left transition-colors",
                   out
-                    ? "border-border bg-sunken opacity-60"
-                    : "border-border bg-card active:bg-sunken",
+                    ? "border-border bg-sunken/80"
+                    : "border-border bg-card shadow-[var(--depth-1)] hover:border-ink/25 hover:bg-accent/25",
                 )}
               >
-                <span className="line-clamp-2 text-[0.8125rem] font-medium leading-snug">
+                <span
+                  className={cn(
+                    "line-clamp-2 text-[0.875rem] font-medium leading-snug",
+                    out ? "text-muted-foreground" : "text-ink",
+                  )}
+                >
                   {product.name}
                 </span>
-                <span className="mt-1.5 flex items-end justify-between gap-1">
-                  <span className="tnum text-sm font-semibold">
+                <span className="mt-2 flex items-end justify-between gap-1.5">
+                  <span
+                    className={cn(
+                      "tnum font-display text-[1.0625rem] font-semibold leading-none tracking-tight",
+                      out ? "text-muted-foreground" : "text-ink",
+                    )}
+                  >
                     {formatMoney(product.selling_price, currency)}
                   </span>
                   <span className="sr-only">
@@ -509,9 +531,20 @@ function PosPage() {
                           : "text-muted-foreground",
                     )}
                   >
-                    {out ? "Out" : `${quantity}`}
+                    <span
+                      className={cn(
+                        "rounded-full px-1.5 py-0.5",
+                        out
+                          ? "bg-negative-soft text-negative"
+                          : product.is_low_stock
+                            ? "bg-caution-soft text-caution"
+                            : "bg-secondary text-secondary-foreground",
+                      )}
+                    >
+                      {out ? "Out" : `${quantity} left`}
+                    </span>
                     {inCart > 0 ? (
-                      <span className="ml-1 rounded bg-ink px-1 py-0.5 text-[10px] font-semibold text-background">
+                      <span className="ml-1 rounded-full bg-ink px-1.5 py-0.5 font-semibold text-background">
                         {inCart} in basket
                       </span>
                     ) : null}
@@ -794,7 +827,7 @@ function PosPage() {
                     value={debtorPhone}
                     onChange={(event) => setDebtorPhone(event.target.value)}
                     inputMode="tel"
-                    placeholder="0712 345 678"
+                    placeholder="+1 555 0100"
                     className="h-11"
                     autoComplete="off"
                   />

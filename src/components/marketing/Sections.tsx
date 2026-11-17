@@ -52,7 +52,7 @@ export const PAGE_BODY = [
     title: "Scan it, sell it, done.",
     screen: "Point of sale",
     icon: ScanLine,
-    body: "A barcode or a tap on the product, then cash, M-Pesa, card or credit. The stock comes off the shelf and the receipt is written in the same movement.",
+    body: "A barcode or a tap on the product, then cash, card, mobile money or credit. The stock comes off the shelf and the receipt is written in the same movement.",
     points: ["Works on the phone you already carry", "Credit sales become balances, not notes"],
     caption: "The basket: scanned items, one payment step, a receipt the customer keeps.",
   },

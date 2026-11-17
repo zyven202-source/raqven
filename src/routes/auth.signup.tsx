@@ -15,7 +15,7 @@ export const Route = createFileRoute("/auth/signup")({
     pageMeta({
       title: "SAVO — Create your account",
       description:
-        "Create a free SAVO account, add your shop and record your first sale from an Android phone.",
+        "Create a free SAVO account, add your shop and record your first sale from any phone or computer.",
       path: "/auth/signup",
     }),
   component: SignupPage,
@@ -69,7 +69,7 @@ function SignupPage() {
     if (fullName.trim().length < 2) next["fullName"] = "Enter the name you will be known by.";
     if (!/^\S+@\S+\.\S+$/.test(email.trim())) next["email"] = "Enter a valid email address.";
     if (phone && !/^(\+?254|0)\d{9}$/.test(phone.replace(/\s+/g, ""))) {
-      next["phone"] = "Use a Kenyan number, e.g. 0712345678.";
+      next["phone"] = "Include your country code, e.g. +254 712 345 678.";
     }
     if (password.length < 8) next["password"] = "Use at least 8 characters.";
     if (!accepted) next["accepted"] = "Tick the box to accept the terms and the privacy policy.";
@@ -146,7 +146,7 @@ function SignupPage() {
             id="signup-phone"
             className="h-12"
             inputMode="tel"
-            placeholder="0712 345 678"
+            placeholder="+1 555 0100"
             value={phone}
             onChange={(e) => {
               setPhone(e.target.value);

@@ -220,8 +220,8 @@ export function SiteFooter() {
           <div>
             <Logo tone="light" showTagline />
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-cream/65">
-              Sales, stock, expenses and customer debts in one calm workspace, built for shops in
-              Kenya.
+              Sales, inventory, expenses and customer accounts in one calm workspace, for
+              independent retail businesses.
             </p>
           </div>
 
@@ -253,7 +253,7 @@ export function SiteFooter() {
 
         <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-6 text-sm text-cream/60 sm:flex-row sm:items-center sm:justify-between">
           <p>
-            &copy; {new Date().getFullYear()} {BUSINESS_DETAILS.tradingName} &middot; Nairobi, Kenya
+            &copy; {new Date().getFullYear()} {BUSINESS_DETAILS.tradingName}
           </p>
           <nav aria-label="Contact" className="flex flex-wrap gap-x-6 gap-y-2">
             <a href={`mailto:${BUSINESS_DETAILS.contactEmail}`} className="hover:text-cream">

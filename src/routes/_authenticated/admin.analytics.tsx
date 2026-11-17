@@ -199,10 +199,7 @@ function Console() {
           overview.isLoading ? (
             <LoadingState label="Gathering platform numbers…" />
           ) : overview.isError ? (
-            <ErrorState
-              message={overview.error.message}
-              onRetry={() => void overview.refetch()}
-            />
+            <ErrorState message={overview.error.message} onRetry={() => void overview.refetch()} />
           ) : overview.data ? (
             <Overview data={overview.data} />
           ) : null
@@ -361,7 +358,10 @@ function Overview({ data }: { data: AdminOverview }) {
             <Line label="Stock movements" value={data.business.stock_moves} />
             <Line label="Refunds" value={data.business.refunds_count} />
             <Line label="Debtors created" value={data.business.debtors_created} />
-            <Line label="Debt repayments" value={formatMoney(data.business.debtor_payments_total)} />
+            <Line
+              label="Debt repayments"
+              value={formatMoney(data.business.debtor_payments_total)}
+            />
             <Line label="Expenses" value={formatMoney(data.business.expenses_total)} />
           </dl>
         </div>
@@ -619,7 +619,8 @@ function ErrorsTab({ range }: { range: { from: string; to: string } }) {
   });
 
   if (feed.isLoading) return <LoadingState label="Reading the error log…" />;
-  if (feed.isError) return <ErrorState message={feed.error.message} onRetry={() => void feed.refetch()} />;
+  if (feed.isError)
+    return <ErrorState message={feed.error.message} onRetry={() => void feed.refetch()} />;
 
   const rows = feed.data?.rows ?? [];
   const total = feed.data?.total ?? 0;
@@ -662,7 +663,8 @@ function ErrorsTab({ range }: { range: { from: string; to: string } }) {
             </div>
             <p className="mt-1 text-sm leading-relaxed">{row.message}</p>
             <p className="mt-0.5 truncate text-xs text-muted-foreground">
-              {[row.route, row.actor, row.app_version].filter(Boolean).join(" · ") || "Unknown screen"}
+              {[row.route, row.actor, row.app_version].filter(Boolean).join(" · ") ||
+                "Unknown screen"}
             </p>
           </li>
         ))}

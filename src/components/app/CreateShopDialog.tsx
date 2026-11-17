@@ -81,7 +81,7 @@ export function CreateShopDialog({ children }: { children: ReactNode }) {
     const next: Record<string, string | undefined> = {};
     if (name.trim().length < 2) next["name"] = "Give the shop a name of at least 2 characters.";
     if (phone && !/^(\+?254|0)\d{9}$/.test(phone.replace(/\s+/g, ""))) {
-      next["phone"] = "Use a Kenyan number, e.g. 0712345678.";
+      next["phone"] = "Include your country code, e.g. +254 712 345 678.";
     }
     setErrors(next);
     if (Object.keys(next).length > 0) return;
@@ -190,7 +190,7 @@ export function CreateShopDialog({ children }: { children: ReactNode }) {
                     id="shop-location"
                     value={location}
                     onChange={(event) => setLocation(event.target.value)}
-                    placeholder="Gikomba"
+                    placeholder="City centre"
                     className="h-12"
                     autoComplete="off"
                   />
@@ -204,7 +204,7 @@ export function CreateShopDialog({ children }: { children: ReactNode }) {
                       setErrors((c) => ({ ...c, phone: undefined }));
                     }}
                     inputMode="tel"
-                    placeholder="0712 345 678"
+                    placeholder="+1 555 0100"
                     className="h-12"
                     autoComplete="tel"
                   />
@@ -262,7 +262,7 @@ export function CreateShopDialog({ children }: { children: ReactNode }) {
                   id="shop-footer"
                   value={footerText}
                   onChange={(event) => setFooterText(event.target.value)}
-                  placeholder="Asante kwa biashara!"
+                  placeholder="Thank you for your business!"
                   className="h-12"
                   autoComplete="off"
                 />

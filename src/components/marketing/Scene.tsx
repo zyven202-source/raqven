@@ -36,7 +36,7 @@ export function TillScene() {
         <ul className="mt-4 space-y-2">
           {[
             { icon: Boxes, label: "Product added to the basket", note: "scanned" },
-            { icon: Banknote, label: "Cash · M-Pesa · Card · Credit", note: "payment" },
+            { icon: Banknote, label: "Cash · Card · Mobile money · Credit", note: "payment" },
             { icon: HandCoins, label: "Credit sale becomes a debtor", note: "balance" },
           ].map((row) => (
             <li

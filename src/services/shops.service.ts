@@ -58,7 +58,7 @@ export async function getShop(shopId: string): Promise<Shop | null> {
 }
 
 export const BUSINESS_TYPES = [
-  { value: "general", label: "General retail / duka" },
+  { value: "general", label: "General retail" },
   { value: "grocery", label: "Grocery / greens" },
   { value: "hardware", label: "Hardware" },
   { value: "boutique", label: "Boutique / clothing" },

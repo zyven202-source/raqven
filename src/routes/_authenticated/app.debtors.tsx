@@ -56,7 +56,8 @@ function DebtorsPage() {
   return (
     <PageContainer>
       <PageHeader
-        title="Debtors"
+        eyebrow="Money"
+        title="Customer accounts"
         subtitle="Only people who took goods on credit."
         action={
           <Button
@@ -375,7 +376,7 @@ function DebtorSheet({
 
                   <Field
                     label="Reference"
-                    hint="Optional. An M-Pesa code or a receipt note."
+                    hint="Optional. A payment reference or receipt note."
                     htmlFor="debt-reference"
                   >
                     <Input

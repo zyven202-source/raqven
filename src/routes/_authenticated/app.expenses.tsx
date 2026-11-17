@@ -63,7 +63,9 @@ function ExpensesPage() {
   return (
     <PageContainer>
       <PageHeader
+        eyebrow="Money"
         title="Expenses"
+        subtitle="What the business spent, in the period it happened."
         action={
           <Button className="h-10" onClick={() => setOpen(true)}>
             <Plus className="size-4" /> Add
@@ -72,15 +74,16 @@ function ExpensesPage() {
       />
 
       {expenses.length > 0 ? (
-        <div className="glass-1 mb-4 rounded-xl p-4 backdrop-blur-2xl backdrop-saturate-150">
-          <p className="text-sm text-muted-foreground">
+        <div className="card-surface mb-4 px-4 py-3.5">
+          <p className="eyebrow">
             {category === "all" ? "Total shown" : expenseCategoryLabel(category)}
           </p>
-          <p className="tnum mt-0.5 text-[1.75rem] font-semibold leading-none text-negative">
+          <p className="tnum mt-1.5 font-display text-[1.6rem] font-semibold leading-none tracking-tight text-ink">
             {formatMoney(total, currency)}
           </p>
           <p className="mt-1.5 text-xs text-muted-foreground">
-            {expenses.length} {expenses.length === 1 ? "entry" : "entries"}
+            {expenses.length} {expenses.length === 1 ? "entry" : "entries"} · outflows are shown
+            with a minus sign
           </p>
         </div>
       ) : null}
@@ -256,7 +259,7 @@ function AddExpenseSheet({
               id="expense-description"
               value={description}
               onChange={(event) => setDescription(event.target.value)}
-              placeholder="e.g. Matatu fare to Gikomba"
+              placeholder="e.g. Delivery to the market"
               className="h-12"
               autoComplete="off"
             />

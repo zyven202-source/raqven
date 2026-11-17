@@ -67,6 +67,7 @@ function TransactionsPage() {
   return (
     <PageContainer>
       <PageHeader
+        eyebrow="Money"
         title="Sales & transactions"
         subtitle="Everything that has moved, newest first."
       />
