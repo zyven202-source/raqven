@@ -83,7 +83,7 @@ function Landing() {
               height={1468}
               fetchPriority="high"
               decoding="async"
-              className="size-full object-cover object-[56%_62%] lg:object-center"
+              className="size-full object-cover object-[52%_72%] lg:object-center"
             />
           </picture>
 
