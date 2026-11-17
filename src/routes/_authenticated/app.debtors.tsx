@@ -93,7 +93,7 @@ function DebtorsPage() {
       </p>
 
       {owing.length > 0 ? (
-        <div className="glass-1 mb-4 rounded-xl p-4 backdrop-blur-2xl backdrop-saturate-150">
+        <div className="glass-1 mb-4 rounded-xl p-4">
           <p className="text-sm text-muted-foreground">Still owed to you</p>
           <p className="tnum mt-0.5 text-[1.75rem] font-semibold leading-none">
             {formatMoney(total, currency)}
@@ -310,7 +310,7 @@ function DebtorSheet({
             <ErrorState message={detail.error.message} onRetry={() => void detail.refetch()} />
           ) : detail.data ? (
             <div className="mt-4 space-y-5">
-              <div className="glass-1 rounded-xl backdrop-blur-2xl backdrop-saturate-150 p-4">
+              <div className="glass-1 rounded-xl p-4">
                 <p className="text-sm text-muted-foreground">Still owed</p>
                 <p
                   className={
@@ -655,7 +655,7 @@ function ReminderSheet({
         </SheetHeader>
 
         <div className="mt-4 space-y-4">
-          <div className="glass-1 rounded-xl p-4 backdrop-blur-2xl backdrop-saturate-150">
+          <div className="glass-1 rounded-xl p-4">
             <p className="text-sm text-muted-foreground">{debtorName}&rsquo;s current balance</p>
             <p className="tnum mt-0.5 text-xl font-semibold text-caution">{balanceText}</p>
             {phone ? (

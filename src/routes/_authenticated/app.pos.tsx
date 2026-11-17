@@ -28,6 +28,8 @@ import { StatusBadge, stockStatusLabel } from "@/components/app/primitives";
 import { ProductFormDialog } from "@/components/app/ProductFormDialog";
 import { ReceiptSheet } from "@/components/app/ReceiptSheet";
 import { BarcodeScannerSheet } from "@/components/pos/BarcodeScannerSheet";
+import { PhotoBanner } from "@/components/app/PhotoBanner";
+import { PHOTOGRAPHY } from "@/lib/photography";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
@@ -426,13 +428,21 @@ function PosPage() {
       </div>
 
       {/* ------------------------------------------------------------ search */}
-      <div className="sticky top-14 z-20 -mx-4 mb-3 border-b border-border/70 bg-background/92 px-4 pb-2.5 pt-2.5 backdrop-blur-md sm:-mx-5 sm:px-5">
+      <div className="sticky top-14 z-20 -mx-4 mb-3 border-b border-border/70 bg-background/92 px-4 pb-2.5 pt-2.5 sm:-mx-5 sm:px-5">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search
               className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
               aria-hidden
             />
+            {lines.length === 0 ? (
+              <PhotoBanner
+                photo={PHOTOGRAPHY.pos}
+                caption="Choose a product to start the sale."
+                className="mb-3"
+              />
+            ) : null}
+
             <Input
               value={search}
               onChange={(event) => setSearch(event.target.value)}
@@ -560,7 +570,7 @@ function PosPage() {
       {/* Sits directly above the floating navigation, using the same clearance
           token the bar was built from, so the two can never overlap. */}
       <div
-        className="fixed inset-x-0 z-30 border-t border-border bg-background/97 px-4 pt-2.5 pb-3 backdrop-blur-md"
+        className="fixed inset-x-0 z-30 border-t border-border bg-background/97 px-4 pt-2.5 pb-3"
         style={{ bottom: "var(--glass-bar-clearance)" }}
       >
         <div className="mx-auto flex max-w-2xl items-center gap-2">

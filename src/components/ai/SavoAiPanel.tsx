@@ -134,7 +134,7 @@ export function SavoAiPanel({
         type="button"
         aria-label="Close SAVO AI"
         onClick={onClose}
-        className="fixed inset-0 z-40 cursor-default bg-ink-deep/45 backdrop-blur-[2px] sm:hidden"
+        className="fixed inset-0 z-40 cursor-default bg-ink-deep/45-[2px] sm:hidden"
         tabIndex={-1}
       />
 
@@ -143,7 +143,7 @@ export function SavoAiPanel({
         aria-modal="true"
         aria-labelledby="savo-ai-title"
         className={cn(
-          "glass-sheet fixed z-50 flex flex-col overflow-hidden border border-glass-1-line bg-[var(--glass-1)] backdrop-blur-2xl backdrop-saturate-150",
+          "glass-sheet fixed z-50 flex flex-col overflow-hidden border border-glass-1-line bg-[var(--glass-1)]",
           "inset-x-0 bottom-0 h-[min(88dvh,46rem)] rounded-t-glass-lg",
           "sm:inset-x-auto sm:right-5 sm:bottom-[calc(env(safe-area-inset-bottom)+1.25rem)] sm:h-[min(38rem,calc(100dvh-3rem))] sm:w-[26rem] sm:rounded-glass-lg",
         )}

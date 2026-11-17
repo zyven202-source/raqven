@@ -83,7 +83,7 @@ export function SavoAiLauncher() {
           <motion.div
             initial={reduceMotion ? false : { opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
-            className="mr-1 hidden max-w-[13rem] rounded-lg rounded-br-sm border border-glass-line bg-[var(--glass-3)] px-2.5 py-1.5 text-xs leading-snug shadow-[var(--shadow-pop)] backdrop-blur-md sm:block"
+            className="mr-1 hidden max-w-[13rem] rounded-lg rounded-br-sm border border-glass-line bg-[var(--glass-3)] px-2.5 py-1.5 text-xs leading-snug shadow-[var(--shadow-pop)] sm:block"
           >
             <span className="font-medium">Ask SAVO AI</span>
             <span className="block text-muted-foreground">

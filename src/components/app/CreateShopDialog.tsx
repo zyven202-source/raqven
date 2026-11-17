@@ -233,7 +233,7 @@ export function CreateShopDialog({ children }: { children: ReactNode }) {
               </Field>
 
               {/* ----------------------------------------------------- policy */}
-              <div className="glass-2 rounded-xl backdrop-blur-md backdrop-saturate-150 px-4">
+              <div className="glass-2 rounded-xl px-4">
                 <ToggleRow
                   title="Does your shop accept refunds?"
                   description="When this is off, nobody at the counter can process a refund. Staff will see why instead of guessing."
@@ -243,7 +243,7 @@ export function CreateShopDialog({ children }: { children: ReactNode }) {
               </div>
 
               {/* ---------------------------------------------------- receipts */}
-              <div className="glass-2 rounded-xl backdrop-blur-md backdrop-saturate-150 px-4">
+              <div className="glass-2 rounded-xl px-4">
                 <ToggleRow
                   title="Show the logo on receipts"
                   description="Requires a logo above."
@@ -284,7 +284,7 @@ export function CreateShopDialog({ children }: { children: ReactNode }) {
               </Field>
 
               {/* ------------------------------------------------ staff access */}
-              <div className="glass-2 rounded-xl backdrop-blur-md backdrop-saturate-150 px-4">
+              <div className="glass-2 rounded-xl px-4">
                 <ToggleRow
                   title="Give my staff an access code"
                   description="They enter it once when they sign up and land straight in this shop. No account ids to copy around."

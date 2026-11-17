@@ -125,7 +125,7 @@ function Landing() {
               </Link>
               <Link
                 to="/features"
-                className="inline-flex h-12 items-center justify-center rounded-full border border-white/25 bg-[color-mix(in_oklab,var(--savo-night)_40%,transparent)] px-6 text-[0.9375rem] font-medium text-cream backdrop-blur-sm transition-colors hover:bg-white/10"
+                className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--brand-line)] bg-[color-mix(in_oklab,var(--savo-night)_40%,transparent)] px-6 text-[0.9375rem] font-medium text-cream transition-colors hover:bg-[var(--brand-raised)]"
               >
                 See how it works
               </Link>

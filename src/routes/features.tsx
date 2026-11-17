@@ -200,7 +200,8 @@ function FeaturesPage() {
       >
         <p>
           SAVO is a point of sale, an inventory ledger, a customer-accounts book and a reporting
-tool — built for retailers who need the day&rsquo;s numbers to be defensible, not decorated.
+          tool — built for retailers who need the day&rsquo;s numbers to be defensible, not
+          decorated.
         </p>
         <div className="mt-7 flex flex-wrap gap-3">
           <Link
@@ -212,7 +213,7 @@ tool — built for retailers who need the day&rsquo;s numbers to be defensible, 
           </Link>
           <Link
             to="/pricing"
-            className="inline-flex h-11 items-center rounded-full border border-white/20 px-5 text-sm font-medium text-cream hover:bg-white/8"
+            className="inline-flex h-11 items-center rounded-full border border-[var(--brand-line)] px-5 text-sm font-medium text-cream hover:bg-[var(--brand-raised)]"
           >
             It&rsquo;s free
           </Link>

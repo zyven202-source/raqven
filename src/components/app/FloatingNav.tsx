@@ -561,7 +561,7 @@ export function FloatingNav({ isOwner, onSignOut }: { isOwner: boolean; onSignOu
             const pointerType = (event.nativeEvent as PointerEvent).pointerType;
             if (pointerType === "touch" || holdRef.current) event.preventDefault();
           }}
-          className="glass-bar pointer-events-auto relative flex h-[var(--glass-bar-height)] w-full max-w-md touch-pan-y items-stretch gap-0.5 rounded-glass p-1 backdrop-blur-2xl backdrop-saturate-150 lg:h-auto lg:w-auto lg:max-w-none lg:flex-col"
+          className="glass-bar pointer-events-auto relative flex h-[var(--glass-bar-height)] w-full max-w-md touch-pan-y items-stretch gap-0.5 rounded-glass p-1 lg:h-auto lg:w-auto lg:max-w-none lg:flex-col"
         >
           {/* The travelling selection the hold gesture lights up. */}
           {gesture ? (
@@ -622,7 +622,7 @@ function Tab({ item, pathname }: { item: TabItem; pathname: string }) {
       {active ? (
         <motion.span
           layoutId="nav-highlight"
-          className="glass-tile pointer-events-none absolute inset-0 rounded-[1.125rem] backdrop-blur-md backdrop-saturate-150"
+          className="glass-tile pointer-events-none absolute inset-0 rounded-[1.125rem]"
           transition={reduceMotion ? { duration: 0 } : SPRING}
         />
       ) : null}
@@ -684,14 +684,14 @@ function CenterTab({ item, pathname }: { item: TabItem; pathname: string }) {
       {active ? (
         <motion.span
           layoutId="nav-highlight"
-          className="glass-tile pointer-events-none absolute inset-0 rounded-[1.125rem] backdrop-blur-md backdrop-saturate-150"
+          className="glass-tile pointer-events-none absolute inset-0 rounded-[1.125rem]"
           transition={reduceMotion ? { duration: 0 } : SPRING}
         />
       ) : null}
 
       <motion.span
         className={cn(
-          "relative z-10 grid size-10 -translate-y-1 place-items-center rounded-full border border-white/15 bg-positive text-background shadow-[0_6px_14px_-6px_oklch(0_0_0_/_0.5)] lg:translate-y-0",
+          "relative z-10 grid size-10 -translate-y-1 place-items-center rounded-full border border-[var(--brand-line)] bg-positive text-background shadow-[0_6px_14px_-6px_oklch(0_0_0_/_0.5)] lg:translate-y-0",
           active && "ring-2 ring-ink/70",
         )}
         animate={active ? { scale: 1.05 } : { scale: 1 }}
@@ -744,7 +744,7 @@ function MoreTab({
       {active ? (
         <motion.span
           layoutId="nav-highlight"
-          className="glass-tile pointer-events-none absolute inset-0 rounded-[1.125rem] backdrop-blur-md backdrop-saturate-150"
+          className="glass-tile pointer-events-none absolute inset-0 rounded-[1.125rem]"
           transition={reduceMotion ? { duration: 0 } : SPRING}
         />
       ) : null}
@@ -828,7 +828,7 @@ function MorePanel({
     <Drawer open={open} onOpenChange={onOpenChange} shouldScaleBackground={false} dismissible>
       <DrawerContent
         className={cn(
-          "glass-sheet mx-auto max-w-lg gap-0 rounded-t-glass-lg px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] backdrop-blur-2xl backdrop-saturate-150",
+          "glass-sheet mx-auto max-w-lg gap-0 rounded-t-glass-lg px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+1.25rem)]",
           reduceMotion && "transition-none",
         )}
       >

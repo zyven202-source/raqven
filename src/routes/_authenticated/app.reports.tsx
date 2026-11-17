@@ -163,7 +163,7 @@ function ReportsPage() {
       {/* ------------------------------------------------------- takings */}
       <section className="mb-6">
         <SectionLabel>Takings</SectionLabel>
-        <div className="glass-1 rounded-xl p-4 backdrop-blur-2xl backdrop-saturate-150">
+        <div className="glass-1 rounded-xl p-4">
           <p className="tnum text-[2rem] font-semibold leading-none">
             {formatMoney(report.grossSales, currency)}
           </p>

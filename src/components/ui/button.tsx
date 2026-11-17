@@ -17,9 +17,9 @@ const buttonVariants = cva(
         // Outline and secondary are the everyday glass controls: level 2, so
         // they sit quietly inside the level 1 surfaces they appear on.
         outline:
-          "glass-2 border border-glass-2-line text-foreground backdrop-blur-md backdrop-saturate-150 hover:bg-accent hover:text-accent-foreground",
+          "glass-2 border border-glass-2-line text-foreground hover:bg-accent hover:text-accent-foreground",
         secondary:
-          "glass-2 border border-glass-2-line text-secondary-foreground backdrop-blur-md backdrop-saturate-150 hover:bg-secondary/80",
+          "glass-2 border border-glass-2-line text-secondary-foreground hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",
         link: "text-primary underline-offset-4 hover:underline",
       },

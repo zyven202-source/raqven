@@ -106,7 +106,9 @@ export function DataPrivacySection() {
       await navigate({ to: "/", replace: true });
       const memberships = `${outcome.memberships_removed} team membership${outcome.memberships_removed === 1 ? "" : "s"} removed.`;
       toast.success(
-        outcome.identity_deleted ? "Your account has been deleted" : "Your account data has been deleted",
+        outcome.identity_deleted
+          ? "Your account has been deleted"
+          : "Your account data has been deleted",
         {
           description: outcome.identity_deleted
             ? `${memberships} Your sign-in is gone too, so the old password no longer works. Your consent record is kept without your name.`
@@ -209,7 +211,7 @@ export function DataPrivacySection() {
           <p className="text-sm text-muted-foreground">Loading…</p>
         ) : (
           <>
-            <div className="glass-2 rounded-xl backdrop-blur-md backdrop-saturate-150 px-4">
+            <div className="glass-2 rounded-xl px-4">
               <ToggleRow
                 title="Product updates"
                 description="News about SAVO itself — new features, changes, the occasional notice. Off unless you turn it on. Every email carries a one-tap unsubscribe, and turning this off never affects the app."

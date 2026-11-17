@@ -93,7 +93,7 @@ function AppShell({
       <a href="#main" className="sr-only-focusable">
         Skip to the main content
       </a>
-      <header className="glass-header sticky top-0 z-30 backdrop-blur-2xl backdrop-saturate-150">
+      <header className="glass-header sticky top-0 z-30">
         <ShopBar
           shop={activeShop}
           shops={shops}

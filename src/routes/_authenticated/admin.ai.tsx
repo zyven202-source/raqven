@@ -117,7 +117,7 @@ function AdminAiPage() {
 
 function AiHeader() {
   return (
-    <header className="border-b border-border bg-card/70 backdrop-blur-xl">
+    <header className="border-b border-border bg-card/70">
       <div className="mx-auto flex w-full max-w-4xl items-center gap-3 px-4 py-3 sm:px-6">
         <Logo compact />
         <div className="min-w-0 flex-1">

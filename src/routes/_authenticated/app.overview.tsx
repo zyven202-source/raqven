@@ -205,7 +205,7 @@ function OverviewPage() {
               <Link
                 to="/app/transactions"
                 search={{ shop: undefined }}
-                className="inline-flex shrink-0 items-center gap-1 rounded-full border border-white/20 px-3 py-1.5 text-xs font-medium text-cream/85 hover:bg-white/10"
+                className="inline-flex shrink-0 items-center gap-1 rounded-full border border-[var(--brand-line)] px-3 py-1.5 text-xs font-medium text-cream/85 hover:bg-[var(--brand-raised)]"
               >
                 Sales
                 <ArrowUpRight className="size-3" aria-hidden />
@@ -213,7 +213,7 @@ function OverviewPage() {
             </div>
 
             {grossProfit !== null && netResult !== null ? (
-              <dl className="mt-5 grid grid-cols-1 gap-3 border-t border-white/15 pt-4 sm:grid-cols-3">
+              <dl className="mt-5 grid grid-cols-1 gap-3 border-t border-[var(--brand-line)] pt-4 sm:grid-cols-3">
                 {[
                   { term: "Gross profit", value: formatMoney(grossProfit, currency) },
                   { term: "Expenses", value: `− ${formatMoney(report.expenses, currency)}` },
@@ -384,7 +384,7 @@ function OverviewPage() {
         <Link
           to="/app/pulse"
           search={{ shop: undefined }}
-          className="glass-2 press hover-glass flex items-center gap-3 rounded-xl px-4 py-3.5 backdrop-blur-md backdrop-saturate-150 active:opacity-80"
+          className="glass-2 press hover-glass flex items-center gap-3 rounded-xl px-4 py-3.5 active:opacity-80"
         >
           <span
             className="grid size-9 shrink-0 place-items-center rounded-lg bg-positive-soft text-positive"

@@ -41,7 +41,7 @@ export function TillScene() {
           ].map((row) => (
             <li
               key={row.label}
-              className="flex items-center gap-3 rounded-xl border border-white/8 bg-white/6 px-3 py-2.5"
+              className="flex items-center gap-3 rounded-xl border border-[var(--brand-line)] bg-[var(--brand-raised)] px-3 py-2.5"
             >
               <span className="grid size-8 shrink-0 place-items-center rounded-lg bg-[var(--savo-emerald)]/40 text-[var(--savo-mint)]">
                 <row.icon className="size-4" />
@@ -141,7 +141,7 @@ export function ClosingCta({
           </Link>
           <Link
             to={secondary.to}
-            className="inline-flex h-12 items-center justify-center rounded-full border border-white/20 px-6 text-[0.9375rem] font-medium text-cream transition-colors hover:bg-white/8"
+            className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--brand-line)] px-6 text-[0.9375rem] font-medium text-cream transition-colors hover:bg-[var(--brand-raised)]"
           >
             {secondary.label}
           </Link>

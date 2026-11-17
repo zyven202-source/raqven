@@ -208,7 +208,7 @@ function SettingsPage() {
 
       <nav
         aria-label="Settings sections"
-        className="sticky top-14 z-20 -mx-4 mb-6 flex gap-1.5 overflow-x-auto bg-background/95 px-4 py-2 backdrop-blur-md [-ms-overflow-style:none] [scrollbar-width:none] sm:-mx-5 sm:px-5 [&::-webkit-scrollbar]:hidden"
+        className="sticky top-14 z-20 -mx-4 mb-6 flex gap-1.5 overflow-x-auto bg-background/95 px-4 py-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:-mx-5 sm:px-5 [&::-webkit-scrollbar]:hidden"
       >
         {SETTINGS_SECTIONS.map((section) => (
           <a

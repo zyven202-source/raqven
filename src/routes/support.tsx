@@ -98,7 +98,7 @@ function SupportPage() {
               href={`mailto:${BUSINESS_DETAILS.contactEmail}`}
               className="mt-4 flex items-center gap-3 text-sm font-medium text-cream"
             >
-              <span className="grid size-9 place-items-center rounded-lg bg-white/8 text-[var(--savo-mint)]">
+              <span className="grid size-9 place-items-center rounded-lg bg-[var(--brand-raised)] text-[var(--savo-mint)]">
                 <Mail className="size-4" aria-hidden />
               </span>
               {BUSINESS_DETAILS.contactEmail}
@@ -107,12 +107,12 @@ function SupportPage() {
               href={`tel:${CONTACT_PHONE}`}
               className="mt-3 flex items-center gap-3 text-sm font-medium text-cream"
             >
-              <span className="grid size-9 place-items-center rounded-lg bg-white/8 text-[var(--savo-mint)]">
+              <span className="grid size-9 place-items-center rounded-lg bg-[var(--brand-raised)] text-[var(--savo-mint)]">
                 <Phone className="size-4" aria-hidden />
               </span>
               {CONTACT_PHONE.replace(/^(\d{4})(\d{3})(\d{3})$/, "$1 $2 $3")}
             </a>
-            <p className="mt-4 border-t border-white/10 pt-3 text-xs leading-relaxed text-cream/55">
+            <p className="mt-4 border-t border-[var(--brand-line)] pt-3 text-xs leading-relaxed text-cream/55">
               Replies come during working hours. Leave the shop name and what you were doing.
             </p>
           </div>
@@ -200,8 +200,8 @@ function SupportPage() {
                 </a>
               </div>
               <p className="mt-4 text-xs leading-relaxed text-muted-foreground">
-                This is a small team. Replies come during working hours, as soon as someone can
-                look properly at the problem.
+                This is a small team. Replies come during working hours, as soon as someone can look
+                properly at the problem.
               </p>
             </div>
 

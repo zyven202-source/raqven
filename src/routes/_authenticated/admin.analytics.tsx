@@ -113,7 +113,7 @@ function AdminAnalyticsPage() {
 
 function ConsoleHeader({ action }: { action?: React.ReactNode }) {
   return (
-    <header className="border-b border-border bg-card/70 backdrop-blur-xl">
+    <header className="border-b border-border bg-card/70">
       <div className="mx-auto flex w-full max-w-5xl items-center gap-3 px-4 py-3 sm:px-6">
         <Logo compact />
         <div className="min-w-0 flex-1">

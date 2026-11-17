@@ -74,8 +74,8 @@ export function SiteNav() {
       className={cn(
         "on-field sticky top-0 z-50 bg-[var(--savo-night)] transition-colors duration-300",
         scrolled
-          ? "border-b border-white/10 bg-[color-mix(in_oklab,var(--savo-night)_88%,black)] shadow-[0_10px_30px_-18px_rgba(0,0,0,0.8)]"
-          : "border-b border-white/5",
+          ? "border-b border-[var(--brand-line)] bg-[color-mix(in_oklab,var(--savo-night)_88%,black)] shadow-[0_10px_30px_-18px_rgba(0,0,0,0.8)]"
+          : "border-b border-[var(--brand-line)]",
       )}
     >
       <div className="mx-auto flex h-16 w-full max-w-6xl items-center justify-between gap-4 px-5">
@@ -88,8 +88,8 @@ export function SiteNav() {
             <Link
               key={link.to}
               to={link.to}
-              className="rounded-full px-3.5 py-2 text-sm font-medium text-cream/80 transition-colors hover:bg-white/8 hover:text-cream"
-              activeProps={{ className: "bg-white/10 text-cream" }}
+              className="rounded-full px-3.5 py-2 text-sm font-medium text-cream/80 transition-colors hover:bg-[var(--brand-raised)] hover:text-cream"
+              activeProps={{ className: "bg-[var(--brand-raised)] text-cream" }}
             >
               {link.label}
             </Link>
@@ -99,13 +99,13 @@ export function SiteNav() {
         <div className="hidden items-center gap-2 md:flex">
           <Link
             to="/auth/login"
-            className="rounded-full px-3.5 py-2 text-sm font-medium text-cream/85 transition-colors hover:bg-white/8 hover:text-cream"
+            className="rounded-full px-3.5 py-2 text-sm font-medium text-cream/85 transition-colors hover:bg-[var(--brand-raised)] hover:text-cream"
           >
             Sign in
           </Link>
           <Link
             to="/auth/signup"
-            className="group inline-flex items-center gap-1.5 rounded-full bg-cream px-4 py-2 text-sm font-semibold text-[var(--savo-night)] transition-transform duration-200 hover:-translate-y-px"
+            className="group inline-flex items-center gap-1.5 rounded-full bg-[var(--brand-primary)] px-4 py-2 text-sm font-semibold text-[#04140e] transition-transform duration-200 hover:-translate-y-px"
           >
             Open your shop
             <ArrowRight className="size-3.5 transition-transform duration-200 group-hover:translate-x-0.5" />
@@ -118,7 +118,7 @@ export function SiteNav() {
           aria-expanded={open}
           aria-controls="site-menu"
           aria-label={open ? "Close menu" : "Open menu"}
-          className="grid size-10 place-items-center rounded-full text-cream transition-colors hover:bg-white/10 md:hidden"
+          className="grid size-10 place-items-center rounded-full text-cream transition-colors hover:bg-[var(--brand-raised)] md:hidden"
         >
           {open ? <X className="size-5" /> : <Menu className="size-5" />}
         </button>
@@ -132,24 +132,24 @@ export function SiteNav() {
                 key={link.to}
                 to={link.to}
                 onClick={() => setOpen(false)}
-                className="rounded-xl px-3 py-2.5 text-sm font-medium text-cream/85 hover:bg-white/8"
-                activeProps={{ className: "bg-white/10 text-cream" }}
+                className="rounded-xl px-3 py-2.5 text-sm font-medium text-cream/85 hover:bg-[var(--brand-raised)]"
+                activeProps={{ className: "bg-[var(--brand-raised)] text-cream" }}
               >
                 {link.label}
               </Link>
             ))}
-            <div className="mt-1 grid grid-cols-2 gap-2 border-t border-white/10 p-1 pt-3">
+            <div className="mt-1 grid grid-cols-2 gap-2 border-t border-[var(--brand-line)] p-1 pt-3">
               <Link
                 to="/auth/login"
                 onClick={() => setOpen(false)}
-                className="grid h-10 place-items-center rounded-xl border border-white/15 text-sm font-medium text-cream"
+                className="grid h-10 place-items-center rounded-xl border border-[var(--brand-line)] text-sm font-medium text-cream"
               >
                 Sign in
               </Link>
               <Link
                 to="/auth/signup"
                 onClick={() => setOpen(false)}
-                className="grid h-10 place-items-center rounded-xl bg-cream text-sm font-semibold text-[var(--savo-night)]"
+                className="grid h-10 place-items-center rounded-xl bg-[var(--brand-primary)] text-sm font-semibold text-[#04140e]"
               >
                 Open your shop
               </Link>
@@ -251,7 +251,7 @@ export function SiteFooter() {
           />
         </div>
 
-        <div className="mt-12 flex flex-col gap-4 border-t border-white/10 pt-6 text-sm text-cream/60 sm:flex-row sm:items-center sm:justify-between">
+        <div className="mt-12 flex flex-col gap-4 border-t border-[var(--brand-line)] pt-6 text-sm text-cream/60 sm:flex-row sm:items-center sm:justify-between">
           <p>
             &copy; {new Date().getFullYear()} {BUSINESS_DETAILS.tradingName}
           </p>

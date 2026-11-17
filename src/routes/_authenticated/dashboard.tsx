@@ -73,7 +73,7 @@ function DashboardPage() {
         <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_15%_0%,rgba(16,185,129,0.18)_0%,transparent_55%)]" />
       </div>
 
-      <header className="border-b border-white/10 bg-white/[0.04] backdrop-blur-xl">
+      <header className="border-b border-[var(--brand-line)] bg-[var(--brand-raised)]">
         <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-4 py-3.5">
           <Logo />
           <Button
@@ -88,7 +88,7 @@ function DashboardPage() {
       </header>
 
       <PageContainer className="flex-1 pb-16 pt-6">
-        <div className="glass-2 rounded-2xl border border-white/12 p-5 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.9)] backdrop-blur-2xl backdrop-saturate-150 sm:p-6">
+        <div className="bg-[var(--brand-raised)] rounded-2xl border border-[var(--brand-line)] p-5 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.9)] sm:p-6">
           <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mint)]">
             Your workspace
           </p>
@@ -112,7 +112,7 @@ function DashboardPage() {
             </div>
           ) : shops.length === 0 ? (
             <div className="mt-6">
-              <div className="relative overflow-hidden rounded-xl border border-white/10">
+              <div className="relative overflow-hidden rounded-xl border border-[var(--brand-line)]">
                 <img
                   src={PHOTOGRAPHY.empty.src}
                   alt={PHOTOGRAPHY.empty.alt}
@@ -152,7 +152,7 @@ function DashboardPage() {
                     <Link
                       to="/app"
                       search={{ shop: shop.id }}
-                      className="group flex min-h-16 items-center gap-3 rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-3 transition-colors hover:border-[var(--mint)]/40 hover:bg-white/[0.09] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mint)]/50 active:bg-white/[0.12]"
+                      className="group flex min-h-16 items-center gap-3 rounded-xl border border-[var(--brand-line)] bg-[var(--brand-raised)] px-3.5 py-3 transition-colors hover:border-[var(--mint)]/40 hover:bg-[var(--brand-raised)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mint)]/50 active:bg-[var(--brand-raised)]"
                     >
                       <StorageImage
                         bucket={STORAGE_BUCKETS.shopLogos}
@@ -178,7 +178,7 @@ function DashboardPage() {
                 ))}
               </ul>
 
-              <div className="mt-4 flex flex-wrap gap-2 border-t border-white/10 pt-4">
+              <div className="mt-4 flex flex-wrap gap-2 border-t border-[var(--brand-line)] pt-4">
                 <CreateShopDialog>
                   <Button variant="outline" className="h-11">
                     <Plus className="size-4" /> Add another shop

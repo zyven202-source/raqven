@@ -196,7 +196,7 @@ function PulsePage() {
       </p>
 
       {/* --------------------------------------------------------- periods */}
-      <div className="sticky top-14 z-20 -mx-4 mb-4 bg-background/95 px-4 pb-2.5 pt-1 backdrop-blur-md sm:-mx-5 sm:px-5">
+      <div className="sticky top-14 z-20 -mx-4 mb-4 bg-background/95 px-4 pb-2.5 pt-1 sm:-mx-5 sm:px-5">
         <div className="flex flex-wrap gap-1.5">
           {PERIODS.map((period) => (
             <Button
@@ -341,7 +341,7 @@ function OverviewSection({
         {pair.current.label} <span className="font-normal normal-case">vs {prev}</span>
       </SectionLabel>
 
-      <div className="glass-1 rounded-xl p-4 backdrop-blur-2xl backdrop-saturate-150">
+      <div className="glass-1 rounded-xl p-4">
         <p className="tnum text-[2.25rem] font-semibold leading-none">
           {money(overview.grossSales)}
         </p>
@@ -587,7 +587,7 @@ function SalesSection({
 
       {/* Daily takings strip — real days, real zeroes included. */}
       <div
-        className="glass-1 mb-3 rounded-xl p-3 backdrop-blur-2xl backdrop-saturate-150"
+        className="glass-1 mb-3 rounded-xl p-3"
         role="img"
         aria-label={`Daily recorded sales for the period: ${trend.length} days, highest ${formatMoney(
           maxDay,
@@ -795,7 +795,7 @@ function RadarSection({ forecasts }: { forecasts: ForecastRow[] }) {
 
 function ForecastCard({ row }: { row: ForecastRow }) {
   return (
-    <li className="glass-1 rounded-xl p-3.5 backdrop-blur-md backdrop-saturate-150">
+    <li className="glass-1 rounded-xl p-3.5">
       <div className="flex items-start justify-between gap-3">
         <div className="min-w-0">
           <p className="truncate text-sm font-semibold">{row.name}</p>
@@ -956,10 +956,7 @@ function InsightsSection({
         {insights.map((insight) => {
           const Icon = SEVERITY_ICON[insight.severity];
           return (
-            <li
-              key={insight.id}
-              className="glass-1 rounded-xl p-3.5 backdrop-blur-md backdrop-saturate-150"
-            >
+            <li key={insight.id} className="glass-1 rounded-xl p-3.5">
               <div className="flex items-start gap-3">
                 <span
                   className={`mt-0.5 grid size-8 shrink-0 place-items-center rounded-full ${SEVERITY_CLASS[insight.severity]}`}
@@ -1090,7 +1087,7 @@ function AskSection({
       ) : null}
 
       {answer ? (
-        <div className="glass-1 mt-3 rounded-xl p-3.5 backdrop-blur-md backdrop-saturate-150">
+        <div className="glass-1 mt-3 rounded-xl p-3.5">
           <p className="text-sm font-semibold">{answer.title}</p>
           <dl className="mt-2 space-y-1">
             {answer.lines.map((line) => (
