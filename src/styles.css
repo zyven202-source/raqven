@@ -875,10 +875,10 @@
 :root {
   color-scheme: dark;
 
-  /* The header/sheet utilities read these names directly. */
-  --glass: rgba(11, 17, 16, 0.78);
-  --glass-strong: rgba(11, 17, 16, 0.94);
-  --glass-sheen: rgba(255, 255, 255, 0.04);
+  /* The header/sheet utilities read these names directly: solid, not glass. */
+  --glass: #0e1613;
+  --glass-strong: #0e1613;
+  --glass-sheen: transparent;
 
   --savo-night: #0b1110;
   --ink: #10b981;
@@ -930,12 +930,19 @@
   --sidebar-border: rgba(255, 255, 255, 0.1);
   --sidebar-ring: #34d399;
 
-  /* Glass levels: 6%, 8% and 11% white — readable ground, visible material. */
-  --glass-1: rgba(255, 255, 255, 0.06);
-  --glass-2: rgba(255, 255, 255, 0.08);
-  --glass-3: rgba(255, 255, 255, 0.11);
-  --glass-line: rgba(255, 255, 255, 0.14);
-  --glass-1-line: rgba(255, 255, 255, 0.16);
+  /* Brand kit: one primary emerald, one amber accent, three solid surfaces. */
+  --brand-primary: #10b981;
+  --brand-primary-deep: #047857;
+  --brand-accent: #f4b860;
+  --brand-surface: #0e1613;
+  --brand-raised: #121c19;
+  --brand-line: #23302b;
+
+  --glass-1: #0e1613;
+  --glass-2: #121c19;
+  --glass-3: #16221e;
+  --glass-line: #23302b;
+  --glass-1-line: #2a3833;
 
   --depth-1: 0 1px 2px rgba(0, 0, 0, 0.45), 0 10px 30px -18px rgba(0, 0, 0, 0.8);
   --shadow-pop: 0 18px 50px -18px rgba(0, 0, 0, 0.85);
@@ -974,7 +981,18 @@ body {
 
 /* The workspace bar keeps its blur but takes the theme's ground, not paper. */
 .glass-header {
-  background-color: rgba(11, 17, 16, 0.78);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  background-color: #0e1613;
+  border-bottom: 1px solid var(--brand-line);
   color: var(--foreground);
+}
+
+/* No frosted layers: the kit is flat, so blur utilities are neutralised and
+   scrolling rows never pay for a backdrop filter. */
+.backdrop-blur-2xl,
+.backdrop-blur-xl,
+.backdrop-blur-md,
+.backdrop-blur-sm,
+.backdrop-blur {
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }

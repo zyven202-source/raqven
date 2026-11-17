@@ -11,6 +11,8 @@ import {
   PageContainer,
   PageHeader,
 } from "@/components/app/AppChrome";
+import { PhotoBanner } from "@/components/app/PhotoBanner";
+import { PHOTOGRAPHY } from "@/lib/photography";
 import { Field, MoneyField } from "@/components/app/fields";
 import { Money, StatusBadge, WhatsAppIcon } from "@/components/app/primitives";
 import { Button } from "@/components/ui/button";
@@ -69,6 +71,12 @@ function DebtorsPage() {
             {includeSettled ? "Hide settled" : "Show settled"}
           </Button>
         }
+      />
+
+      <PhotoBanner
+        photo={PHOTOGRAPHY.customers}
+        caption="Credit you have given, and who still owes it."
+        className="mb-4"
       />
 
       {/*

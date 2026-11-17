@@ -324,6 +324,73 @@ function Landing() {
         title="Run your business with greater clarity."
         description="Open an account, add a few products and record the first sale. SAVO keeps the stock, the balances and the numbers from there."
       />
+
+      {/* ------------------------------------------------- real product screens */}
+      <section className="border-t border-[var(--brand-line)] bg-[var(--brand-surface)] py-16 sm:py-24">
+        <div className="mx-auto w-full max-w-6xl px-5">
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-14">
+            <div className="max-w-md">
+              <h2 className="font-display text-3xl font-semibold leading-tight sm:text-4xl">
+                The same screens you get on day one.
+              </h2>
+              <p className="mt-4 text-[0.9375rem] leading-relaxed text-muted-foreground">
+                These are captures of the running application, not illustrations. A dashboard that
+                adds up your day, a till that works on a phone, and a stock list that says what to
+                reorder.
+              </p>
+              <ul className="mt-6 space-y-2 text-sm text-foreground/80">
+                <li>Sales, expenses and profit from the records you enter.</li>
+                <li>Stock levels, reorder points and receiving in one place.</li>
+                <li>Customer credit with balances that stay with the shop.</li>
+              </ul>
+            </div>
+
+            <div className="relative flex-1">
+              <img
+                src={PHOTOGRAPHY.showcase.src}
+                alt={PHOTOGRAPHY.showcase.alt}
+                width={PHOTOGRAPHY.showcase.width}
+                height={PHOTOGRAPHY.showcase.height}
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 size-full rounded-2xl object-cover opacity-45"
+                style={{ objectPosition: PHOTOGRAPHY.showcase.focal }}
+              />
+              <div className="relative flex items-end justify-center gap-3 px-2 py-6 sm:gap-5">
+                {[
+                  {
+                    src: "/showcase/showcase-dashboard.png",
+                    label: "Dashboard",
+                    rotate: "-rotate-2",
+                  },
+                  { src: "/showcase/showcase-pos.png", label: "Point of sale", rotate: "rotate-1" },
+                  { src: "/showcase/showcase-inventory.png", label: "Stock", rotate: "rotate-3" },
+                ].map((shot) => (
+                  <figure key={shot.label} className={`w-1/3 max-w-[11rem] ${shot.rotate}`}>
+                    <div className="overflow-hidden rounded-xl border border-[var(--brand-line)] bg-[var(--brand-raised)] shadow-[0_18px_40px_-24px_rgba(0,0,0,0.9)]">
+                      <img
+                        src={shot.src}
+                        alt={`SAVO ${shot.label} screen`}
+                        width={430}
+                        height={932}
+                        loading="lazy"
+                        decoding="async"
+                        className="w-full"
+                      />
+                    </div>
+                    <figcaption className="mt-2 text-center text-[11px] text-muted-foreground">
+                      {shot.label}
+                    </figcaption>
+                  </figure>
+                ))}
+              </div>
+            </div>
+          </div>
+          <p className="mt-6 text-[11px] text-muted-foreground">
+            Screenshots taken from the deployed application. {creditLine(PHOTOGRAPHY.showcase)}
+          </p>
+        </div>
+      </section>
     </SiteShell>
   );
 }

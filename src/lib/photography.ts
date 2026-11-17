@@ -27,10 +27,10 @@ export type Photograph = {
 export const PHOTOGRAPHY = {
   /** Image A — landing hero: a real boutique interior with hanging racks. */
   hero: {
-    src: "/photography/a-hero.jpg",
+    src: "/photography/a-hero.webp",
     alt: "",
-    width: 1600,
-    height: 1067,
+    width: 1200,
+    height: 800,
     focal: "50% 45%",
     title: "Clothing boutique interior with hanging racks",
     author: "Clark Street Mercantile",
@@ -40,10 +40,10 @@ export const PHOTOGRAPHY = {
   },
   /** Image B — shop selection: a well-lit independent retail interior. */
   shops: {
-    src: "/photography/b-shops.jpg",
+    src: "/photography/b-shops.webp",
     alt: "",
-    width: 1600,
-    height: 1067,
+    width: 1200,
+    height: 800,
     focal: "50% 55%",
     title: "Interior of a well-lit retail store with wooden beams",
     author: "Declan Sun",
@@ -53,10 +53,10 @@ export const PHOTOGRAPHY = {
   },
   /** Image C — stock: labelled products on a display rack. */
   stock: {
-    src: "/photography/c-stock.jpg",
+    src: "/photography/c-stock.webp",
     alt: "Bottles arranged in rows on a shop display rack",
-    width: 1600,
-    height: 1067,
+    width: 1200,
+    height: 800,
     focal: "50% 50%",
     title: "Assorted labelled bottles on a display rack",
     author: "Daria Strategy",
@@ -66,10 +66,10 @@ export const PHOTOGRAPHY = {
   },
   /** Image D — point of sale: a card being taken at a counter. */
   pos: {
-    src: "/photography/d-pos.jpg",
+    src: "/photography/d-pos.webp",
     alt: "A card being used to pay at a counter",
-    width: 1600,
-    height: 1067,
+    width: 1200,
+    height: 800,
     focal: "50% 55%",
     title: "A credit card being used for payment",
     author: "SumUp",
@@ -79,10 +79,10 @@ export const PHOTOGRAPHY = {
   },
   /** Image E — reports: a desk with a notebook in daylight. */
   reports: {
-    src: "/photography/e-reports.jpg",
+    src: "/photography/e-reports.webp",
     alt: "A sunlit desk with a computer, books and a notebook",
-    width: 1600,
-    height: 1067,
+    width: 1200,
+    height: 800,
     focal: "55% 55%",
     title: "Sunlit home office desk with computer and books",
     author: "Olivier Amyot",
@@ -92,10 +92,10 @@ export const PHOTOGRAPHY = {
   },
   /** Image F — customer accounts: a customer paying at a shop counter. */
   customers: {
-    src: "/photography/f-customers.jpg",
+    src: "/photography/f-customers.webp",
     alt: "A customer paying at a small shop counter",
-    width: 1600,
-    height: 1067,
+    width: 1200,
+    height: 800,
     focal: "50% 50%",
     title: "Woman paying at shop counter",
     author: "Christiann Koepke",
@@ -105,10 +105,10 @@ export const PHOTOGRAPHY = {
   },
   /** Image G — product showcase: a phone on a desk beside a real screenshot. */
   showcase: {
-    src: "/photography/g-showcase.jpg",
+    src: "/photography/g-showcase.webp",
     alt: "A smartphone showing app icons on a wooden desk",
-    width: 1600,
-    height: 1067,
+    width: 1200,
+    height: 800,
     focal: "50% 50%",
     title: "A smartphone with app icons on a wooden desk",
     author: "Thom Bradley",
@@ -118,10 +118,10 @@ export const PHOTOGRAPHY = {
   },
   /** Image H — empty and onboarding states. */
   empty: {
-    src: "/photography/h-empty.jpg",
+    src: "/photography/h-empty.webp",
     alt: "",
-    width: 1600,
-    height: 1067,
+    width: 1200,
+    height: 800,
     focal: "50% 50%",
     title: "A monitor on a white desk in a bright room",
     author: "Teddy GR",

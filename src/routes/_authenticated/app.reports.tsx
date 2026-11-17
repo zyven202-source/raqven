@@ -9,6 +9,8 @@ import {
   PageContainer,
   PageHeader,
 } from "@/components/app/AppChrome";
+import { PhotoBanner } from "@/components/app/PhotoBanner";
+import { PHOTOGRAPHY } from "@/lib/photography";
 import { ExportReportButton } from "@/components/app/ExportReportButton";
 import { OwnerOnly } from "@/components/app/OwnerOnly";
 import { SectionLabel } from "@/components/app/primitives";
@@ -86,6 +88,11 @@ function ReportsPage() {
     return (
       <PageContainer>
         <PageHeader eyebrow="Insight" title="Reports" />
+        <PhotoBanner
+          photo={PHOTOGRAPHY.reports}
+          caption="How the period went, in numbers."
+          className="mb-4"
+        />
         <div className="mt-4">
           <ErrorState
             message="The report came back empty. Try loading it again."
