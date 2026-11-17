@@ -16,6 +16,13 @@ import { SiteShell } from "@/components/marketing/SiteShell";
 import { PAGE_BODY, SectionHeading } from "@/components/marketing/Sections";
 import { HOME_EYEBROW, HOME_HEADLINE, HOME_META, SITE_URL, webApplicationJsonLd } from "@/lib/seo";
 
+const SCREEN_SHOTS = [
+  "/showcase/showcase-pos.png",
+  "/showcase/showcase-inventory.png",
+  "/showcase/showcase-debtors.png",
+  "/showcase/showcase-reports.png",
+] as const;
+
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [...HOME_META],
@@ -201,40 +208,22 @@ function Landing() {
                   </ul>
                 </div>
 
-                <div className="savo-glass-paper rounded-3xl p-6 sm:p-8">
-                  <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft">
+                <div className="overflow-hidden rounded-3xl border border-[var(--brand-line)] bg-[var(--brand-raised)] p-3 sm:p-4">
+                  <div className="mb-3 flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft">
                     <step.icon className="size-4" aria-hidden />
                     {step.screen}
                   </div>
-                  {/* Illustrative structure only — no invented figures, no fake
-                      transactions, nothing that reads as a live dashboard. */}
-                  <div className="mt-5 space-y-2.5">
-                    {[72, 88, 64, 80].map((width, rowIndex) => (
-                      <div
-                        key={width}
-                        className="flex items-center gap-3 rounded-xl border border-border/70 bg-card/70 px-3 py-2.5"
-                      >
-                        <span
-                          className="size-7 shrink-0 rounded-lg"
-                          style={{
-                            background:
-                              rowIndex % 2 === 0
-                                ? "color-mix(in oklab, var(--mint) 70%, white)"
-                                : "color-mix(in oklab, var(--ink-soft) 16%, white)",
-                          }}
-                        />
-                        <span className="min-w-0 flex-1">
-                          <span
-                            className="block h-2 rounded-full bg-ink/12"
-                            style={{ width: `${width}%` }}
-                          />
-                          <span className="mt-1.5 block h-1.5 w-1/3 rounded-full bg-ink/8" />
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                  <p className="mt-5 text-xs leading-relaxed text-muted-foreground">
-                    {step.caption}
+                  <img
+                    src={SCREEN_SHOTS[index] ?? SCREEN_SHOTS[0]}
+                    alt={`SAVO ${step.screen} screen`}
+                    width={430}
+                    height={800}
+                    loading="lazy"
+                    decoding="async"
+                    className="mx-auto w-full max-w-[17rem] rounded-xl border border-[var(--brand-line)] bg-[var(--brand-surface)]"
+                  />
+                  <p className="mt-3 px-1 text-xs leading-relaxed text-muted-foreground">
+                    {step.caption} Screenshot from the running app.
                   </p>
                 </div>
               </article>
@@ -372,7 +361,7 @@ function Landing() {
                         src={shot.src}
                         alt={`SAVO ${shot.label} screen`}
                         width={430}
-                        height={932}
+                        height={800}
                         loading="lazy"
                         decoding="async"
                         className="w-full"

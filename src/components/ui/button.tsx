@@ -8,19 +8,19 @@ const buttonVariants = cva(
   // `press` and `hover-glass` carry the whole interaction system: a 1.5% press
   // that also dims, and a 0.4% lift that also brightens, both gated so a phone
   // never gets a stuck hover state.
-  "press hover-glass inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "press inline-flex cursor-pointer items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-medium focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:pointer-events-none disabled:opacity-50 disabled:cursor-not-allowed [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground shadow-sm hover:bg-primary/90",
+        default: "bg-[var(--brand-primary)] text-[#04140e] hover:bg-[#0ea472]",
         destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         // Outline and secondary are the everyday glass controls: level 2, so
         // they sit quietly inside the level 1 surfaces they appear on.
         outline:
-          "glass-2 border border-glass-2-line text-foreground hover:bg-accent hover:text-accent-foreground",
+          "border border-[var(--brand-line)] bg-[var(--brand-raised)] text-foreground hover:bg-[var(--brand-surface)]",
         secondary:
-          "glass-2 border border-glass-2-line text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
+          "border border-[var(--brand-line)] bg-[var(--brand-surface)] text-foreground hover:bg-[var(--brand-raised)]",
+        ghost: "text-foreground hover:bg-[var(--brand-raised)]",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
