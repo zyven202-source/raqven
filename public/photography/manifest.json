@@ -1,0 +1,74 @@
+{
+  "a-hero": {
+    "photoId": "photo-1441984904996-e0b6ba687e04",
+    "unsplashId": "qnKhZJPKFD8",
+    "title": "Clothing boutique interior with hanging racks",
+    "author": "Clark Street Mercantile",
+    "page": "https://unsplash.com/photos/qnKhZJPKFD8",
+    "source": "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04",
+    "license": "Unsplash License"
+  },
+  "b-shops": {
+    "photoId": "photo-1778034758286-d58d597db0a4",
+    "unsplashId": "xUuH6SWak1I",
+    "title": "Interior of a well-lit retail store with wooden beams",
+    "author": "Declan Sun",
+    "page": "https://unsplash.com/photos/xUuH6SWak1I",
+    "source": "https://images.unsplash.com/photo-1778034758286-d58d597db0a4",
+    "license": "Unsplash License"
+  },
+  "c-stock": {
+    "photoId": "photo-1545601445-4d6a0a0565f0",
+    "unsplashId": "BMnX7L9G5xc",
+    "title": "Assorted labelled bottles on a display rack",
+    "author": "Daria Strategy",
+    "page": "https://unsplash.com/photos/BMnX7L9G5xc",
+    "source": "https://images.unsplash.com/photo-1545601445-4d6a0a0565f0",
+    "license": "Unsplash License"
+  },
+  "d-pos": {
+    "photoId": "photo-1742836531309-838d0f62efaf",
+    "unsplashId": "CzoRfscp8dU",
+    "title": "A credit card being used for payment",
+    "author": "SumUp",
+    "page": "https://unsplash.com/photos/CzoRfscp8dU",
+    "source": "https://images.unsplash.com/photo-1742836531309-838d0f62efaf",
+    "license": "Unsplash License"
+  },
+  "e-reports": {
+    "photoId": "photo-1770003354577-82b2a2d09d19",
+    "unsplashId": "-IhR-UgqUTc",
+    "title": "Sunlit home office desk with computer and books",
+    "author": "Olivier Amyot",
+    "page": "https://unsplash.com/photos/-IhR-UgqUTc",
+    "source": "https://images.unsplash.com/photo-1770003354577-82b2a2d09d19",
+    "license": "Unsplash License"
+  },
+  "f-customers": {
+    "photoId": "photo-1556741533-6e6a62bd8b49",
+    "unsplashId": "dQyS2pMYtok",
+    "title": "Woman paying at a shop counter",
+    "author": "Christiann Koepke",
+    "page": "https://unsplash.com/photos/dQyS2pMYtok",
+    "source": "https://images.unsplash.com/photo-1556741533-6e6a62bd8b49",
+    "license": "Unsplash License"
+  },
+  "g-showcase": {
+    "photoId": "photo-1596558450268-9c27524ba856",
+    "unsplashId": "A6qNzfJXRGQ",
+    "title": "A smartphone with app icons on a wooden desk",
+    "author": "Thom Bradley",
+    "page": "https://unsplash.com/photos/A6qNzfJXRGQ",
+    "source": "https://images.unsplash.com/photo-1596558450268-9c27524ba856",
+    "license": "Unsplash License"
+  },
+  "h-empty": {
+    "photoId": "photo-1639413665566-2f75adf7b7ca",
+    "unsplashId": "gVpXbCGG6jI",
+    "title": "A monitor on a white desk in a bright room",
+    "author": "Teddy GR",
+    "page": "https://unsplash.com/photos/gVpXbCGG6jI",
+    "source": "https://images.unsplash.com/photo-1639413665566-2f75adf7b7ca",
+    "license": "Unsplash License"
+  }
+}

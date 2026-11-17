@@ -504,7 +504,7 @@ function PosPage() {
                 <span
                   className={cn(
                     "line-clamp-2 text-[0.875rem] font-medium leading-snug",
-                    out ? "text-muted-foreground" : "text-ink",
+                    out ? "text-muted-foreground" : "text-foreground",
                   )}
                 >
                   {product.name}

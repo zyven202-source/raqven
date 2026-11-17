@@ -11,6 +11,7 @@ import {
 } from "lucide-react";
 
 import { ClosingCta } from "@/components/marketing/Scene";
+import { PHOTOGRAPHY, creditLine } from "@/lib/photography";
 import { SiteShell } from "@/components/marketing/SiteShell";
 import { PAGE_BODY, SectionHeading } from "@/components/marketing/Sections";
 import { HOME_EYEBROW, HOME_HEADLINE, HOME_META, SITE_URL, webApplicationJsonLd } from "@/lib/seo";
@@ -60,9 +61,11 @@ export const Route = createFileRoute("/")({
  * both survive, and the tall original for phones, where the lantern stays in
  * frame instead of being cropped to a strip.
  *
- * The photograph is by Jason Leung on Unsplash, used under the Unsplash License
- * (free for commercial use, no attribution required). The credit is shown in
- * the hero anyway, because a photograph is somebody's work.
+ * The photograph is a real boutique interior by Clark Street Mercantile on
+ * Unsplash, used under the Unsplash License (free for commercial use, no
+ * attribution required). Its source page is recorded in `src/lib/photography.ts`
+ * and the credit is shown in the hero anyway, because a photograph is
+ * somebody's work.
  *
  * **Nothing here invents a number.** No customer counts, no testimonials, no
  * fake dashboard figures, and no simulated product screenshot. Every claim
@@ -74,48 +77,16 @@ function Landing() {
       <section className="relative isolate overflow-hidden bg-[var(--savo-night)] text-cream">
         {/* ---------------------------------------------------- photograph */}
         <div aria-hidden className="absolute inset-0 -z-10">
-          {/*
-            Three encodings per crop, chosen by the browser: AVIF first (about a
-            fifth of the original JPEG), WebP next, the JPEG as the last resort.
-            The widths are the ones the hero is actually displayed at, so a
-            phone downloads the 700px portrait rather than the 2000px desktop
-            crop. `bun scripts/optimize-hero.mjs` rebuilds these from the
-            originals.
-          */}
-          <picture>
-            <source
-              type="image/avif"
-              media="(min-width: 1024px)"
-              srcSet="/hero/shop-wide-1200.avif 1200w, /hero/shop-wide-1600.avif 1600w, /hero/shop-wide-2000.avif 2000w"
-              sizes="100vw"
-            />
-            <source
-              type="image/webp"
-              media="(min-width: 1024px)"
-              srcSet="/hero/shop-wide-1200.webp 1200w, /hero/shop-wide-1600.webp 1600w, /hero/shop-wide-2000.webp 2000w"
-              sizes="100vw"
-            />
-            <source media="(min-width: 1024px)" srcSet="/hero/shop-wide.jpg" sizes="100vw" />
-            <source
-              type="image/avif"
-              srcSet="/hero/shop-tall-700.avif 700w, /hero/shop-tall-900.avif 900w, /hero/shop-tall-1100.avif 1100w"
-              sizes="100vw"
-            />
-            <source
-              type="image/webp"
-              srcSet="/hero/shop-tall-700.webp 700w, /hero/shop-tall-900.webp 900w, /hero/shop-tall-1100.webp 1100w"
-              sizes="100vw"
-            />
-            <img
-              src="/hero/shop-tall.jpg"
-              alt=""
-              width={1100}
-              height={1468}
-              fetchPriority="high"
-              decoding="async"
-              className="size-full object-cover object-[52%_72%] lg:object-center"
-            />
-          </picture>
+          <img
+            src={PHOTOGRAPHY.hero.src}
+            alt={PHOTOGRAPHY.hero.alt}
+            width={PHOTOGRAPHY.hero.width}
+            height={PHOTOGRAPHY.hero.height}
+            fetchPriority="high"
+            decoding="async"
+            className="size-full object-cover"
+            style={{ objectPosition: PHOTOGRAPHY.hero.focal }}
+          />
 
           {/*
             The overlays are doing two jobs, and they are separate on purpose.
@@ -172,7 +143,7 @@ function Landing() {
           rel="noopener noreferrer"
           className="absolute right-4 bottom-3 z-10 text-[10px] text-cream/45 underline-offset-2 transition-colors hover:text-cream/80 hover:underline"
         >
-          Photograph: Jason Leung / Unsplash
+          {creditLine(PHOTOGRAPHY.hero)}
         </a>
       </section>
 

@@ -37,6 +37,7 @@ import { Route as AuthenticatedAppInventoryRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppOverviewRouteImport } from './routes/_authenticated/app.overview'
 import { Route as AuthenticatedAppPosRouteImport } from './routes/_authenticated/app.pos'
 import { Route as AuthenticatedAppPulseRouteImport } from './routes/_authenticated/app.pulse'
+import { Route as AuthenticatedAppRefundsRouteImport } from './routes/_authenticated/app.refunds'
 import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authenticated/app.reports'
 import { Route as AuthenticatedAppRestockRouteImport } from './routes/_authenticated/app.restock'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
@@ -188,6 +189,11 @@ const AuthenticatedAppPulseRoute = AuthenticatedAppPulseRouteImport.update({
   path: '/pulse',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppRefundsRoute = AuthenticatedAppRefundsRouteImport.update({
+  id: '/refunds',
+  path: '/refunds',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppReportsRoute = AuthenticatedAppReportsRouteImport.update({
   id: '/reports',
   path: '/reports',
@@ -248,6 +254,7 @@ export interface FileRoutesByFullPath {
   '/app/overview': typeof AuthenticatedAppOverviewRoute
   '/app/pos': typeof AuthenticatedAppPosRoute
   '/app/pulse': typeof AuthenticatedAppPulseRoute
+  '/app/refunds': typeof AuthenticatedAppRefundsRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
   '/app/restock': typeof AuthenticatedAppRestockRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -282,6 +289,7 @@ export interface FileRoutesByTo {
   '/app/overview': typeof AuthenticatedAppOverviewRoute
   '/app/pos': typeof AuthenticatedAppPosRoute
   '/app/pulse': typeof AuthenticatedAppPulseRoute
+  '/app/refunds': typeof AuthenticatedAppRefundsRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
   '/app/restock': typeof AuthenticatedAppRestockRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -319,6 +327,7 @@ export interface FileRoutesById {
   '/_authenticated/app/overview': typeof AuthenticatedAppOverviewRoute
   '/_authenticated/app/pos': typeof AuthenticatedAppPosRoute
   '/_authenticated/app/pulse': typeof AuthenticatedAppPulseRoute
+  '/_authenticated/app/refunds': typeof AuthenticatedAppRefundsRoute
   '/_authenticated/app/reports': typeof AuthenticatedAppReportsRoute
   '/_authenticated/app/restock': typeof AuthenticatedAppRestockRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
@@ -356,6 +365,7 @@ export interface FileRouteTypes {
     | '/app/overview'
     | '/app/pos'
     | '/app/pulse'
+    | '/app/refunds'
     | '/app/reports'
     | '/app/restock'
     | '/app/settings'
@@ -390,6 +400,7 @@ export interface FileRouteTypes {
     | '/app/overview'
     | '/app/pos'
     | '/app/pulse'
+    | '/app/refunds'
     | '/app/reports'
     | '/app/restock'
     | '/app/settings'
@@ -426,6 +437,7 @@ export interface FileRouteTypes {
     | '/_authenticated/app/overview'
     | '/_authenticated/app/pos'
     | '/_authenticated/app/pulse'
+    | '/_authenticated/app/refunds'
     | '/_authenticated/app/reports'
     | '/_authenticated/app/restock'
     | '/_authenticated/app/settings'
@@ -644,6 +656,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppPulseRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/refunds': {
+      id: '/_authenticated/app/refunds'
+      path: '/refunds'
+      fullPath: '/app/refunds'
+      preLoaderRoute: typeof AuthenticatedAppRefundsRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/reports': {
       id: '/_authenticated/app/reports'
       path: '/reports'
@@ -697,6 +716,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppOverviewRoute: typeof AuthenticatedAppOverviewRoute
   AuthenticatedAppPosRoute: typeof AuthenticatedAppPosRoute
   AuthenticatedAppPulseRoute: typeof AuthenticatedAppPulseRoute
+  AuthenticatedAppRefundsRoute: typeof AuthenticatedAppRefundsRoute
   AuthenticatedAppReportsRoute: typeof AuthenticatedAppReportsRoute
   AuthenticatedAppRestockRoute: typeof AuthenticatedAppRestockRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
@@ -714,6 +734,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppOverviewRoute: AuthenticatedAppOverviewRoute,
   AuthenticatedAppPosRoute: AuthenticatedAppPosRoute,
   AuthenticatedAppPulseRoute: AuthenticatedAppPulseRoute,
+  AuthenticatedAppRefundsRoute: AuthenticatedAppRefundsRoute,
   AuthenticatedAppReportsRoute: AuthenticatedAppReportsRoute,
   AuthenticatedAppRestockRoute: AuthenticatedAppRestockRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,

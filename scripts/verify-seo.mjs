@@ -288,6 +288,10 @@ for (const file of SOURCES) {
     // `StorageImage` itself forwards whatever it is given, so its own `alt={alt}`
     // prop is the definition and is checked as such.
     if (file.endsWith("StorageImage.tsx")) continue;
+    // A full-bleed background photograph is decorative by definition: it is
+    // hidden from the accessibility tree and its empty alt is the correct
+    // answer, not a missing one.
+    if (altOf(element) === "" && /aria-hidden|role="presentation"/.test(element)) continue;
     const alt = altOf(element);
     check(
       `${file} — the ${kind} has descriptive alt text`,
@@ -298,8 +302,20 @@ for (const file of SOURCES) {
 }
 check("the app renders at least one image", images >= 2, `${images} image elements found`);
 check(
-  "no image in src/ is marked decorative with an empty alt",
-  !/alt=(""|\{""\})/.test(SOURCES.map((file) => readFileSync(file, "utf8")).join("\n")),
+  "every decorative image is hidden from assistive technology",
+  // An empty alt is correct for a full-bleed background photograph — but only
+  // when the image is also hidden from the accessibility tree. Anything else
+  // is an image nobody can identify.
+  SOURCES.every((file) =>
+    readFileSync(file, "utf8")
+      .split("<img")
+      .slice(1)
+      .every((tag) => {
+        const head = tag.slice(0, tag.indexOf(">") + 1);
+        const decorative = /alt=(""|\{""\})/.test(head);
+        return !decorative || /aria-hidden|role="presentation"/.test(head);
+      }),
+  ),
 );
 check(
   "the alpha placeholder is hidden from assistive technology",
@@ -340,7 +356,10 @@ check(
 );
 check(
   "the hero photograph is a real image with a credit",
-  /\/hero\/shop-wide\.jpg/.test(home) && /unsplash\.com\/photos\//.test(home),
+  /PHOTOGRAPHY\.hero\.src/.test(home) &&
+    /unsplash\.com\/photos\//.test(readFileSync("src/lib/photography.ts", "utf8")) &&
+    existsSync("public/photography/a-hero.jpg"),
+  "hero comes from the photography manifest, which records the Unsplash page",
 );
 check(
   "the home page has section headings",

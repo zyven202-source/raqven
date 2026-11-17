@@ -213,7 +213,7 @@ function OverviewPage() {
             </div>
 
             {grossProfit !== null && netResult !== null ? (
-              <dl className="mt-5 grid grid-cols-3 gap-3 border-t border-white/15 pt-4">
+              <dl className="mt-5 grid grid-cols-1 gap-3 border-t border-white/15 pt-4 sm:grid-cols-3">
                 {[
                   { term: "Gross profit", value: formatMoney(grossProfit, currency) },
                   { term: "Expenses", value: `− ${formatMoney(report.expenses, currency)}` },

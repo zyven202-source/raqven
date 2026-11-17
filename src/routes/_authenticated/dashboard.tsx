@@ -1,16 +1,17 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { ChevronRight, Plus, Store } from "lucide-react";
+import { Plus, Store } from "lucide-react";
 import { toast } from "sonner";
 
 import { CreateShopDialog } from "@/components/app/CreateShopDialog";
 import { JoinShopSheet } from "@/components/app/JoinShopSheet";
-import { EmptyState, ErrorState, LoadingState, PageContainer } from "@/components/app/AppChrome";
+import { ErrorState, LoadingState, PageContainer } from "@/components/app/AppChrome";
 import { StorageImage } from "@/components/app/StorageImage";
-import { SectionLabel } from "@/components/app/primitives";
+import { StatusBadge } from "@/components/app/primitives";
 import { Logo } from "@/components/brand/Logo";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/hooks/useSession";
 import { useMyShops } from "@/hooks/useShops";
+import { PHOTOGRAPHY, creditLine } from "@/lib/photography";
 import { signOut } from "@/services/auth.service";
 import { businessTypeLabel } from "@/services/shops.service";
 import { STORAGE_BUCKETS } from "@/types/savo";
@@ -18,17 +19,23 @@ import { STORAGE_BUCKETS } from "@/types/savo";
 export const Route = createFileRoute("/_authenticated/dashboard")({
   head: () => ({
     meta: [
-      { title: "SAVO — Your shops" },
-      { name: "description", content: "Open a shop to manage its sales, stock and numbers." },
+      { title: "SAVO — Your workspace" },
+      { name: "description", content: "Choose where you want to work." },
     ],
   }),
   component: DashboardPage,
 });
 
 /**
- * The hub between accounts and shops. It lists only shops the signed-in user
- * genuinely belongs to — whatever is in their database, nothing else — and
- * offers the two real ways forward: run a shop, or join one.
+ * The hub between accounts and shops.
+ *
+ * It lists only shops the signed-in user genuinely belongs to — whatever is in
+ * their database, nothing else — and offers the two real ways forward: run a
+ * shop, or join one.
+ *
+ * The photograph behind it is a shop interior, dimmed enough that the glass
+ * panel is the thing in focus. It is one image, lazy-decoded and sized in the
+ * markup, so the page never jumps as it arrives.
  */
 function DashboardPage() {
   const shopsQuery = useMyShops();
@@ -37,6 +44,7 @@ function DashboardPage() {
 
   const shops = shopsQuery.data ?? [];
   const firstName = user?.user_metadata?.["full_name"]?.toString().split(" ")[0];
+  const photo = PHOTOGRAPHY.shops;
 
   async function handleSignOut() {
     try {
@@ -48,104 +56,145 @@ function DashboardPage() {
   }
 
   return (
-    <div className="flex min-h-screen flex-col bg-background/30">
-      <header className="border-b border-border px-4 py-3.5">
-        <div className="mx-auto flex w-full max-w-2xl items-center justify-between">
+    <div className="relative flex min-h-screen flex-col">
+      {/* ------------------------------------------------------- photograph */}
+      <div aria-hidden className="fixed inset-0 -z-10 overflow-hidden bg-[var(--savo-night)]">
+        <img
+          src={photo.src}
+          alt=""
+          aria-hidden
+          width={photo.width}
+          height={photo.height}
+          decoding="async"
+          className="size-full object-cover opacity-90"
+          style={{ objectPosition: photo.focal }}
+        />
+        <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,17,16,0.62)_0%,rgba(11,17,16,0.72)_45%,rgba(11,17,16,0.9)_100%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_15%_0%,rgba(16,185,129,0.18)_0%,transparent_55%)]" />
+      </div>
+
+      <header className="border-b border-white/10 bg-white/[0.04] backdrop-blur-xl">
+        <div className="mx-auto flex w-full max-w-2xl items-center justify-between px-4 py-3.5">
           <Logo />
-          <Button variant="ghost" size="sm" onClick={() => void handleSignOut()}>
+          <Button
+            variant="ghost"
+            size="sm"
+            className="text-[var(--cream)]/80 hover:text-[var(--cream)]"
+            onClick={() => void handleSignOut()}
+          >
             Sign out
           </Button>
         </div>
       </header>
 
       <PageContainer className="flex-1 pb-16 pt-6">
-        <h1 className="text-[1.375rem] leading-tight">
-          {firstName ? `Hello, ${firstName}` : "Your shops"}
-        </h1>
-        <p className="mt-1 text-sm text-muted-foreground">
-          {shops.length === 0
-            ? "Set up a shop to start recording sales and stock."
-            : "Pick a shop to open its till."}
-        </p>
+        <div className="glass-2 rounded-2xl border border-white/12 p-5 shadow-[0_24px_60px_-30px_rgba(0,0,0,0.9)] backdrop-blur-2xl backdrop-saturate-150 sm:p-6">
+          <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-[var(--mint)]">
+            Your workspace
+          </p>
+          <h1 className="mt-2 font-display text-[1.75rem] leading-tight sm:text-[2rem]">
+            {firstName ? `Hello, ${firstName}` : "Choose where you want to work."}
+          </h1>
+          <p className="mt-1.5 text-sm text-[var(--cream)]/70">
+            {shops.length === 0
+              ? "Set up a shop to start recording sales and stock."
+              : "Choose where you want to work. Your data stays with the shop you open."}
+          </p>
 
-        {shopsQuery.isLoading ? (
-          <LoadingState label="Loading your shops…" />
-        ) : shopsQuery.isError ? (
-          <div className="mt-6">
-            <ErrorState
-              message={shopsQuery.error.message}
-              onRetry={() => void shopsQuery.refetch()}
-            />
-          </div>
-        ) : shops.length === 0 ? (
-          <div className="mt-8">
-            <EmptyState
-              title="No shop yet"
-              description="Create your shop to start selling, managing stock and tracking your business."
-              action={
-                <CreateShopDialog>
-                  <Button className="h-12 px-6">Create shop</Button>
-                </CreateShopDialog>
-              }
-            />
-            <div className="mt-4 flex justify-center">
-              <JoinShopSheet>
-                <Button variant="outline" className="h-11">
-                  I have an access code
-                </Button>
-              </JoinShopSheet>
+          {shopsQuery.isLoading ? (
+            <LoadingState label="Loading your shops…" />
+          ) : shopsQuery.isError ? (
+            <div className="mt-6">
+              <ErrorState
+                message={shopsQuery.error.message}
+                onRetry={() => void shopsQuery.refetch()}
+              />
             </div>
-          </div>
-        ) : (
-          <>
-            <div className="mt-5">
-              <SectionLabel>Shops</SectionLabel>
-              <ul className="list-divided">
+          ) : shops.length === 0 ? (
+            <div className="mt-6">
+              <div className="relative overflow-hidden rounded-xl border border-white/10">
+                <img
+                  src={PHOTOGRAPHY.empty.src}
+                  alt={PHOTOGRAPHY.empty.alt}
+                  aria-hidden
+                  width={PHOTOGRAPHY.empty.width}
+                  height={PHOTOGRAPHY.empty.height}
+                  loading="lazy"
+                  decoding="async"
+                  className="h-32 w-full object-cover opacity-60 sm:h-40"
+                />
+                <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,17,16,0.35),rgba(11,17,16,0.9))]" />
+                <div className="absolute inset-0 flex flex-col justify-end p-4">
+                  <p className="font-display text-lg">No shop yet</p>
+                  <p className="mt-0.5 text-xs text-[var(--cream)]/70">
+                    Create your shop to start selling, managing stock and tracking your business.
+                  </p>
+                </div>
+              </div>
+              <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+                <CreateShopDialog>
+                  <Button className="h-12 w-full sm:w-auto sm:px-6">
+                    <Plus className="size-4" /> Create shop
+                  </Button>
+                </CreateShopDialog>
+                <JoinShopSheet>
+                  <Button variant="outline" className="h-12 w-full sm:w-auto">
+                    <Store className="size-4" /> I have an access code
+                  </Button>
+                </JoinShopSheet>
+              </div>
+            </div>
+          ) : (
+            <>
+              <ul className="mt-5 space-y-2">
                 {shops.map((shop) => (
                   <li key={shop.id}>
                     <Link
                       to="/app"
                       search={{ shop: shop.id }}
-                      className="flex min-h-14 items-center gap-3 py-3 active:opacity-70"
+                      className="group flex min-h-16 items-center gap-3 rounded-xl border border-white/10 bg-white/[0.05] px-3.5 py-3 transition-colors hover:border-[var(--mint)]/40 hover:bg-white/[0.09] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mint)]/50 active:bg-white/[0.12]"
                     >
                       <StorageImage
                         bucket={STORAGE_BUCKETS.shopLogos}
                         path={shop.logo_url}
                         alt={`${shop.name} logo`}
-                        className="size-10 shrink-0 rounded-lg"
+                        className="size-11 shrink-0 rounded-lg"
                       />
                       <span className="min-w-0 flex-1">
-                        <span className="block truncate text-sm font-medium">{shop.name}</span>
-                        <span className="block truncate text-xs text-muted-foreground">
+                        <span className="block truncate text-[0.95rem] font-semibold">
+                          {shop.name}
+                        </span>
+                        <span className="mt-0.5 block truncate text-xs text-[var(--cream)]/65">
                           {[businessTypeLabel(shop.business_type), shop.location]
                             .filter((part) => part && part !== "—")
                             .join(" · ") || "No details yet"}
                         </span>
                       </span>
-                      <span className="shrink-0 text-xs capitalize text-muted-foreground">
-                        {shop.role}
-                      </span>
-                      <ChevronRight className="size-4 shrink-0 text-muted-foreground" />
+                      <StatusBadge tone={shop.role === "owner" ? "info" : "neutral"}>
+                        {shop.role === "owner" ? "Owner" : "Staff"}
+                      </StatusBadge>
                     </Link>
                   </li>
                 ))}
               </ul>
-            </div>
 
-            <div className="mt-5 flex flex-wrap gap-2">
-              <CreateShopDialog>
-                <Button variant="outline" className="h-11">
-                  <Plus className="size-4" /> Add another shop
-                </Button>
-              </CreateShopDialog>
-              <JoinShopSheet>
-                <Button variant="ghost" className="h-11">
-                  <Store className="size-4" /> Join with a code
-                </Button>
-              </JoinShopSheet>
-            </div>
-          </>
-        )}
+              <div className="mt-4 flex flex-wrap gap-2 border-t border-white/10 pt-4">
+                <CreateShopDialog>
+                  <Button variant="outline" className="h-11">
+                    <Plus className="size-4" /> Add another shop
+                  </Button>
+                </CreateShopDialog>
+                <JoinShopSheet>
+                  <Button variant="ghost" className="h-11 text-[var(--cream)]/80">
+                    <Store className="size-4" /> Join with a code
+                  </Button>
+                </JoinShopSheet>
+              </div>
+            </>
+          )}
+        </div>
+
+        <p className="mt-4 text-center text-[11px] text-[var(--cream)]/40">{creditLine(photo)}</p>
       </PageContainer>
     </div>
   );
