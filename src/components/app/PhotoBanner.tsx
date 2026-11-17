@@ -1,4 +1,4 @@
-import { PHOTOGRAPHY, type Photograph } from "@/lib/photography";
+import { type Photograph } from "@/lib/photography";
 import { cn } from "@/lib/utils";
 
 /**
@@ -38,23 +38,5 @@ export function PhotoBanner({
         {caption}
       </p>
     </div>
-  );
-}
-
-/** The same band, sized for a page that is already dense. */
-export function PhotoStrip({ photo }: { photo: keyof typeof PHOTOGRAPHY }) {
-  const chosen = PHOTOGRAPHY[photo];
-  return (
-    <img
-      src={chosen.src}
-      alt=""
-      aria-hidden
-      width={chosen.width}
-      height={chosen.height}
-      loading="lazy"
-      decoding="async"
-      className="h-20 w-full rounded-xl border border-[var(--border)] object-cover"
-      style={{ objectPosition: chosen.focal }}
-    />
   );
 }
