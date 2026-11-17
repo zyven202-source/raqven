@@ -74,8 +74,38 @@ function Landing() {
       <section className="relative isolate overflow-hidden bg-[var(--savo-night)] text-cream">
         {/* ---------------------------------------------------- photograph */}
         <div aria-hidden className="absolute inset-0 -z-10">
+          {/*
+            Three encodings per crop, chosen by the browser: AVIF first (about a
+            fifth of the original JPEG), WebP next, the JPEG as the last resort.
+            The widths are the ones the hero is actually displayed at, so a
+            phone downloads the 700px portrait rather than the 2000px desktop
+            crop. `bun scripts/optimize-hero.mjs` rebuilds these from the
+            originals.
+          */}
           <picture>
-            <source media="(min-width: 1024px)" srcSet="/hero/shop-wide.jpg" />
+            <source
+              type="image/avif"
+              media="(min-width: 1024px)"
+              srcSet="/hero/shop-wide-1200.avif 1200w, /hero/shop-wide-1600.avif 1600w, /hero/shop-wide-2000.avif 2000w"
+              sizes="100vw"
+            />
+            <source
+              type="image/webp"
+              media="(min-width: 1024px)"
+              srcSet="/hero/shop-wide-1200.webp 1200w, /hero/shop-wide-1600.webp 1600w, /hero/shop-wide-2000.webp 2000w"
+              sizes="100vw"
+            />
+            <source media="(min-width: 1024px)" srcSet="/hero/shop-wide.jpg" sizes="100vw" />
+            <source
+              type="image/avif"
+              srcSet="/hero/shop-tall-700.avif 700w, /hero/shop-tall-900.avif 900w, /hero/shop-tall-1100.avif 1100w"
+              sizes="100vw"
+            />
+            <source
+              type="image/webp"
+              srcSet="/hero/shop-tall-700.webp 700w, /hero/shop-tall-900.webp 900w, /hero/shop-tall-1100.webp 1100w"
+              sizes="100vw"
+            />
             <img
               src="/hero/shop-tall.jpg"
               alt=""

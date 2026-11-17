@@ -12,7 +12,7 @@ import {
 } from "@/components/app/AppChrome";
 import { ToggleRow } from "@/components/app/fields";
 import { OwnerOnly } from "@/components/app/OwnerOnly";
-import { StatusBadge, SectionLabel } from "@/components/app/primitives";
+import { MetricCard, SectionLabel, StatusBadge } from "@/components/app/primitives";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -65,6 +65,10 @@ function EmployeesPage() {
 
   const activeCode = (codesQuery.data ?? []).find((entry) => entry.is_active) ?? null;
   const joiningOpen = shopQuery.data?.employee_joining_enabled ?? true;
+
+  const members = membersQuery.data ?? [];
+  const owners = members.filter((member) => member.role === "owner").length;
+  const paused = members.filter((member) => member.status !== "active").length;
 
   /** The plaintext exists only in this session — the database keeps a digest. */
   function reveal(code: string) {
@@ -163,6 +167,18 @@ function EmployeesPage() {
         subtitle="One code brings your staff in. Nobody needs a technical account id."
       />
 
+      <div className="mb-6 grid grid-cols-2 gap-2 sm:grid-cols-3">
+        <MetricCard label="People" value={members.length} hint="Including you" />
+        <MetricCard label="Owners" value={owners} hint="Can change settings" />
+        <MetricCard
+          label="Joining"
+          value={joiningOpen ? "Open" : "Closed"}
+          hint={activeCode ? "Code is active" : "No code created"}
+          tone={joiningOpen ? "default" : "caution"}
+          className="col-span-2 sm:col-span-1"
+        />
+      </div>
+
       {/* ---------------------------------------------------------- access code */}
       <section className="mb-8">
         <SectionLabel>Access code</SectionLabel>
@@ -192,7 +208,7 @@ function EmployeesPage() {
             </Button>
           </div>
         ) : (
-          <div className="glass-1 rounded-xl backdrop-blur-2xl backdrop-saturate-150 p-4">
+          <div className="card-surface p-4">
             {codesQuery.isLoading ? (
               <p className="text-sm text-muted-foreground">Checking the code…</p>
             ) : activeCode ? (
@@ -271,14 +287,14 @@ function EmployeesPage() {
             message={membersQuery.error.message}
             onRetry={() => void membersQuery.refetch()}
           />
-        ) : (membersQuery.data ?? []).length === 0 ? (
+        ) : members.length === 0 ? (
           <EmptyState
             title="No one here yet"
             description="You are the owner. Share the access code above and your staff will appear here when they join."
           />
         ) : (
           <ul className="list-divided">
-            {(membersQuery.data ?? []).map((member) => {
+            {members.map((member) => {
               const isMe = member.user_id === user?.id;
               const name = member.display_name || (isMe ? "You" : "Team member");
               const active = member.status === "active";
@@ -354,10 +370,34 @@ function EmployeesPage() {
           </ul>
         )}
 
-        <p className="mt-3 text-xs leading-relaxed text-muted-foreground">
-          To bring someone in, send them the access code. They sign up in SAVO, choose &ldquo;I have
-          an access code&rdquo;, and they land straight in this shop.
-        </p>
+        {paused > 0 ? (
+          <p className="mt-2 text-xs text-muted-foreground">
+            {paused} {paused === 1 ? "person is" : "people are"} paused — they keep their record but
+            cannot sign in to this shop until restored.
+          </p>
+        ) : null}
+
+        <div className="card-surface mt-4 p-4">
+          <p className="eyebrow">How joining works</p>
+          <ol className="mt-2 space-y-1.5 text-sm text-muted-foreground">
+            <li>
+              <span className="font-medium text-foreground">1.</span> Send them the code above — in
+              person or by message.
+            </li>
+            <li>
+              <span className="font-medium text-foreground">2.</span> They sign up in SAVO and
+              choose &ldquo;I have an access code&rdquo;.
+            </li>
+            <li>
+              <span className="font-medium text-foreground">3.</span> They land in this shop as
+              staff, and appear in the list above.
+            </li>
+          </ol>
+          <p className="mt-2 text-xs text-muted-foreground">
+            Changing the code stops new people joining with the old one. Staff who already joined
+            keep their access.
+          </p>
+        </div>
       </section>
     </PageContainer>
   );

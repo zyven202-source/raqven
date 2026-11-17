@@ -104,9 +104,15 @@ export function DataPrivacySection() {
       const outcome = await removeAccount.mutateAsync();
       await signOut().catch(() => undefined);
       await navigate({ to: "/", replace: true });
-      toast.success("Your account data has been deleted", {
-        description: `${outcome.memberships_removed} team membership${outcome.memberships_removed === 1 ? "" : "s"} removed. Your consent record is kept without your name.`,
-      });
+      const memberships = `${outcome.memberships_removed} team membership${outcome.memberships_removed === 1 ? "" : "s"} removed.`;
+      toast.success(
+        outcome.identity_deleted ? "Your account has been deleted" : "Your account data has been deleted",
+        {
+          description: outcome.identity_deleted
+            ? `${memberships} Your sign-in is gone too, so the old password no longer works. Your consent record is kept without your name.`
+            : `${memberships} Your consent record is kept without your name.`,
+        },
+      );
     } catch (error) {
       setConfirmingDelete(false);
       const message = error instanceof Error ? error.message : "The account could not be deleted.";

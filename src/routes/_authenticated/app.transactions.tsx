@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { Fragment, useState } from "react";
 import { Receipt, TriangleAlert } from "lucide-react";
 import { toast } from "sonner";
 
@@ -12,7 +12,7 @@ import {
   PageHeader,
 } from "@/components/app/AppChrome";
 import { Field } from "@/components/app/fields";
-import { Money } from "@/components/app/primitives";
+import { Money, MetricCard } from "@/components/app/primitives";
 import { ReceiptSheet } from "@/components/app/ReceiptSheet";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -20,7 +20,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sh
 import { useActiveShop } from "@/hooks/useActiveShop";
 import { useRefundedQuantities, useCreateRefund, useTransactions } from "@/hooks/useLedger";
 import { useSaleDetail } from "@/hooks/useSales";
-import { formatDateTime, formatMoney } from "@/lib/format";
+import { formatDate, formatDateTime, formatMoney } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import {
   kindLabel,
@@ -32,6 +32,11 @@ export const Route = createFileRoute("/_authenticated/app/transactions")({
   head: () => ({ meta: [{ title: "SAVO — Sales & transactions" }] }),
   component: TransactionsPage,
 });
+
+/** Same calendar day in the viewer's own timezone. */
+function onSameDay(a: TransactionRow, b: TransactionRow) {
+  return new Date(a.occurredAt).toDateString() === new Date(b.occurredAt).toDateString();
+}
 
 const FILTERS: { value: TransactionKind | "all"; label: string }[] = [
   { value: "all", label: "All" },
@@ -64,6 +69,16 @@ function TransactionsPage() {
 
   const rows = transactionsQuery.data ?? [];
 
+  // Totals of the list on screen. "In this view" is stated in the hint because
+  // the list is capped at 80 events — this is not the shop's all-time balance.
+  const moneyIn = rows
+    .filter((row) => row.direction === "in")
+    .reduce((sum, row) => sum + row.amount, 0);
+  const moneyOut = rows
+    .filter((row) => row.direction === "out")
+    .reduce((sum, row) => sum + row.amount, 0);
+  const net = moneyIn - moneyOut;
+
   return (
     <PageContainer>
       <PageHeader
@@ -71,6 +86,25 @@ function TransactionsPage() {
         title="Sales & transactions"
         subtitle="Everything that has moved, newest first."
       />
+
+      {rows.length > 0 ? (
+        <div className="mb-3 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <MetricCard
+            label="In"
+            value={formatMoney(moneyIn, currency)}
+            hint="In this view"
+            tone="positive"
+          />
+          <MetricCard label="Out" value={formatMoney(moneyOut, currency)} hint="In this view" />
+          <MetricCard
+            label="Net"
+            value={formatMoney(net, currency)}
+            hint="In this view"
+            tone={net < 0 ? "negative" : "default"}
+            className="col-span-2 sm:col-span-1"
+          />
+        </div>
+      ) : null}
 
       <div className="-mx-4 mb-3 flex gap-1.5 overflow-x-auto px-4 pb-1 sm:-mx-5 sm:px-5">
         {FILTERS.map((option) => (
@@ -122,69 +156,97 @@ function TransactionsPage() {
         />
       ) : (
         <ul className="list-divided">
-          {rows.map((row) => (
-            <li key={row.id}>
-              <button
-                type="button"
-                onClick={() => setSelected(row)}
-                className="flex w-full items-start gap-3 py-3 text-left active:opacity-70"
-              >
-                <span
-                  className={cn(
-                    "mt-0.5 shrink-0 text-xs font-semibold uppercase tracking-wide",
-                    row.direction === "in"
-                      ? "text-positive"
-                      : row.direction === "out"
-                        ? "text-negative"
-                        : "text-muted-foreground",
-                  )}
-                  aria-hidden
-                >
-                  {row.direction === "in" ? "+" : row.direction === "out" ? "−" : "•"}
-                </span>
+          {rows.map((row, index) => {
+            const previous = rows[index - 1];
+            const startsDay = !previous || !onSameDay(previous, row);
+            // The day's net is the sum of the rows on screen for that day.
+            const dayNet = rows
+              .filter((entry) => onSameDay(entry, row))
+              .reduce(
+                (sum, entry) => sum + (entry.direction === "out" ? -entry.amount : entry.amount),
+                0,
+              );
 
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-sm font-medium">{row.title}</span>
-                  <span className="mt-0.5 block text-xs text-muted-foreground">
-                    {kindLabel(row.kind)}
-                    {row.subtitle ? ` · ${row.subtitle}` : ""} · {formatDateTime(row.occurredAt)}
-                  </span>
-                  {row.reference ? (
-                    <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                      {row.reference}
-                      {row.userName ? ` · ${row.userName}` : ""}
+            return (
+              <Fragment key={row.id}>
+                {startsDay ? (
+                  <li className="flex items-baseline justify-between gap-3 pb-1.5 pt-4 first:pt-0">
+                    <h2 className="eyebrow">{formatDate(row.occurredAt)}</h2>
+                    <span
+                      className={cn(
+                        "tnum text-xs font-semibold",
+                        dayNet < 0 ? "text-negative" : "text-muted-foreground",
+                      )}
+                    >
+                      {formatMoney(dayNet, currency)}
                     </span>
-                  ) : row.userName ? (
-                    <span className="mt-0.5 block truncate text-xs text-muted-foreground">
-                      {row.userName}
+                  </li>
+                ) : null}
+                <li>
+                  <button
+                    type="button"
+                    onClick={() => setSelected(row)}
+                    className="flex w-full items-start gap-3 py-3 text-left active:opacity-70"
+                  >
+                    <span
+                      className={cn(
+                        "mt-0.5 shrink-0 text-xs font-semibold uppercase tracking-wide",
+                        row.direction === "in"
+                          ? "text-positive"
+                          : row.direction === "out"
+                            ? "text-negative"
+                            : "text-muted-foreground",
+                      )}
+                      aria-hidden
+                    >
+                      {row.direction === "in" ? "+" : row.direction === "out" ? "−" : "•"}
                     </span>
-                  ) : null}
-                </span>
 
-                <span className="shrink-0 text-right">
-                  <Money
-                    amount={row.direction === "out" ? -row.amount : row.amount}
-                    currency={currency}
-                    className={cn(
-                      "text-sm font-semibold",
-                      row.direction === "out" ? "text-negative" : "",
-                    )}
-                  />
-                  {row.quantity !== null ? (
-                    <span className="tnum block text-[11px] text-muted-foreground">
-                      {row.quantity > 0 ? "+" : ""}
-                      {row.quantity} {row.unit ?? ""}
+                    <span className="min-w-0 flex-1">
+                      <span className="block truncate text-sm font-medium">{row.title}</span>
+                      <span className="mt-0.5 block text-xs text-muted-foreground">
+                        {kindLabel(row.kind)}
+                        {row.subtitle ? ` · ${row.subtitle}` : ""} ·{" "}
+                        {formatDateTime(row.occurredAt)}
+                      </span>
+                      {row.reference ? (
+                        <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                          {row.reference}
+                          {row.userName ? ` · ${row.userName}` : ""}
+                        </span>
+                      ) : row.userName ? (
+                        <span className="mt-0.5 block truncate text-xs text-muted-foreground">
+                          {row.userName}
+                        </span>
+                      ) : null}
                     </span>
-                  ) : null}
-                  {row.status ? (
-                    <span className="block text-[11px] capitalize text-muted-foreground">
-                      {row.status}
+
+                    <span className="shrink-0 text-right">
+                      <Money
+                        amount={row.direction === "out" ? -row.amount : row.amount}
+                        currency={currency}
+                        className={cn(
+                          "text-sm font-semibold",
+                          row.direction === "out" ? "text-negative" : "",
+                        )}
+                      />
+                      {row.quantity !== null ? (
+                        <span className="tnum block text-[11px] text-muted-foreground">
+                          {row.quantity > 0 ? "+" : ""}
+                          {row.quantity} {row.unit ?? ""}
+                        </span>
+                      ) : null}
+                      {row.status ? (
+                        <span className="block text-[11px] capitalize text-muted-foreground">
+                          {row.status}
+                        </span>
+                      ) : null}
                     </span>
-                  ) : null}
-                </span>
-              </button>
-            </li>
-          ))}
+                  </button>
+                </li>
+              </Fragment>
+            );
+          })}
         </ul>
       )}
 

@@ -26,7 +26,13 @@ import { ProductFormDialog } from "@/components/app/ProductFormDialog";
 import { StockMoveSheet, type StockMoveMode } from "@/components/app/StockMoveSheet";
 import { StorageImage } from "@/components/app/StorageImage";
 import { BarcodeScannerSheet } from "@/components/pos/BarcodeScannerSheet";
-import { StatusBadge, stockStatus, stockStatusLabel } from "@/components/app/primitives";
+import {
+  MetricCard,
+  SectionLabel,
+  StatusBadge,
+  stockStatus,
+  stockStatusLabel,
+} from "@/components/app/primitives";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -112,6 +118,21 @@ function InventoryPage() {
   const products = productsQuery.data ?? [];
   const filtered = Boolean(debouncedSearch || categoryId || lowStockOnly || includeArchived);
 
+  // Figures for the rows this screen actually loaded (up to 200). They are sums
+  // of real columns — quantity and buying price — not a forecast of anything.
+  const unitsOnShelf = products.reduce((sum, product) => sum + Number(product.quantity), 0);
+  const stockAtCost = products.reduce(
+    (sum, product) => sum + Number(product.quantity) * Number(product.buying_price),
+    0,
+  );
+  const needsAttention = products.filter(
+    (product) => Number(product.quantity) <= Number(product.low_stock_threshold),
+  ).length;
+  // The catalogue query loads at most 200 products; say so rather than let a
+  // larger shop believe these totals cover all of it.
+  const atLimit = products.length >= 200;
+  const scopeHint = filtered ? "In this view" : atLimit ? "First 200 loaded" : "In the catalogue";
+
   async function handleArchiveToggle(product: Product) {
     const nextActive = !product.is_active;
     try {
@@ -144,6 +165,7 @@ function InventoryPage() {
       <PageHeader
         eyebrow="Inventory"
         title="Stock"
+        subtitle="What is on the shelf, what it cost, and what needs reordering."
         action={
           <Button
             className="h-10"
@@ -157,6 +179,19 @@ function InventoryPage() {
           </Button>
         }
       />
+
+      {products.length > 0 ? (
+        <div className="mb-4 grid grid-cols-2 gap-2 sm:grid-cols-3">
+          <MetricCard label="Products" value={products.length} hint={scopeHint} />
+          <MetricCard label="Units" value={unitsOnShelf} hint="On the shelf" />
+          <MetricCard
+            label="At cost"
+            value={formatMoney(stockAtCost, currency)}
+            hint={atLimit ? "First 200 loaded" : "What the shelves hold"}
+            className="col-span-2 sm:col-span-1"
+          />
+        </div>
+      ) : null}
 
       {/* ------------------------------------------------------------ search */}
       <div className="sticky top-14 z-20 -mx-4 space-y-2 bg-background/95 px-4 pb-2.5 pt-1 backdrop-blur-md sm:-mx-5 sm:px-5">
@@ -229,7 +264,26 @@ function InventoryPage() {
       </div>
 
       {/* ---------------------------------------------------------- products */}
-      <div className="mt-3">
+      <div className="mt-1">
+        {needsAttention > 0 && !lowStockOnly ? (
+          <button
+            type="button"
+            onClick={() => setLowStockOnly(true)}
+            className="press mb-3 flex w-full items-center justify-between gap-3 rounded-xl border border-caution/30 bg-caution-soft/50 px-3.5 py-2.5 text-left text-sm"
+          >
+            <span className="flex items-center gap-2">
+              <TriangleAlert className="size-4 shrink-0 text-caution" aria-hidden />
+              <span>
+                <span className="font-medium">
+                  {needsAttention} product{needsAttention === 1 ? "" : "s"}
+                </span>{" "}
+                at or below the reorder level
+              </span>
+            </span>
+            <span className="shrink-0 text-xs font-semibold text-caution">Show</span>
+          </button>
+        ) : null}
+
         {productsQuery.isLoading ? (
           <LoadingState label="Loading your stock…" />
         ) : productsQuery.isError ? (
@@ -273,9 +327,15 @@ function InventoryPage() {
           />
         ) : (
           <>
-            <p className="mb-2 text-xs text-muted-foreground">
-              {products.length} product{products.length === 1 ? "" : "s"}
-            </p>
+            <SectionLabel
+              action={
+                <span className="tnum text-xs text-muted-foreground">
+                  {products.length} product{products.length === 1 ? "" : "s"}
+                </span>
+              }
+            >
+              {filtered ? "Matching stock" : "Catalogue"}
+            </SectionLabel>
             <ul className="list-divided">
               {products.map((product) => {
                 const quantity = Number(product.quantity);

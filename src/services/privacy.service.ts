@@ -120,6 +120,12 @@ export async function withdrawDataRequest(requestId: string): Promise<boolean> {
 
 export interface DeletionOutcome {
   profile_deleted: boolean;
+  /**
+   * True once the database also removed the `auth.users` row — the sign-in
+   * identity itself. The older function omitted this key, so the UI treats a
+   * missing value as "profile only" rather than claiming more than happened.
+   */
+  identity_deleted: boolean;
   memberships_removed: number;
   consent_retained: boolean;
 }
@@ -137,6 +143,7 @@ export async function deleteAccount(): Promise<DeletionOutcome> {
   const result = data as unknown as DeletionOutcome;
   return {
     profile_deleted: result.profile_deleted === true,
+    identity_deleted: result.identity_deleted === true,
     memberships_removed: Number(result.memberships_removed ?? 0),
     consent_retained: result.consent_retained === true,
   };

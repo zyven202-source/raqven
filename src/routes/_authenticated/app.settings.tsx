@@ -40,6 +40,16 @@ export const Route = createFileRoute("/_authenticated/app/settings")({
   ),
 });
 
+/** The sections of this screen, in the order they are laid out below. */
+const SETTINGS_SECTIONS = [
+  { id: "shop", label: "Shop" },
+  { id: "refunds", label: "Refunds" },
+  { id: "receipts", label: "Receipts" },
+  { id: "activity", label: "Activity" },
+  { id: "data", label: "Privacy" },
+  { id: "delete-shop", label: "Closing" },
+] as const;
+
 /**
  * Shop settings, in the shopkeeper's language.
  *
@@ -190,11 +200,33 @@ function SettingsPage() {
 
   return (
     <PageContainer>
-      <PageHeader eyebrow="Workspace" title="Settings" />
+      <PageHeader
+        eyebrow="Workspace"
+        title="Settings"
+        subtitle="How your shop appears, what receipts say, and what happens to your data."
+      />
+
+      <nav
+        aria-label="Settings sections"
+        className="sticky top-14 z-20 -mx-4 mb-6 flex gap-1.5 overflow-x-auto bg-background/95 px-4 py-2 backdrop-blur-md [-ms-overflow-style:none] [scrollbar-width:none] sm:-mx-5 sm:px-5 [&::-webkit-scrollbar]:hidden"
+      >
+        {SETTINGS_SECTIONS.map((section) => (
+          <a
+            key={section.id}
+            href={`#${section.id}`}
+            className="press shrink-0 rounded-full border border-border bg-background px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:border-ink hover:text-ink"
+          >
+            {section.label}
+          </a>
+        ))}
+      </nav>
 
       {/* ------------------------------------------------------------ shop */}
-      <form onSubmit={saveShop} id="shop" className="scroll-mt-20 space-y-4">
-        <Section title="Your shop" />
+      <form onSubmit={saveShop} id="shop" className="card-surface scroll-mt-20 space-y-4 p-4">
+        <Section
+          title="Your shop"
+          description="The name, type, place and phone that appear on receipts and reports."
+        />
 
         <Field label="Shop name" htmlFor="settings-name">
           <Input
@@ -276,9 +308,9 @@ function SettingsPage() {
       </form>
 
       {/* --------------------------------------------------------- refunds */}
-      <section id="refunds" className="mt-8 scroll-mt-20 border-t border-border pt-5">
-        <Section title="Refunds" />
-        <div className="glass-2 rounded-xl backdrop-blur-md backdrop-saturate-150 px-4">
+      <section id="refunds" className="mt-8 scroll-mt-20">
+        <Section title="Refunds" description="Whether staff may take goods back at the counter." />
+        <div className="card-surface px-4">
           <ToggleRow
             title="Accept refunds"
             description="When this is on, staff can take goods back and the stock returns to the shelf. When it is off, nobody can — not even the owner — until it is switched back on."
@@ -293,11 +325,14 @@ function SettingsPage() {
       <form
         onSubmit={saveReceipt}
         id="receipts"
-        className="mt-8 scroll-mt-20 space-y-4 border-t border-border pt-5"
+        className="card-surface mt-8 scroll-mt-20 space-y-4 p-4"
       >
-        <Section title="Receipts" />
+        <Section
+          title="Receipts"
+          description="What a printed receipt says, and how its numbers are built."
+        />
 
-        <div className="glass-2 rounded-xl backdrop-blur-md backdrop-saturate-150 px-4">
+        <div className="rounded-lg border border-border px-4">
           <ToggleRow
             title="Show the logo on receipts"
             description="Needs a logo above."
@@ -361,13 +396,16 @@ function SettingsPage() {
       </form>
 
       {/* --------------------------------------------------------- account */}
-      <section id="activity" className="mt-8 scroll-mt-20 border-t border-border pt-5">
-        <Section title="Activity log" />
+      <section id="activity" className="mt-8 scroll-mt-20">
+        <Section title="Activity log" description="Who changed what in this shop, and when." />
         <ActivityLog shopId={shopId} />
       </section>
 
-      <section id="data" className="mt-8 scroll-mt-20 border-t border-border pt-5">
-        <Section title="Data & privacy" />
+      <section id="data" className="mt-8 scroll-mt-20">
+        <Section
+          title="Data & privacy"
+          description="Take a copy of your data, correct it, or ask us to act on it."
+        />
         <DataPrivacySection />
       </section>
 
@@ -377,15 +415,23 @@ function SettingsPage() {
         first, so this has to be the thing they scroll to next — not something
         they meet halfway down a settings page.
       */}
-      <section id="delete-shop" className="mt-8 scroll-mt-20 border-t border-border pt-5">
-        <Section title="Closing the shop" />
+      <section id="delete-shop" className="mt-8 scroll-mt-20">
+        <Section
+          title="Closing the shop"
+          description="Removes this shop and its books, permanently. Your account stays."
+        />
         <DeleteShopSection />
       </section>
     </PageContainer>
   );
 }
 
-/** A small section heading that does not shout. */
-function Section({ title }: { title: string }) {
-  return <h2 className="eyebrow mb-3">{title}</h2>;
+/** A small section heading with the sentence that explains it. */
+function Section({ title, description }: { title: string; description?: string }) {
+  return (
+    <div className="mb-3">
+      <h2 className="eyebrow">{title}</h2>
+      {description ? <p className="mt-1 text-sm text-muted-foreground">{description}</p> : null}
+    </div>
+  );
 }

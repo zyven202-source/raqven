@@ -1,5 +1,13 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ArrowUp, ChevronDown, Loader2, RotateCcw, Sparkles, Trash2 } from "lucide-react";
+import {
+  ArrowUp,
+  ArrowUpRight,
+  ChevronDown,
+  Loader2,
+  RotateCcw,
+  Sparkles,
+  Trash2,
+} from "lucide-react";
 
 import { SavoMascot } from "@/components/ai/SavoMascot";
 import { SavoStudio } from "@/components/ai/SavoStudio";
@@ -29,10 +37,26 @@ type Suggestion = { label: string; prompt: string; needs: "any" | "shop" | "owne
 const SUGGESTIONS: Suggestion[] = [
   { label: "Help me use SAVO", prompt: "Help me use SAVO", needs: "any" },
   { label: "Check low stock", prompt: "Which products are running low on stock?", needs: "shop" },
-  { label: "Summarize my sales today", prompt: "Summarize my recorded sales for today.", needs: "shop" },
-  { label: "Explain my business report", prompt: "Explain how to read my business report.", needs: "any" },
-  { label: "Who owes me money?", prompt: "Which debtors have outstanding balances?", needs: "shop" },
-  { label: "How did this month go?", prompt: "How did my shop do this month so far?", needs: "owner" },
+  {
+    label: "Summarize my sales today",
+    prompt: "Summarize my recorded sales for today.",
+    needs: "shop",
+  },
+  {
+    label: "Explain my business report",
+    prompt: "Explain how to read my business report.",
+    needs: "any",
+  },
+  {
+    label: "Who owes me money?",
+    prompt: "Which debtors have outstanding balances?",
+    needs: "shop",
+  },
+  {
+    label: "How did this month go?",
+    prompt: "How did my shop do this month so far?",
+    needs: "owner",
+  },
   { label: "Create a SAVO advertisement", prompt: "", needs: "any" },
 ];
 
@@ -134,10 +158,13 @@ export function SavoAiPanel({
             />
           </span>
           <div className="min-w-0 flex-1">
-            <h2 id="savo-ai-title" className="text-[0.9375rem] font-semibold leading-tight">
+            <p className="text-[10px] font-semibold uppercase tracking-[0.14em] text-positive">
+              Assistant
+            </p>
+            <h2 id="savo-ai-title" className="font-display text-base font-semibold leading-tight">
               SAVO AI
             </h2>
-            <p className="truncate text-xs leading-tight text-muted-foreground">
+            <p className="mt-0.5 truncate text-xs leading-tight text-muted-foreground">
               {shopName ? `Answers for ${shopName}` : "Ask about SAVO"}
             </p>
           </div>
@@ -167,7 +194,11 @@ export function SavoAiPanel({
         </header>
 
         {/* --------------------------------------------------------------- tabs */}
-        <div role="tablist" aria-label="SAVO AI" className="flex gap-1 border-b border-glass-line px-3 pt-2">
+        <div
+          role="tablist"
+          aria-label="SAVO AI"
+          className="flex gap-1 border-b border-glass-line px-3 pt-2"
+        >
           {(
             [
               { key: "ask", label: "Ask" },
@@ -182,7 +213,9 @@ export function SavoAiPanel({
               onClick={() => setTab(entry.key)}
               className={cn(
                 "press relative rounded-t-md px-3 pb-2 pt-1 text-sm font-medium transition-colors",
-                tab === entry.key ? "text-foreground" : "text-muted-foreground hover:text-foreground",
+                tab === entry.key
+                  ? "text-foreground"
+                  : "text-muted-foreground hover:text-foreground",
               )}
             >
               {entry.label}
@@ -209,20 +242,25 @@ export function SavoAiPanel({
               {turns.length === 0 ? (
                 <div className="space-y-3">
                   <div className="flex items-start gap-2.5">
-                    <SavoMascot className="mt-0.5 block size-8 shrink-0 [&>svg]:size-full" expression="happy" />
-                    <div className="rounded-xl rounded-tl-sm bg-positive/10 px-3 py-2.5 text-sm leading-relaxed ring-1 ring-positive/20">
-                      <p className="font-medium">Hello — I&rsquo;m SAVO AI.</p>
+                    <SavoMascot
+                      className="mt-1 block size-8 shrink-0 [&>svg]:size-full"
+                      expression="happy"
+                    />
+                    <div className="card-surface px-3.5 py-3 text-sm leading-relaxed">
+                      <p className="font-display text-[0.95rem] font-semibold leading-snug">
+                        Hello — I&rsquo;m SAVO AI.
+                      </p>
                       <p className="mt-1 text-muted-foreground">
                         {shopId
-                          ? "Ask me about this shop's recorded sales, stock, expenses or debtors — or how to do something in SAVO."
+                          ? "Ask me about this shop's recorded sales, stock, expenses or customer accounts — or how to do something in SAVO."
                           : "Ask me how SAVO works, or what a screen is for. Sign in and open a shop to ask about its figures."}
                       </p>
                     </div>
                   </div>
 
-                  <div className="space-y-1.5 pl-0.5">
-                    <p className="eyebrow">Try one of these</p>
-                    <div className="flex flex-wrap gap-1.5">
+                  <div>
+                    <p className="eyebrow mb-1.5">Start with one of these</p>
+                    <div className="grid gap-1.5">
                       {suggestions
                         .filter((entry) => entry.prompt || studioAllowed)
                         .map((suggestion) => (
@@ -236,9 +274,13 @@ export function SavoAiPanel({
                                 setTab("studio");
                               }
                             }}
-                            className="press rounded-full border border-glass-line bg-glass-2 px-3 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-accent hover:text-accent-foreground"
+                            className="press flex w-full items-center justify-between gap-3 rounded-lg border border-glass-line bg-[var(--glass-2)] px-3 py-2 text-left text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
                           >
-                            {suggestion.label}
+                            <span className="min-w-0 truncate">{suggestion.label}</span>
+                            <ArrowUpRight
+                              className="size-3.5 shrink-0 text-muted-foreground"
+                              aria-hidden
+                            />
                           </button>
                         ))}
                     </div>
@@ -249,14 +291,14 @@ export function SavoAiPanel({
                   {turns.map((turn, index) =>
                     turn.role === "user" ? (
                       <li key={index} className="flex justify-end">
-                        <p className="max-w-[85%] whitespace-pre-wrap break-words rounded-xl rounded-tr-sm bg-ink px-3 py-2 text-sm leading-relaxed text-primary-foreground">
+                        <p className="band-emerald max-w-[85%] whitespace-pre-wrap break-words rounded-xl rounded-tr-sm px-3 py-2 text-sm leading-relaxed">
                           {turn.content}
                         </p>
                       </li>
                     ) : (
                       <li key={index} className="flex items-start gap-2">
                         <SavoMascot className="mt-1 block size-6 shrink-0 [&>svg]:size-full" />
-                        <div className="max-w-[85%] whitespace-pre-wrap break-words rounded-xl rounded-tl-sm bg-sunken px-3 py-2 text-sm leading-relaxed ring-1 ring-glass-line">
+                        <div className="card-surface max-w-[85%] whitespace-pre-wrap break-words px-3 py-2 text-sm leading-relaxed">
                           {turn.content}
                         </div>
                       </li>
@@ -288,7 +330,9 @@ export function SavoAiPanel({
                           ? "SAVO AI is unavailable"
                           : "That didn't work"}
                   </p>
-                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">{error.message}</p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
+                    {error.message}
+                  </p>
                   <div className="mt-2 flex gap-2">
                     {error.code !== "not_configured" && error.code !== "forbidden" ? (
                       <Button
@@ -331,7 +375,11 @@ export function SavoAiPanel({
                     resize();
                   }}
                   onKeyDown={(event) => {
-                    if (event.key === "Enter" && !event.shiftKey && !event.nativeEvent.isComposing) {
+                    if (
+                      event.key === "Enter" &&
+                      !event.shiftKey &&
+                      !event.nativeEvent.isComposing
+                    ) {
                       event.preventDefault();
                       submit();
                     }
@@ -358,7 +406,8 @@ export function SavoAiPanel({
               {started && turns.length > 0 ? (
                 <p className="mt-1 text-[11px] text-muted-foreground/80">
                   <Sparkles className="mr-1 inline size-3 align-[-2px]" aria-hidden />
-                  Messages go to the AI provider for processing and are cleared when you close this tab.
+                  Messages go to the AI provider for processing and are cleared when you close this
+                  tab.
                 </p>
               ) : null}
             </div>
@@ -368,4 +417,3 @@ export function SavoAiPanel({
     </>
   );
 }
-
