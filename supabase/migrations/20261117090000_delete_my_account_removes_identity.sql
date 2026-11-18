@@ -1,19 +1,12 @@
 -- ============================================================================
--- Make "delete my account" delete the sign-in identity too.
---
--- The original function (20260930090000_privacy_audit_governance.sql) removed
--- the profile, memberships, minted access codes and the link from consent
--- records — and then returned, leaving the row in `auth.users` untouched. A
--- myshopkeeper who deleted their account could sign in again with the same
--- password, land in the "no shop yet" state with a fresh profile, and the
--- deletion looked like it had not happened.
+-- Make "delete my account" remove the sign-in identity too.
 --
 -- `auth.users` is not writable from the client and cannot be touched by a
 -- SECURITY INVOKER function. This function is SECURITY DEFINER and owned by the
--- migration role (`postgres`), so it can delete the identity; the
--- `authenticated` role never gets direct table access. Deleting the auth row
--- cascades to identities, sessions and refresh tokens, which is exactly the
--- intent of "delete my account".
+-- migration role (`postgres`), so it can delete the identity; the `authenticated`
+-- role never gets direct table access. Deleting the auth row cascades to
+-- identities, sessions and refresh tokens, which is exactly the intent of
+-- "delete my account".
 --
 -- The audit trail is preserved deliberately: `audit_log.actor_id` and the
 -- operator columns on sales are `ON DELETE SET NULL`, so the shop's books keep
