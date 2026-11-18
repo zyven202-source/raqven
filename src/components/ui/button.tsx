@@ -16,11 +16,14 @@ const buttonVariants = cva(
         destructive: "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
         // Outline and secondary are the everyday glass controls: level 2, so
         // they sit quietly inside the level 1 surfaces they appear on.
+        // Every button is one solid card fill with one hairline. Variants
+        // differ by weight of text and border, never by a second layer.
         outline:
           "border border-[var(--brand-line)] bg-[var(--brand-raised)] text-foreground hover:bg-[var(--brand-surface)]",
         secondary:
-          "border border-[var(--brand-line)] bg-[var(--brand-surface)] text-foreground hover:bg-[var(--brand-raised)]",
-        ghost: "text-foreground hover:bg-[var(--brand-raised)]",
+          "border border-[var(--brand-line)] bg-[var(--brand-raised)] text-foreground hover:bg-[var(--brand-surface)]",
+        ghost:
+          "border border-transparent bg-[var(--brand-raised)] text-foreground hover:bg-[var(--brand-surface)]",
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {

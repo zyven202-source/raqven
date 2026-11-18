@@ -996,3 +996,43 @@ body {
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
+
+/*
+  Flat surface contract.
+  Every panel and control in the product is one solid fill, one hairline and no
+  blur. These classes are the old layered-glass names; they are kept as aliases
+  so untouched screens inherit the flat system instead of drifting, but they can
+  no longer paint translucency, gradients or shadow.
+*/
+.glass-1,
+.savo-glass-a,
+.savo-glass-paper,
+.glass-header {
+  background: var(--brand-raised) !important;
+  background-image: none !important;
+  border-color: var(--brand-line) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.glass-2,
+.savo-glass-b {
+  background: var(--brand-surface) !important;
+  background-image: none !important;
+  border-color: var(--brand-line) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}
+
+.glass-3,
+.glass-strong,
+.savo-glass-c {
+  background: var(--brand-surface) !important;
+  background-image: none !important;
+  border-color: var(--brand-line) !important;
+  box-shadow: none !important;
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+}

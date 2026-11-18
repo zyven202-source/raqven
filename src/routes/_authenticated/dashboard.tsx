@@ -70,7 +70,6 @@ function DashboardPage() {
           style={{ objectPosition: photo.focal }}
         />
         <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(11,17,16,0.62)_0%,rgba(11,17,16,0.72)_45%,rgba(11,17,16,0.9)_100%)]" />
-        <div className="absolute inset-0 bg-[radial-gradient(120%_90%_at_15%_0%,rgba(16,185,129,0.18)_0%,transparent_55%)]" />
       </div>
 
       <header className="border-b border-[var(--brand-line)] bg-[var(--brand-raised)]">

@@ -216,7 +216,7 @@ function Landing() {
                   <img
                     src={SCREEN_SHOTS[index] ?? SCREEN_SHOTS[0]}
                     alt={`SAVO ${step.screen} screen`}
-                    width={430}
+                    width={412}
                     height={800}
                     loading="lazy"
                     decoding="async"
@@ -360,7 +360,7 @@ function Landing() {
                       <img
                         src={shot.src}
                         alt={`SAVO ${shot.label} screen`}
-                        width={430}
+                        width={412}
                         height={800}
                         loading="lazy"
                         decoding="async"

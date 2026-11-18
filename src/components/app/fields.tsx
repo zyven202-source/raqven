@@ -45,6 +45,7 @@ export function Field({
 /** Password input with a real show/hide control and a 44px touch target. */
 export function PasswordField({
   id,
+  name,
   value,
   onChange,
   placeholder,
@@ -73,6 +74,7 @@ export function PasswordField({
       <div className="relative">
         <Input
           id={id}
+          name={name}
           type={visible ? "text" : "password"}
           value={value}
           onChange={(event) => onChange(event.target.value)}

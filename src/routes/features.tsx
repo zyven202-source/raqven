@@ -175,7 +175,10 @@ function FeaturesPage() {
         }
         aside={
           /* A real index, not decoration: every row jumps to its own section. */
-          <nav aria-label="Feature sections" className="savo-glass-a rounded-3xl p-5">
+          <nav
+            aria-label="Feature sections"
+            className="rounded-3xl border border-[var(--brand-line)] bg-[var(--brand-raised)] p-5"
+          >
             <p className="text-[11px] font-semibold uppercase tracking-[0.18em] text-cream/50">
               On this page
             </p>

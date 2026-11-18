@@ -74,6 +74,7 @@ function LoginPage() {
         <Field label="Email" error={errors["email"]} htmlFor="login-email">
           <Input
             id="login-email"
+            name="email"
             type="email"
             className="h-12"
             value={email}
@@ -89,6 +90,7 @@ function LoginPage() {
 
         <PasswordField
           id="login-password"
+          name="password"
           label="Password"
           error={errors["password"]}
           value={password}
