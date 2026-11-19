@@ -10,6 +10,7 @@ User-agent: Googlebot
 Allow: /
 Disallow: /app
 Disallow: /dashboard
+Disallow: /account
 Disallow: /auth/forgot-password
 Disallow: /auth/reset-password
 
@@ -17,6 +18,7 @@ User-agent: Bingbot
 Allow: /
 Disallow: /app
 Disallow: /dashboard
+Disallow: /account
 
 User-agent: Twitterbot
 Allow: /
@@ -28,6 +30,7 @@ User-agent: *
 Allow: /
 Disallow: /app
 Disallow: /dashboard
+Disallow: /account
 Disallow: /auth/forgot-password
 Disallow: /auth/reset-password
 

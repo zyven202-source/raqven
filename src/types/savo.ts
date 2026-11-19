@@ -26,6 +26,21 @@ export type ShopInsert = Tables["shops"]["Insert"];
 export type ShopUpdate = Tables["shops"]["Update"];
 
 export type ShopMember = Tables["shop_members"]["Row"];
+
+/* Marketlink — the public marketplace layered over inventory. */
+export type MarketlinkStorefront = Tables["marketlink_storefronts"]["Row"];
+export type MarketlinkStorefrontUpdate = Tables["marketlink_storefronts"]["Update"];
+export type MarketlinkListing = Tables["marketlink_listings"]["Row"];
+export type MarketlinkListingInsert = Tables["marketlink_listings"]["Insert"];
+export type MarketlinkListingUpdate = Tables["marketlink_listings"]["Update"];
+export type MarketlinkDeliveryZone = Tables["marketlink_delivery_zones"]["Row"];
+export type MarketlinkDeliveryZoneInsert = Tables["marketlink_delivery_zones"]["Insert"];
+export type MarketlinkOrder = Tables["marketlink_orders"]["Row"];
+export type MarketlinkOrderItem = Tables["marketlink_order_items"]["Row"];
+export type MarketlinkNotification = Tables["marketlink_notifications"]["Row"];
+export type MarketlinkCustomerProfile = Tables["marketlink_customer_profiles"]["Row"];
+export type MarketlinkDeliveryKind = Enums["marketlink_delivery_kind"];
+export type MarketlinkOrderStatus = Enums["marketlink_order_status"];
 export type EmployeeAccessCode = Tables["employee_access_codes"]["Row"];
 
 export type Category = Tables["categories"]["Row"];
@@ -71,4 +86,6 @@ export const STORAGE_BUCKETS = {
   shopLogos: "shop-logos",
   productImages: "product-images",
   expenseReceipts: "expense-receipts",
+  /** Public-read, owner-write. Marketplace images only. */
+  marketlink: "marketlink-images",
 } as const;

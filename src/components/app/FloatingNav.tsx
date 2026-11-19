@@ -14,6 +14,7 @@ import {
   RefreshCw,
   ScanLine,
   ScrollText,
+  ShoppingBag,
   Store,
   Users,
   Wallet,
@@ -21,6 +22,7 @@ import {
 import { useRef, useState } from "react";
 
 import { JoinShopSheet } from "@/components/app/JoinShopSheet";
+import { useMarketlinkUnread } from "@/hooks/useMarketlink";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -59,6 +61,7 @@ type AppPath =
   | "/app/stock"
   | "/app/debtors"
   | "/app/employees"
+  | "/app/marketlink"
   | "/app/settings"
   | "/app/sync"
   | "/dashboard";
@@ -162,6 +165,13 @@ const OWNER_MORE: MoreGroup[] = [
       },
       { to: "/app/reports", label: "Reports", icon: BarChart3, ownerOnly: true },
       { to: "/app/employees", label: "Employees", icon: Users, ownerOnly: true },
+      {
+        to: "/app/marketlink",
+        label: "Marketlink",
+        note: "Your public shop and online order requests",
+        icon: ShoppingBag,
+        ownerOnly: true,
+      },
       { to: "/dashboard", label: "All my shops", icon: Store },
     ],
   },
@@ -344,11 +354,23 @@ function buzz(ms: number) {
   }
 }
 
-export function FloatingNav({ isOwner, onSignOut }: { isOwner: boolean; onSignOut: () => void }) {
+export function FloatingNav({
+  isOwner,
+  shopId,
+  onSignOut,
+}: {
+  isOwner: boolean;
+  shopId: string;
+  onSignOut: () => void;
+}) {
   const pathname = useRouterState({ select: (state) => state.location.pathname });
   const hash = useRouterState({ select: (state) => state.location.hash });
   const navigate = useNavigate();
   const [moreOpen, setMoreOpen] = useState(false);
+  // A real, persisted count from `marketlink_notifications` — not a badge that
+  // decorates the menu. Employees never see it because they cannot own orders.
+  const unread = useMarketlinkUnread(shopId, isOwner);
+  const unreadMarketlink = isOwner ? (unread.data ?? 0) : 0;
 
   const tabs = isOwner ? OWNER_TABS : STAFF_TABS;
   const groups = (isOwner ? OWNER_MORE : STAFF_MORE)
@@ -587,7 +609,12 @@ export function FloatingNav({ isOwner, onSignOut }: { isOwner: boolean; onSignOu
               <Tab key={tab.to} item={tab} pathname={pathname} />
             ),
           )}
-          <MoreTab open={moreOpen} active={moreActive} onOpenChange={setMoreOpen} />
+          <MoreTab
+            open={moreOpen}
+            active={moreActive}
+            hasUnread={unreadMarketlink > 0}
+            onOpenChange={setMoreOpen}
+          />
         </div>
       </nav>
 
@@ -597,6 +624,7 @@ export function FloatingNav({ isOwner, onSignOut }: { isOwner: boolean; onSignOu
         groups={groups}
         pathname={pathname}
         hash={hash}
+        unreadMarketlink={unreadMarketlink}
         onSignOut={onSignOut}
       />
     </>
@@ -724,10 +752,12 @@ function CenterTab({ item, pathname }: { item: TabItem; pathname: string }) {
 function MoreTab({
   open,
   active,
+  hasUnread,
   onOpenChange,
 }: {
   open: boolean;
   active: boolean;
+  hasUnread: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
   const reduceMotion = useReducedMotion();
@@ -758,6 +788,12 @@ function MoreTab({
         transition={reduceMotion ? { duration: 0 } : SPRING}
       >
         <MoreHorizontal className="size-5" aria-hidden />
+        {hasUnread ? (
+          <span
+            aria-hidden
+            className="absolute -top-0.5 -right-1 size-2 rounded-full bg-[var(--brand-accent)] ring-2 ring-[var(--brand-surface)]"
+          />
+        ) : null}
       </motion.span>
 
       <span
@@ -792,6 +828,7 @@ function MorePanel({
   groups,
   pathname,
   hash,
+  unreadMarketlink,
   onSignOut,
 }: {
   open: boolean;
@@ -799,6 +836,7 @@ function MorePanel({
   groups: MoreGroup[];
   pathname: string;
   hash: string;
+  unreadMarketlink: number;
   onSignOut: () => void;
 }) {
   const reduceMotion = useReducedMotion();
@@ -828,7 +866,7 @@ function MorePanel({
     <Drawer open={open} onOpenChange={onOpenChange} shouldScaleBackground={false} dismissible>
       <DrawerContent
         className={cn(
-          "glass-sheet mx-auto max-w-lg gap-0 rounded-t-glass-lg px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+1.25rem)]",
+          "glass-sheet mx-auto max-h-[calc(100dvh-1.5rem)] max-w-lg gap-0 rounded-t-glass-lg px-4 pt-3 pb-[calc(env(safe-area-inset-bottom)+1.25rem)] text-foreground",
           reduceMotion && "transition-none",
         )}
       >
@@ -854,7 +892,13 @@ function MorePanel({
           </DrawerDescription>
         </motion.div>
 
-        <div className="max-h-[min(62vh,30rem)] overflow-y-auto overscroll-contain pr-0.5">
+        {/*
+          The sheet's own scroll area. `dvh` rather than `vh` matters on Android:
+          the URL bar retracts, and a 62vh cap measured against the larger
+          viewport clips the last row once it does. The bottom padding includes
+          the gesture-bar inset so “Join another shop” is never under it.
+        */}
+        <div className="max-h-[min(72dvh,34rem)] overflow-y-auto overscroll-contain pr-0.5 pb-[env(safe-area-inset-bottom)]">
           {sections.map((section) => (
             <motion.section
               key={section.heading}
@@ -864,14 +908,19 @@ function MorePanel({
               className="mb-4 last:mb-0"
             >
               <h2 className="eyebrow mb-2 px-1">{section.heading}</h2>
-              <ul className="glass-sunk overflow-hidden rounded-xl">
+              {/*
+                A solid raised surface, not `glass-sunk`. The token fix above
+                makes the old alias dark too; using the semantic pair here means
+                the rows stay readable even if a future theme forgets an alias.
+              */}
+              <ul className="overflow-hidden rounded-xl border border-[var(--brand-line)] bg-[var(--brand-raised)]">
                 {section.items.map(({ item, at: itemAt }) => (
                   <motion.li
                     key={`${item.to}${item.hash ?? ""}`}
                     initial={{ opacity: 0, y: STAGGER_RISE }}
                     animate={{ opacity: open ? 1 : 0, y: open ? 0 : STAGGER_RISE }}
                     transition={stagger(open, itemAt, reduced)}
-                    className="border-t border-glass-line first:border-t-0"
+                    className="border-t border-[var(--brand-line)] first:border-t-0"
                   >
                     <SheetLink
                       item={item}
@@ -881,6 +930,7 @@ function MorePanel({
                         pathname === item.to &&
                         (item.hash === undefined || hash === `#${item.hash}`)
                       }
+                      badge={item.to === "/app/marketlink" ? unreadMarketlink : 0}
                       onNavigate={() => onOpenChange(false)}
                     />
                   </motion.li>
@@ -926,10 +976,12 @@ function MorePanel({
 function SheetLink({
   item,
   active,
+  badge = 0,
   onNavigate,
 }: {
   item: NavItem;
   active: boolean;
+  badge?: number;
   onNavigate: () => void;
 }) {
   const body = (
@@ -943,13 +995,20 @@ function SheetLink({
         <item.icon className="size-5" aria-hidden />
       </span>
       <span className="min-w-0 flex-1">
-        <span className="block text-[0.9375rem] font-medium leading-tight">{item.label}</span>
+        <span className="block text-[0.9375rem] font-medium leading-tight text-foreground">
+          {item.label}
+        </span>
         {item.note ? (
           <span className="mt-0.5 block text-xs leading-tight text-muted-foreground">
             {item.note}
           </span>
         ) : null}
       </span>
+      {badge > 0 ? (
+        <span className="tnum ml-auto grid min-w-5 shrink-0 place-items-center rounded-full bg-[var(--brand-accent)] px-1.5 py-0.5 text-[11px] font-bold text-[#1a1205]">
+          {badge > 9 ? "9+" : badge}
+        </span>
+      ) : null}
     </>
   );
 
@@ -961,12 +1020,19 @@ function SheetLink({
     compiled inside `@media (hover: hover)`, so a phone never gets a row stuck
     in a hover state after a tap.
   */
-  const className =
-    "press hover-glass flex min-h-14 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left hover:bg-ink/5";
+  const className = cn(
+    "press flex min-h-14 w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-foreground transition-colors hover:bg-accent/60 focus-visible:bg-accent/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset active:bg-accent",
+    active && "bg-accent/70",
+  );
 
   if (item.to === "/dashboard") {
     return (
-      <Link to={item.to} onClick={onNavigate} className={className}>
+      <Link
+        to={item.to}
+        onClick={onNavigate}
+        aria-current={active ? "page" : undefined}
+        className={className}
+      >
         {body}
       </Link>
     );
@@ -978,6 +1044,7 @@ function SheetLink({
       search={{ shop: undefined }}
       {...(item.hash ? { hash: item.hash } : {})}
       onClick={onNavigate}
+      aria-current={active ? "page" : undefined}
       className={className}
     >
       {body}

@@ -38,6 +38,7 @@ const STATIC_PAGES = new Set([
   "/features",
   "/about",
   "/support",
+  "/market",
 ]);
 
 export default {
@@ -51,12 +52,15 @@ export default {
 
     const method = request.method;
     const path = url.pathname.replace(/\/+$/, "") || "/";
-    if ((method === "GET" || method === "HEAD") && STATIC_PAGES.has(path)) {
+    const wantsStatic =
+      STATIC_PAGES.has(path) || path === "/market" || path.startsWith("/shop/");
+    if ((method === "GET" || method === "HEAD") && wantsStatic) {
       const page = new URL(`${path}.html`, url);
       const response = await env.ASSETS.fetch(new Request(page, request));
       // A missing file would be answered with the SPA shell by the assets
       // binding, which is exactly what this branch is trying to avoid; only a
-      // real HTML file is accepted, and anything else falls through.
+      // real HTML file is accepted, and anything else falls through. Shop and
+      // product pages exist only while published; the build writes them.
       if (response.ok && response.headers.get("content-type")?.includes("text/html")) {
         return response;
       }

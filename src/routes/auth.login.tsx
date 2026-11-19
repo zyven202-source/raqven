@@ -12,6 +12,14 @@ import { signInWithEmail } from "@/services/auth.service";
 import { AuthHeading, AuthSwitchLink, SubmitButton } from "./-auth-parts";
 
 export const Route = createFileRoute("/auth/login")({
+  validateSearch: (search: Record<string, unknown>): { redirect?: string | undefined } => ({
+    redirect:
+      typeof search["redirect"] === "string" &&
+      search["redirect"].startsWith("/") &&
+      !search["redirect"].startsWith("//")
+        ? search["redirect"]
+        : undefined,
+  }),
   head: () =>
     pageMeta({
       title: "SAVO — Sign in",
@@ -23,6 +31,7 @@ export const Route = createFileRoute("/auth/login")({
 
 function LoginPage() {
   const navigate = Route.useNavigate();
+  const { redirect } = Route.useSearch();
   const { session, loading } = useSession();
   const storageAvailable = useStorageAvailable();
 
@@ -31,12 +40,14 @@ function LoginPage() {
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [busy, setBusy] = useState(false);
 
-  // A signed-in user has no business on this page.
+  // A signed-in user has no business on this page. A marketplace checkout can
+  // send them here with the page to return to; only an internal path is accepted.
   useEffect(() => {
     if (!loading && session) {
-      void navigate({ to: "/onboarding", replace: true });
+      if (redirect) window.location.assign(redirect);
+      else void navigate({ to: "/onboarding", replace: true });
     }
-  }, [loading, session, navigate]);
+  }, [loading, session, navigate, redirect]);
 
   async function handleSubmit(event: React.FormEvent) {
     event.preventDefault();
@@ -57,7 +68,8 @@ function LoginPage() {
         // instead of navigating to a page that bounces straight back.
         throw new Error(STORAGE_BLOCKED_MESSAGE);
       }
-      await navigate({ to: "/onboarding", replace: true });
+      if (redirect) window.location.assign(redirect);
+      else await navigate({ to: "/onboarding", replace: true });
     } catch (error) {
       setBusy(false);
       const message = error instanceof Error ? error.message : "Could not sign in.";

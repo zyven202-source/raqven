@@ -31,6 +31,7 @@ import { cn } from "@/lib/utils";
  */
 
 const NAV_LINKS = [
+  { to: "/market", label: "Marketplace" },
   { to: "/features", label: "Features" },
   { to: "/pricing", label: "Pricing" },
   { to: "/about", label: "About" },
@@ -228,6 +229,7 @@ export function SiteFooter() {
           <FooterColumn
             title="Product"
             links={[
+              { to: "/market", label: "Marketplace" },
               { to: "/features", label: "Features" },
               { to: "/pricing", label: "Pricing" },
               { to: "/auth/signup", label: "Open your shop" },

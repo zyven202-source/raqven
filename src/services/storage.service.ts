@@ -18,6 +18,7 @@ const MAX_BYTES: Record<string, number> = {
   [STORAGE_BUCKETS.shopLogos]: 2 * 1024 * 1024,
   [STORAGE_BUCKETS.productImages]: 5 * 1024 * 1024,
   [STORAGE_BUCKETS.expenseReceipts]: 10 * 1024 * 1024,
+  [STORAGE_BUCKETS.marketlink]: 5 * 1024 * 1024,
 };
 
 function extensionFor(file: File) {

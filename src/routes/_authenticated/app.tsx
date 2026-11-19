@@ -112,7 +112,11 @@ function AppShell({
         </SwipeArea>
       </div>
 
-      <FloatingNav isOwner={role === "owner"} onSignOut={() => void handleSignOut()} />
+      <FloatingNav
+        isOwner={role === "owner"}
+        shopId={activeShop.id}
+        onSignOut={() => void handleSignOut()}
+      />
 
       {/* The assistant floats above the page and below every dialog. It is
           SAVO AI on Groq, which reads this shop's records through the edge

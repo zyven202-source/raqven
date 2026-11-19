@@ -943,6 +943,20 @@
   --glass-3: #16221e;
   --glass-line: #23302b;
   --glass-1-line: #2a3833;
+  /*
+   * The rest of the glass ramp. These four were left at their light-paper
+   * values when the dark emerald theme was introduced, which made `glass-sunk`
+   * paint #eef4f0 under #f5f7f6 text — the More sheet's invisible rows. The
+   * whole ramp is now stated here so no alias can fall back to paper again.
+   */
+  --glass-2-line: #23302b;
+  --glass-3-line: #23302b;
+  --glass-2-sheen: transparent;
+  --glass-3-sheen: transparent;
+  --glass-sunk: #0a1311;
+  --glass-tile: rgba(16, 185, 129, 0.18);
+  --glass-tile-line: rgba(16, 185, 129, 0.42);
+  --hover-line: rgba(16, 185, 129, 0.45);
 
   --depth-1: 0 1px 2px rgba(0, 0, 0, 0.45), 0 10px 30px -18px rgba(0, 0, 0, 0.8);
   --shadow-pop: 0 18px 50px -18px rgba(0, 0, 0, 0.85);

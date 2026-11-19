@@ -15,6 +15,7 @@ import { Route as AboutRouteImport } from './routes/about'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as FeaturesRouteImport } from './routes/features'
 import { Route as LegalRouteImport } from './routes/legal'
+import { Route as MarketRouteImport } from './routes/market'
 import { Route as PricingRouteImport } from './routes/pricing'
 import { Route as SupportRouteImport } from './routes/support'
 import { Route as AuthenticatedAppRouteImport } from './routes/_authenticated/app'
@@ -27,6 +28,8 @@ import { Route as AuthSignupRouteImport } from './routes/auth.signup'
 import { Route as LegalPrivacyRouteImport } from './routes/legal.privacy'
 import { Route as LegalRefundsRouteImport } from './routes/legal.refunds'
 import { Route as LegalTermsRouteImport } from './routes/legal.terms'
+import { Route as ShopSlugRouteImport } from './routes/shop.$slug'
+import { Route as AuthenticatedAccountOrdersRouteImport } from './routes/_authenticated/account.orders'
 import { Route as AuthenticatedAdminAiRouteImport } from './routes/_authenticated/admin.ai'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
 import { Route as AuthenticatedAppIndexRouteImport } from './routes/_authenticated/app.index'
@@ -34,6 +37,7 @@ import { Route as AuthenticatedAppDebtorsRouteImport } from './routes/_authentic
 import { Route as AuthenticatedAppEmployeesRouteImport } from './routes/_authenticated/app.employees'
 import { Route as AuthenticatedAppExpensesRouteImport } from './routes/_authenticated/app.expenses'
 import { Route as AuthenticatedAppInventoryRouteImport } from './routes/_authenticated/app.inventory'
+import { Route as AuthenticatedAppMarketlinkRouteImport } from './routes/_authenticated/app.marketlink'
 import { Route as AuthenticatedAppOverviewRouteImport } from './routes/_authenticated/app.overview'
 import { Route as AuthenticatedAppPosRouteImport } from './routes/_authenticated/app.pos'
 import { Route as AuthenticatedAppPulseRouteImport } from './routes/_authenticated/app.pulse'
@@ -44,6 +48,8 @@ import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenti
 import { Route as AuthenticatedAppStockRouteImport } from './routes/_authenticated/app.stock'
 import { Route as AuthenticatedAppSyncRouteImport } from './routes/_authenticated/app.sync'
 import { Route as AuthenticatedAppTransactionsRouteImport } from './routes/_authenticated/app.transactions'
+import { Route as ShopSlugIndexRouteImport } from './routes/shop.$slug.index'
+import { Route as ShopSlugPListingIdRouteImport } from './routes/shop.$slug.p.$listingId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -72,6 +78,11 @@ const FeaturesRoute = FeaturesRouteImport.update({
 const LegalRoute = LegalRouteImport.update({
   id: '/legal',
   path: '/legal',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const MarketRoute = MarketRouteImport.update({
+  id: '/market',
+  path: '/market',
   getParentRoute: () => rootRouteImport,
 } as any)
 const PricingRoute = PricingRouteImport.update({
@@ -134,6 +145,17 @@ const LegalTermsRoute = LegalTermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => LegalRoute,
 } as any)
+const ShopSlugRoute = ShopSlugRouteImport.update({
+  id: '/shop/$slug',
+  path: '/shop/$slug',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const AuthenticatedAccountOrdersRoute =
+  AuthenticatedAccountOrdersRouteImport.update({
+    id: '/account/orders',
+    path: '/account/orders',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAdminAiRoute = AuthenticatedAdminAiRouteImport.update({
   id: '/admin/ai',
   path: '/admin/ai',
@@ -171,6 +193,12 @@ const AuthenticatedAppInventoryRoute =
   AuthenticatedAppInventoryRouteImport.update({
     id: '/inventory',
     path: '/inventory',
+    getParentRoute: () => AuthenticatedAppRoute,
+  } as any)
+const AuthenticatedAppMarketlinkRoute =
+  AuthenticatedAppMarketlinkRouteImport.update({
+    id: '/marketlink',
+    path: '/marketlink',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
 const AuthenticatedAppOverviewRoute =
@@ -226,6 +254,16 @@ const AuthenticatedAppTransactionsRoute =
     path: '/transactions',
     getParentRoute: () => AuthenticatedAppRoute,
   } as any)
+const ShopSlugIndexRoute = ShopSlugIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => ShopSlugRoute,
+} as any)
+const ShopSlugPListingIdRoute = ShopSlugPListingIdRouteImport.update({
+  id: '/p/$listingId',
+  path: '/p/$listingId',
+  getParentRoute: () => ShopSlugRoute,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -233,6 +271,7 @@ export interface FileRoutesByFullPath {
   '/auth': typeof AuthRouteWithChildren
   '/features': typeof FeaturesRoute
   '/legal': typeof LegalRouteWithChildren
+  '/market': typeof MarketRoute
   '/pricing': typeof PricingRoute
   '/support': typeof SupportRoute
   '/app': typeof AuthenticatedAppRouteWithChildren
@@ -245,12 +284,15 @@ export interface FileRoutesByFullPath {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/refunds': typeof LegalRefundsRoute
   '/legal/terms': typeof LegalTermsRoute
+  '/shop/$slug': typeof ShopSlugRouteWithChildren
+  '/account/orders': typeof AuthenticatedAccountOrdersRoute
   '/admin/ai': typeof AuthenticatedAdminAiRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/app/debtors': typeof AuthenticatedAppDebtorsRoute
   '/app/employees': typeof AuthenticatedAppEmployeesRoute
   '/app/expenses': typeof AuthenticatedAppExpensesRoute
   '/app/inventory': typeof AuthenticatedAppInventoryRoute
+  '/app/marketlink': typeof AuthenticatedAppMarketlinkRoute
   '/app/overview': typeof AuthenticatedAppOverviewRoute
   '/app/pos': typeof AuthenticatedAppPosRoute
   '/app/pulse': typeof AuthenticatedAppPulseRoute
@@ -262,6 +304,8 @@ export interface FileRoutesByFullPath {
   '/app/sync': typeof AuthenticatedAppSyncRoute
   '/app/transactions': typeof AuthenticatedAppTransactionsRoute
   '/app/': typeof AuthenticatedAppIndexRoute
+  '/shop/$slug/': typeof ShopSlugIndexRoute
+  '/shop/$slug/p/$listingId': typeof ShopSlugPListingIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -269,6 +313,7 @@ export interface FileRoutesByTo {
   '/auth': typeof AuthRouteWithChildren
   '/features': typeof FeaturesRoute
   '/legal': typeof LegalRouteWithChildren
+  '/market': typeof MarketRoute
   '/pricing': typeof PricingRoute
   '/support': typeof SupportRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
@@ -280,12 +325,14 @@ export interface FileRoutesByTo {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/refunds': typeof LegalRefundsRoute
   '/legal/terms': typeof LegalTermsRoute
+  '/account/orders': typeof AuthenticatedAccountOrdersRoute
   '/admin/ai': typeof AuthenticatedAdminAiRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/app/debtors': typeof AuthenticatedAppDebtorsRoute
   '/app/employees': typeof AuthenticatedAppEmployeesRoute
   '/app/expenses': typeof AuthenticatedAppExpensesRoute
   '/app/inventory': typeof AuthenticatedAppInventoryRoute
+  '/app/marketlink': typeof AuthenticatedAppMarketlinkRoute
   '/app/overview': typeof AuthenticatedAppOverviewRoute
   '/app/pos': typeof AuthenticatedAppPosRoute
   '/app/pulse': typeof AuthenticatedAppPulseRoute
@@ -297,6 +344,8 @@ export interface FileRoutesByTo {
   '/app/sync': typeof AuthenticatedAppSyncRoute
   '/app/transactions': typeof AuthenticatedAppTransactionsRoute
   '/app': typeof AuthenticatedAppIndexRoute
+  '/shop/$slug': typeof ShopSlugIndexRoute
+  '/shop/$slug/p/$listingId': typeof ShopSlugPListingIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -306,6 +355,7 @@ export interface FileRoutesById {
   '/auth': typeof AuthRouteWithChildren
   '/features': typeof FeaturesRoute
   '/legal': typeof LegalRouteWithChildren
+  '/market': typeof MarketRoute
   '/pricing': typeof PricingRoute
   '/support': typeof SupportRoute
   '/_authenticated/app': typeof AuthenticatedAppRouteWithChildren
@@ -318,12 +368,15 @@ export interface FileRoutesById {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/refunds': typeof LegalRefundsRoute
   '/legal/terms': typeof LegalTermsRoute
+  '/shop/$slug': typeof ShopSlugRouteWithChildren
+  '/_authenticated/account/orders': typeof AuthenticatedAccountOrdersRoute
   '/_authenticated/admin/ai': typeof AuthenticatedAdminAiRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
   '/_authenticated/app/debtors': typeof AuthenticatedAppDebtorsRoute
   '/_authenticated/app/employees': typeof AuthenticatedAppEmployeesRoute
   '/_authenticated/app/expenses': typeof AuthenticatedAppExpensesRoute
   '/_authenticated/app/inventory': typeof AuthenticatedAppInventoryRoute
+  '/_authenticated/app/marketlink': typeof AuthenticatedAppMarketlinkRoute
   '/_authenticated/app/overview': typeof AuthenticatedAppOverviewRoute
   '/_authenticated/app/pos': typeof AuthenticatedAppPosRoute
   '/_authenticated/app/pulse': typeof AuthenticatedAppPulseRoute
@@ -335,6 +388,8 @@ export interface FileRoutesById {
   '/_authenticated/app/sync': typeof AuthenticatedAppSyncRoute
   '/_authenticated/app/transactions': typeof AuthenticatedAppTransactionsRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
+  '/shop/$slug/': typeof ShopSlugIndexRoute
+  '/shop/$slug/p/$listingId': typeof ShopSlugPListingIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -344,6 +399,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/features'
     | '/legal'
+    | '/market'
     | '/pricing'
     | '/support'
     | '/app'
@@ -356,12 +412,15 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/refunds'
     | '/legal/terms'
+    | '/shop/$slug'
+    | '/account/orders'
     | '/admin/ai'
     | '/admin/analytics'
     | '/app/debtors'
     | '/app/employees'
     | '/app/expenses'
     | '/app/inventory'
+    | '/app/marketlink'
     | '/app/overview'
     | '/app/pos'
     | '/app/pulse'
@@ -373,6 +432,8 @@ export interface FileRouteTypes {
     | '/app/sync'
     | '/app/transactions'
     | '/app/'
+    | '/shop/$slug/'
+    | '/shop/$slug/p/$listingId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -380,6 +441,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/features'
     | '/legal'
+    | '/market'
     | '/pricing'
     | '/support'
     | '/dashboard'
@@ -391,12 +453,14 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/refunds'
     | '/legal/terms'
+    | '/account/orders'
     | '/admin/ai'
     | '/admin/analytics'
     | '/app/debtors'
     | '/app/employees'
     | '/app/expenses'
     | '/app/inventory'
+    | '/app/marketlink'
     | '/app/overview'
     | '/app/pos'
     | '/app/pulse'
@@ -408,6 +472,8 @@ export interface FileRouteTypes {
     | '/app/sync'
     | '/app/transactions'
     | '/app'
+    | '/shop/$slug'
+    | '/shop/$slug/p/$listingId'
   id:
     | '__root__'
     | '/'
@@ -416,6 +482,7 @@ export interface FileRouteTypes {
     | '/auth'
     | '/features'
     | '/legal'
+    | '/market'
     | '/pricing'
     | '/support'
     | '/_authenticated/app'
@@ -428,12 +495,15 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/refunds'
     | '/legal/terms'
+    | '/shop/$slug'
+    | '/_authenticated/account/orders'
     | '/_authenticated/admin/ai'
     | '/_authenticated/admin/analytics'
     | '/_authenticated/app/debtors'
     | '/_authenticated/app/employees'
     | '/_authenticated/app/expenses'
     | '/_authenticated/app/inventory'
+    | '/_authenticated/app/marketlink'
     | '/_authenticated/app/overview'
     | '/_authenticated/app/pos'
     | '/_authenticated/app/pulse'
@@ -445,6 +515,8 @@ export interface FileRouteTypes {
     | '/_authenticated/app/sync'
     | '/_authenticated/app/transactions'
     | '/_authenticated/app/'
+    | '/shop/$slug/'
+    | '/shop/$slug/p/$listingId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -454,8 +526,10 @@ export interface RootRouteChildren {
   AuthRoute: typeof AuthRouteWithChildren
   FeaturesRoute: typeof FeaturesRoute
   LegalRoute: typeof LegalRouteWithChildren
+  MarketRoute: typeof MarketRoute
   PricingRoute: typeof PricingRoute
   SupportRoute: typeof SupportRoute
+  ShopSlugRoute: typeof ShopSlugRouteWithChildren
 }
 
 declare module '@tanstack/react-router' {
@@ -500,6 +574,13 @@ declare module '@tanstack/react-router' {
       path: '/legal'
       fullPath: '/legal'
       preLoaderRoute: typeof LegalRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/market': {
+      id: '/market'
+      path: '/market'
+      fullPath: '/market'
+      preLoaderRoute: typeof MarketRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/pricing': {
@@ -586,6 +667,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalTermsRouteImport
       parentRoute: typeof LegalRoute
     }
+    '/shop/$slug': {
+      id: '/shop/$slug'
+      path: '/shop/$slug'
+      fullPath: '/shop/$slug'
+      preLoaderRoute: typeof ShopSlugRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/account/orders': {
+      id: '/_authenticated/account/orders'
+      path: '/account/orders'
+      fullPath: '/account/orders'
+      preLoaderRoute: typeof AuthenticatedAccountOrdersRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/admin/ai': {
       id: '/_authenticated/admin/ai'
       path: '/admin/ai'
@@ -633,6 +728,13 @@ declare module '@tanstack/react-router' {
       path: '/inventory'
       fullPath: '/app/inventory'
       preLoaderRoute: typeof AuthenticatedAppInventoryRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
+    '/_authenticated/app/marketlink': {
+      id: '/_authenticated/app/marketlink'
+      path: '/marketlink'
+      fullPath: '/app/marketlink'
+      preLoaderRoute: typeof AuthenticatedAppMarketlinkRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
     '/_authenticated/app/overview': {
@@ -705,6 +807,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppTransactionsRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/shop/$slug/': {
+      id: '/shop/$slug/'
+      path: '/'
+      fullPath: '/shop/$slug/'
+      preLoaderRoute: typeof ShopSlugIndexRouteImport
+      parentRoute: typeof ShopSlugRoute
+    }
+    '/shop/$slug/p/$listingId': {
+      id: '/shop/$slug/p/$listingId'
+      path: '/p/$listingId'
+      fullPath: '/shop/$slug/p/$listingId'
+      preLoaderRoute: typeof ShopSlugPListingIdRouteImport
+      parentRoute: typeof ShopSlugRoute
+    }
   }
 }
 
@@ -713,6 +829,7 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppEmployeesRoute: typeof AuthenticatedAppEmployeesRoute
   AuthenticatedAppExpensesRoute: typeof AuthenticatedAppExpensesRoute
   AuthenticatedAppInventoryRoute: typeof AuthenticatedAppInventoryRoute
+  AuthenticatedAppMarketlinkRoute: typeof AuthenticatedAppMarketlinkRoute
   AuthenticatedAppOverviewRoute: typeof AuthenticatedAppOverviewRoute
   AuthenticatedAppPosRoute: typeof AuthenticatedAppPosRoute
   AuthenticatedAppPulseRoute: typeof AuthenticatedAppPulseRoute
@@ -731,6 +848,7 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppEmployeesRoute: AuthenticatedAppEmployeesRoute,
   AuthenticatedAppExpensesRoute: AuthenticatedAppExpensesRoute,
   AuthenticatedAppInventoryRoute: AuthenticatedAppInventoryRoute,
+  AuthenticatedAppMarketlinkRoute: AuthenticatedAppMarketlinkRoute,
   AuthenticatedAppOverviewRoute: AuthenticatedAppOverviewRoute,
   AuthenticatedAppPosRoute: AuthenticatedAppPosRoute,
   AuthenticatedAppPulseRoute: AuthenticatedAppPulseRoute,
@@ -751,6 +869,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedAccountOrdersRoute: typeof AuthenticatedAccountOrdersRoute
   AuthenticatedAdminAiRoute: typeof AuthenticatedAdminAiRoute
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
 }
@@ -759,6 +878,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedAccountOrdersRoute: AuthenticatedAccountOrdersRoute,
   AuthenticatedAdminAiRoute: AuthenticatedAdminAiRoute,
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
 }
@@ -796,6 +916,20 @@ const LegalRouteChildren: LegalRouteChildren = {
 
 const LegalRouteWithChildren = LegalRoute._addFileChildren(LegalRouteChildren)
 
+interface ShopSlugRouteChildren {
+  ShopSlugIndexRoute: typeof ShopSlugIndexRoute
+  ShopSlugPListingIdRoute: typeof ShopSlugPListingIdRoute
+}
+
+const ShopSlugRouteChildren: ShopSlugRouteChildren = {
+  ShopSlugIndexRoute: ShopSlugIndexRoute,
+  ShopSlugPListingIdRoute: ShopSlugPListingIdRoute,
+}
+
+const ShopSlugRouteWithChildren = ShopSlugRoute._addFileChildren(
+  ShopSlugRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
@@ -803,8 +937,10 @@ const rootRouteChildren: RootRouteChildren = {
   AuthRoute: AuthRouteWithChildren,
   FeaturesRoute: FeaturesRoute,
   LegalRoute: LegalRouteWithChildren,
+  MarketRoute: MarketRoute,
   PricingRoute: PricingRoute,
   SupportRoute: SupportRoute,
+  ShopSlugRoute: ShopSlugRouteWithChildren,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

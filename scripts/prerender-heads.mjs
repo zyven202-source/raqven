@@ -37,6 +37,7 @@ function fail(message) {
 
 /** Routes that build their head with `pageMeta()` and must ship their own. */
 const ROUTE_FILES = [
+  "src/routes/market.tsx",
   "src/routes/features.tsx",
   "src/routes/about.tsx",
   "src/routes/support.tsx",

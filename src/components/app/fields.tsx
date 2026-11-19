@@ -57,6 +57,7 @@ export function PasswordField({
   required,
 }: {
   id: string;
+  name?: string | undefined;
   value: string;
   onChange: (value: string) => void;
   placeholder?: string | undefined;
