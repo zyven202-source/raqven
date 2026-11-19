@@ -29,6 +29,8 @@ import type {
 import type {
   CustomerOrder,
   MarketCategory,
+  MarketFeedItem,
+  MarketFeedSort,
   MarketFeedResult,
   PublicProductPayload,
   PublicShopPayload,
@@ -400,6 +402,7 @@ export interface FeedQuery {
   region?: string;
   lat?: number;
   lng?: number;
+  sort?: MarketFeedSort;
   limit?: number;
   offset?: number;
 }
@@ -416,6 +419,7 @@ export async function fetchMarketplaceFeed(query: FeedQuery): Promise<MarketFeed
     ...(query.region ? { p_region: query.region } : {}),
     ...(query.lat !== undefined ? { p_lat: query.lat } : {}),
     ...(query.lng !== undefined ? { p_lng: query.lng } : {}),
+    ...(query.sort ? { p_sort: query.sort } : {}),
     p_limit: query.limit ?? 24,
     p_offset: query.offset ?? 0,
   });
@@ -429,6 +433,34 @@ export async function fetchMarketCategories(): Promise<MarketCategory[]> {
   const { data, error } = await supabase.rpc("marketlink_categories");
   if (error) throw error;
   return asJson<MarketCategory[]>(data ?? []);
+}
+
+/**
+ * Saved products.
+ *
+ * The toggle is a database function rather than an upsert from the browser, so
+ * the public-visibility check and the row's ownership both live in one place the
+ * client cannot skip. These calls are authenticated-only; PostgreSQL refuses the
+ * anonymous role outright.
+ */
+export async function fetchFavouriteIds(): Promise<string[]> {
+  const { data, error } = await supabase.rpc("marketlink_favourite_ids");
+  if (error) throw error;
+  return asJson<string[]>(data ?? []);
+}
+
+export async function toggleFavourite(listingId: string): Promise<boolean> {
+  const { data, error } = await supabase.rpc("marketlink_toggle_favourite", {
+    p_listing_id: listingId,
+  });
+  if (error) throw error;
+  return data === true;
+}
+
+export async function fetchMyFavourites(): Promise<MarketFeedItem[]> {
+  const { data, error } = await supabase.rpc("marketlink_my_favourites");
+  if (error) throw error;
+  return asJson<MarketFeedItem[]>(data ?? []);
 }
 
 export async function fetchPublicShop(slug: string): Promise<PublicShopPayload | null> {

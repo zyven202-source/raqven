@@ -1,5 +1,5 @@
 import { Link, createFileRoute, useNavigate } from "@tanstack/react-router";
-import { Plus, Store } from "lucide-react";
+import { ArrowRight, Plus, ShoppingBag, Store } from "lucide-react";
 import { toast } from "sonner";
 
 import { CreateShopDialog } from "@/components/app/CreateShopDialog";
@@ -192,6 +192,28 @@ function DashboardPage() {
             </>
           )}
         </div>
+
+        {/*
+          Marketlink sits outside the shop panel on purpose: it is public, it
+          needs no shop membership, and a customer who came to browse should not
+          have to open somebody's till first. The panel below it stays exactly as
+          it was — the shops, their roles, and the two ways to join one.
+        */}
+        <Link
+          to="/market"
+          className="mt-4 flex items-center gap-3 rounded-2xl border border-[var(--mint)]/30 bg-[var(--brand-raised)] px-4 py-3.5 transition-colors hover:border-[var(--mint)]/60 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--mint)]/50"
+        >
+          <span className="grid size-11 shrink-0 place-items-center rounded-xl bg-[var(--mint)]/15 text-[var(--mint)]">
+            <ShoppingBag className="size-5" aria-hidden />
+          </span>
+          <span className="min-w-0 flex-1">
+            <span className="block text-sm font-semibold">Marketlink</span>
+            <span className="mt-0.5 block text-xs leading-relaxed text-[var(--cream)]/70">
+              Browse real products from every shop — no shop of your own needed.
+            </span>
+          </span>
+          <ArrowRight className="size-4 shrink-0 text-[var(--cream)]/60" aria-hidden />
+        </Link>
 
         <p className="mt-4 text-center text-[11px] text-[var(--cream)]/40">{creditLine(photo)}</p>
       </PageContainer>

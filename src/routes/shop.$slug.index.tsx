@@ -16,8 +16,15 @@ import { CheckoutDrawer } from "@/components/marketlink/CheckoutDrawer";
 import { MarketProductCard } from "@/components/marketlink/MarketProductCard";
 import { MarketShell } from "@/components/marketlink/MarketShell";
 import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 import { Input } from "@/components/ui/input";
-import { useMarketFeed, usePublicShop } from "@/hooks/useMarketlink";
+import {
+  useFavouriteIds,
+  useMarketFeed,
+  usePublicShop,
+  useToggleFavourite,
+} from "@/hooks/useMarketlink";
+import { useSession } from "@/hooks/useSession";
 import { usePageSeo } from "@/hooks/usePageSeo";
 import { useShopCart } from "@/hooks/useShopCart";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
@@ -55,6 +62,10 @@ function ShopPage() {
   const debounced = useDebouncedValue(search, 300);
   const [cartOpen, setCartOpen] = useState(false);
   const cart = useShopCart(slug);
+  const { user } = useSession();
+  const favouriteIds = useFavouriteIds(Boolean(user));
+  const favourites = useMemo(() => new Set(favouriteIds.data ?? []), [favouriteIds.data]);
+  const toggleFavourite = useToggleFavourite();
 
   const filters = useMemo(
     () => ({
@@ -276,7 +287,25 @@ function ShopPage() {
           <>
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {items.map((item) => (
-                <MarketProductCard key={item.id} item={item} />
+                <MarketProductCard
+                  key={item.id}
+                  item={item}
+                  favourite={favourites.has(item.id)}
+                  onToggleFavourite={
+                    user
+                      ? () =>
+                          void toggleFavourite
+                            .mutateAsync(item.id)
+                            .catch((cause: unknown) =>
+                              toast.error(
+                                cause instanceof Error
+                                  ? cause.message
+                                  : "Could not save that product.",
+                              ),
+                            )
+                      : undefined
+                  }
+                />
               ))}
             </div>
             {feed.hasNextPage ? (

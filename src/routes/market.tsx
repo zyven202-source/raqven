@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { useMemo, useState } from "react";
-import { Crosshair, Loader2, MapPin, Search, SlidersHorizontal, Store, X } from "lucide-react";
+import { Heart, Loader2, Search, SlidersHorizontal, Store, X } from "lucide-react";
+import { toast } from "sonner";
 
 import { MarketProductCard } from "@/components/marketlink/MarketProductCard";
 import { MarketShell } from "@/components/marketlink/MarketShell";
@@ -13,10 +14,19 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { useMarketCategories, useMarketFeed, usePublicShops } from "@/hooks/useMarketlink";
+import {
+  useFavouriteIds,
+  useMarketCategories,
+  useMarketFeed,
+  useMyFavourites,
+  usePublicShops,
+  useToggleFavourite,
+} from "@/hooks/useMarketlink";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
+import { useSession } from "@/hooks/useSession";
 import { pageMeta } from "@/lib/seo";
 import { cn } from "@/lib/utils";
+import type { MarketFeedItem, MarketFeedSort } from "@/types/marketlink";
 
 export const Route = createFileRoute("/market")({
   head: () =>
@@ -50,9 +60,17 @@ function MarketPage() {
   const [country, setCountry] = useState("");
   const [region, setRegion] = useState("");
   const [filtersOpen, setFiltersOpen] = useState(false);
+  const [sort, setSort] = useState<MarketFeedSort>("relevance");
+  const [savedOnly, setSavedOnly] = useState(false);
 
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [geoState, setGeoState] = useState<GeoState>("idle");
+
+  const { user } = useSession();
+  const favouriteIds = useFavouriteIds(Boolean(user));
+  const favourites = useMemo(() => new Set(favouriteIds.data ?? []), [favouriteIds.data]);
+  const toggleFavourite = useToggleFavourite();
+  const saved = useMyFavourites(Boolean(user) && savedOnly);
 
   const categories = useMarketCategories();
   const shops = usePublicShops();
@@ -68,13 +86,18 @@ function MarketPage() {
       ...(region.trim() ? { region: region.trim() } : {}),
       ...(inStock ? { inStock: true } : {}),
       ...(coords ? { lat: coords.lat, lng: coords.lng } : {}),
+      ...(sort !== "relevance" ? { sort } : {}),
       limit: 24,
     }),
-    [debouncedSearch, category, shopSlug, parsedMax, country, region, inStock, coords],
+    [debouncedSearch, category, shopSlug, parsedMax, country, region, inStock, coords, sort],
   );
 
   const feed = useMarketFeed(filters);
-  const items = feed.data?.pages.flatMap((page) => page.items) ?? [];
+  const items = savedOnly
+    ? (saved.data ?? [])
+    : (feed.data?.pages.flatMap((page) => page.items) ?? []);
+  const loading = savedOnly ? saved.isLoading : feed.isLoading;
+  const error = savedOnly ? saved.error : feed.error;
   const hasFilters = Boolean(
     debouncedSearch || category || shopSlug || parsedMax !== undefined || country || region,
   );
@@ -93,9 +116,34 @@ function MarketPage() {
         });
         setGeoState("on");
       },
-      () => setGeoState("denied"),
+      () => {
+        setGeoState("denied");
+        setSort("relevance");
+      },
       { enableHighAccuracy: false, timeout: 10_000, maximumAge: 300_000 },
     );
+  }
+
+  /** Sorting by distance is only ever offered after the visitor opts in. */
+  function chooseNearby() {
+    setSort("nearby");
+    if (!coords) askForLocation();
+  }
+
+  function save(item: MarketFeedItem) {
+    void toggleFavourite
+      .mutateAsync(item.id)
+      .then((nowSaved) =>
+        toast.success(nowSaved ? `Saved ${item.name}` : `Removed ${item.name} from saved`),
+      )
+      .catch((cause: unknown) =>
+        toast.error(cause instanceof Error ? cause.message : "Could not save that product."),
+      );
+  }
+
+  function retry() {
+    if (savedOnly) void saved.refetch();
+    else void feed.refetch();
   }
 
   function clearFilters() {
@@ -108,6 +156,7 @@ function MarketPage() {
     setRegion("");
     setCoords(null);
     setGeoState("idle");
+    setSort("relevance");
   }
 
   return (
@@ -249,50 +298,6 @@ function MarketPage() {
         </section>
       ) : null}
 
-      {/* --------------------------------------------------------- location */}
-      <section className="mx-auto w-full max-w-6xl px-4 pt-4 sm:px-6">
-        <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[var(--brand-line)] bg-[var(--brand-raised)] px-3.5 py-3">
-          <MapPin className="size-4 shrink-0 text-[var(--brand-primary)]" aria-hidden />
-          <p className="min-w-0 flex-1 text-xs leading-relaxed text-muted-foreground">
-            {geoState === "on"
-              ? "Nearby sorting is on. Only shops that published an approximate location can show a distance."
-              : geoState === "denied"
-                ? "Location permission was declined. You can still search, and pick a country or county above."
-                : geoState === "unavailable"
-                  ? "This browser cannot share a location. Search and the country filters still work."
-                  : "Turn on nearby discovery to sort shops near you. Location is used once, for this sort — it is not tracked."}
-          </p>
-          {coords ? (
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8"
-              onClick={() => {
-                setCoords(null);
-                setGeoState("idle");
-              }}
-            >
-              Turn off
-            </Button>
-          ) : (
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8"
-              disabled={geoState === "asking"}
-              onClick={askForLocation}
-            >
-              {geoState === "asking" ? (
-                <Loader2 className="size-3.5 animate-spin" />
-              ) : (
-                <Crosshair className="size-3.5" />
-              )}
-              Near me
-            </Button>
-          )}
-        </div>
-      </section>
-
       {/* --------------------------------------------------------- categories */}
       <section className="mx-auto w-full max-w-6xl px-4 pt-5 sm:px-6">
         <div className="flex gap-1.5 overflow-x-auto pb-1 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -329,9 +334,78 @@ function MarketPage() {
         </div>
       </section>
 
+      {/* --------------------------------------------------------- ordering */}
+      <section className="mx-auto w-full max-w-6xl px-4 pt-4 sm:px-6">
+        <div className="flex flex-wrap items-center gap-1.5">
+          {(
+            [
+              ["relevance", "Recommended"],
+              ["newest", "New arrivals"],
+              ["nearby", "Near me"],
+            ] as const
+          ).map(([value, label]) => (
+            <button
+              key={value}
+              type="button"
+              aria-pressed={sort === value}
+              onClick={() => {
+                if (value !== "nearby") {
+                  setSort(value);
+                  return;
+                }
+                if (sort === "nearby") {
+                  setSort("relevance");
+                  setCoords(null);
+                  setGeoState("idle");
+                  return;
+                }
+                chooseNearby();
+              }}
+              className={cn(
+                "press h-9 rounded-full border px-3.5 text-xs font-medium",
+                sort === value
+                  ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-[#04140e]"
+                  : "border-[var(--brand-line)] text-muted-foreground",
+              )}
+            >
+              {label}
+            </button>
+          ))}
+          {user ? (
+            <button
+              type="button"
+              aria-pressed={savedOnly}
+              onClick={() => setSavedOnly((value) => !value)}
+              className={cn(
+                "press ml-auto flex h-9 items-center gap-1.5 rounded-full border px-3.5 text-xs font-medium",
+                savedOnly
+                  ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-[#04140e]"
+                  : "border-[var(--brand-line)] text-muted-foreground",
+              )}
+            >
+              <Heart className={cn("size-3.5", savedOnly ? "fill-current" : "")} aria-hidden />
+              Saved
+            </button>
+          ) : null}
+        </div>
+        <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+          {geoState === "denied"
+            ? "Location permission was declined. You can still search, and pick a country or county above."
+            : geoState === "unavailable"
+              ? "This browser cannot share a location. Search and the country filters still work."
+              : geoState === "asking"
+                ? "Waiting for your location permission. Nothing is sorted until you allow it."
+                : sort === "newest"
+                  ? "Newest first, by the time each seller published the product."
+                  : sort === "nearby"
+                    ? "Buyable products from shops that published a location, nearest first. Your location is used once for this sort and is not tracked."
+                    : "Recommended: what you can buy now, then nearest when you share a location, then newest."}
+        </p>
+      </section>
+
       {/* ------------------------------------------------------------- feed */}
       <section className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6">
-        {feed.isLoading ? (
+        {loading ? (
           <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
             {Array.from({ length: 8 }).map((_, index) => (
               <div
@@ -340,13 +414,13 @@ function MarketPage() {
               />
             ))}
           </div>
-        ) : feed.isError ? (
+        ) : error ? (
           <div className="rounded-xl border border-negative/30 bg-negative-soft/40 p-5 text-center">
             <p className="text-sm font-medium text-negative">The marketplace could not load.</p>
             <p className="mt-1 text-xs text-muted-foreground">
-              {feed.error instanceof Error ? feed.error.message : "Check your connection."}
+              {error instanceof Error ? error.message : "Check your connection."}
             </p>
-            <Button className="mt-3 h-10" onClick={() => void feed.refetch()}>
+            <Button className="mt-3 h-10" onClick={retry}>
               Try again
             </Button>
           </div>
@@ -354,14 +428,24 @@ function MarketPage() {
           <div className="flex flex-col items-center gap-2 rounded-xl border border-[var(--brand-line)] bg-[var(--brand-raised)] px-5 py-14 text-center">
             <Store className="size-7 text-muted-foreground" aria-hidden />
             <p className="text-sm font-semibold">
-              {hasFilters || coords ? "Nothing matches those filters" : "No shops are live yet"}
+              {savedOnly
+                ? "Nothing saved yet"
+                : hasFilters || coords
+                  ? "Nothing matches those filters"
+                  : "No shops are live yet"}
             </p>
             <p className="max-w-sm text-xs leading-relaxed text-muted-foreground">
-              {hasFilters || coords
-                ? "Try a broader search, or clear the filters."
-                : "Shops appear here after they publish a product on Marketlink."}
+              {savedOnly
+                ? "Tap the heart on a product to keep it here."
+                : hasFilters || coords
+                  ? "Try a broader search, or clear the filters."
+                  : "Shops appear here after they publish a product on Marketlink."}
             </p>
-            {hasFilters || coords ? (
+            {savedOnly ? (
+              <Button variant="outline" className="mt-2 h-9" onClick={() => setSavedOnly(false)}>
+                Browse all products
+              </Button>
+            ) : hasFilters || coords ? (
               <Button variant="outline" className="mt-2 h-9" onClick={clearFilters}>
                 Clear filters
               </Button>
@@ -375,7 +459,8 @@ function MarketPage() {
           <>
             <div className="mb-3 flex items-center justify-between">
               <p className="text-xs text-muted-foreground">
-                {items.length} product{items.length === 1 ? "" : "s"} shown
+                {items.length} {savedOnly ? "saved " : ""}product{items.length === 1 ? "" : "s"}{" "}
+                shown
               </p>
               {coords ? (
                 <p className="text-[11px] text-muted-foreground">Sorted by distance first</p>
@@ -384,11 +469,16 @@ function MarketPage() {
 
             <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-4">
               {items.map((item) => (
-                <MarketProductCard key={item.id} item={item} />
+                <MarketProductCard
+                  key={item.id}
+                  item={item}
+                  favourite={favourites.has(item.id)}
+                  onToggleFavourite={user ? () => save(item) : undefined}
+                />
               ))}
             </div>
 
-            {feed.hasNextPage ? (
+            {!savedOnly && feed.hasNextPage ? (
               <div className="mt-6 flex justify-center">
                 <Button
                   variant="outline"
@@ -400,11 +490,11 @@ function MarketPage() {
                   Load more products
                 </Button>
               </div>
-            ) : (
+            ) : !savedOnly ? (
               <p className="mt-6 text-center text-xs text-muted-foreground">
                 You have reached the end of the marketplace.
               </p>
-            )}
+            ) : null}
           </>
         )}
       </section>

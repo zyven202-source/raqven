@@ -3,8 +3,10 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from "@tansta
 import {
   addDeliveryZone,
   changeShopSlug,
+  fetchFavouriteIds,
   fetchMarketCategories,
   fetchMarketplaceFeed,
+  fetchMyFavourites,
   fetchMyOrders,
   fetchPublicShops,
   fetchPublicProduct,
@@ -25,6 +27,7 @@ import {
   setOrderStatus,
   setStorefrontPublished,
   submitMarketOrder,
+  toggleFavourite,
   unreadNotificationCount,
   type FeedQuery,
   type PublishListingInput,
@@ -46,6 +49,8 @@ export const marketlinkKeys = {
   shop: (slug: string) => ["marketlink", "shop", slug] as const,
   product: (slug: string, id: string) => ["marketlink", "product", slug, id] as const,
   myOrders: ["marketlink", "my-orders"] as const,
+  favouriteIds: ["marketlink", "favourite-ids"] as const,
+  saved: ["marketlink", "saved"] as const,
   profile: (userId: string) => ["marketlink", "profile", userId] as const,
 };
 
@@ -268,6 +273,35 @@ export function useSubmitMarketOrder() {
       void client.invalidateQueries({ queryKey: marketlinkKeys.myOrders });
       void client.invalidateQueries({ queryKey: ["marketlink", "feed"] });
     },
+  });
+}
+
+// -------------------------------------------------------------------- saved
+export function useFavouriteIds(enabled = true) {
+  return useQuery({
+    queryKey: marketlinkKeys.favouriteIds,
+    queryFn: fetchFavouriteIds,
+    enabled,
+    staleTime: 60_000,
+  });
+}
+
+export function useToggleFavourite() {
+  const client = useQueryClient();
+  return useMutation({
+    mutationFn: (listingId: string) => toggleFavourite(listingId),
+    onSuccess: () => {
+      void client.invalidateQueries({ queryKey: marketlinkKeys.favouriteIds });
+      void client.invalidateQueries({ queryKey: marketlinkKeys.saved });
+    },
+  });
+}
+
+export function useMyFavourites(enabled = true) {
+  return useQuery({
+    queryKey: marketlinkKeys.saved,
+    queryFn: fetchMyFavourites,
+    enabled,
   });
 }
 

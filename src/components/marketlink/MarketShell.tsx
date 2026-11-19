@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, ShoppingBag } from "lucide-react";
+import { ArrowLeft, LayoutGrid, ShoppingBag } from "lucide-react";
 
 import { Logo } from "@/components/brand/Logo";
 import { useSession } from "@/hooks/useSession";
@@ -36,6 +36,18 @@ export function MarketShell({
             Marketplace
           </Link>
           <div className="ml-auto flex items-center gap-1">
+            {/* The marketplace is public; the workspace is not. Only a signed-in
+                visitor is offered the way back into their shops. */}
+            {!loading && user ? (
+              <Link
+                to="/dashboard"
+                className="flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-xs font-medium text-cream/80 transition-colors hover:bg-[var(--brand-raised)] hover:text-cream"
+                aria-label="Back to your workspace"
+              >
+                <LayoutGrid className="size-3.5" aria-hidden />
+                <span className="hidden sm:inline">Workspace</span>
+              </Link>
+            ) : null}
             <Link
               to="/account/orders"
               className="rounded-full px-3 py-1.5 text-xs font-medium text-cream/80 transition-colors hover:bg-[var(--brand-raised)] hover:text-cream"

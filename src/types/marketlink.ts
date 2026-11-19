@@ -7,12 +7,16 @@
  * component from reaching for a column (a cost price, a customer's phone) that
  * the public payload does not contain.
  */
-import type {
-  MarketlinkDeliveryKind,
-  MarketlinkOrderStatus,
-} from "@/types/savo";
+import type { MarketlinkDeliveryKind, MarketlinkOrderStatus } from "@/types/savo";
 
 export type StockState = "in" | "low" | "out";
+
+/**
+ * How the shared feed is ordered. `relevance` is the default: buyable first,
+ * then nearest when a location is known, then newest. `newest` is the seller's
+ * own publication time. `nearby` only reorders shops that published a location.
+ */
+export type MarketFeedSort = "relevance" | "newest" | "nearby";
 
 /** One product in the public marketplace feed. */
 export interface MarketFeedItem {

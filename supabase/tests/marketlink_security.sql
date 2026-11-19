@@ -33,6 +33,10 @@ DECLARE
   v_slug TEXT;
   v_zone_mismatch UUID;
   v_err TEXT;
+  v_listing_old UUID;
+  v_listing_hidden UUID;
+  v_product2 UUID;
+  v_flag BOOLEAN;
 BEGIN
   SELECT id INTO v_owner FROM auth.users ORDER BY created_at LIMIT 1;
   SELECT id INTO v_other FROM auth.users WHERE id <> v_owner ORDER BY created_at LIMIT 1;
@@ -306,6 +310,122 @@ BEGIN
   EXCEPTION WHEN others THEN
     INSERT INTO mk_results VALUES ('slug checks run', false, SQLERRM);
   END;
+
+  -- -------------------------------------------------------------- sort modes
+  INSERT INTO public.products (shop_id, name, unit, buying_price, selling_price, quantity)
+  VALUES (v_shop, 'Test Rice', 'kg', 90, 130, 0)
+  RETURNING id INTO v_product2;
+
+  INSERT INTO public.marketlink_listings (
+    shop_id, product_id, image_path, category, is_published, published_at
+  ) VALUES (
+    v_shop, v_product2, v_shop::text || '/test-rice.jpg', 'Groceries', true, now() - interval '2 days'
+  ) RETURNING id INTO v_listing_old;
+
+  v_res := public.marketlink_feed(NULL, NULL, NULL, NULL, NULL, v_slug, NULL, NULL, NULL, NULL, 24, 0, 'newest');
+  INSERT INTO mk_results VALUES (
+    'new arrivals puts the most recently published product first',
+    (v_res->'items'->0->>'id')::uuid = v_listing, v_res->'items'->0->>'id'
+  );
+  INSERT INTO mk_results VALUES (
+    'sorting by newest still returns every published product',
+    jsonb_array_length(v_res->'items') = 2, jsonb_array_length(v_res->'items')::text
+  );
+
+  v_res := public.marketlink_feed(NULL, NULL, NULL, NULL, NULL, v_slug, NULL, NULL, NULL, NULL, 24, 0, 'nearby');
+  INSERT INTO mk_results VALUES (
+    'nearby sorting invents no distance without coordinates',
+    (v_res->'items'->0->'distance_km') = 'null'::jsonb, v_res->'items'->0->>'distance_km'
+  );
+  INSERT INTO mk_results VALUES (
+    'recommended sorting returns buyable products first',
+    (public.marketlink_feed(NULL, NULL, NULL, NULL, TRUE, v_slug, NULL, NULL, NULL, NULL, 24, 0)->'items'->0->>'stock_state') <> 'out', ''
+  );
+
+  -- -------------------------------------------------------------- favourites
+  INSERT INTO mk_results VALUES (
+    'anon has no execute grant on the save RPC',
+    NOT has_function_privilege('anon', 'public.marketlink_toggle_favourite(uuid)', 'EXECUTE'), ''
+  );
+  INSERT INTO mk_results VALUES (
+    'anon cannot read saved products',
+    NOT has_table_privilege('anon', 'public.marketlink_favourites', 'SELECT'), ''
+  );
+
+  EXECUTE 'SET LOCAL ROLE anon';
+  BEGIN
+    PERFORM public.marketlink_toggle_favourite(v_listing);
+    RESET ROLE;
+    INSERT INTO mk_results VALUES ('anon cannot save a product', false, 'rpc succeeded');
+  EXCEPTION WHEN others THEN
+    RESET ROLE;
+    INSERT INTO mk_results VALUES ('anon cannot save a product', true, SQLERRM);
+  END;
+
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', v_other)::text, true);
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  BEGIN
+    v_flag := public.marketlink_toggle_favourite(v_listing);
+    RESET ROLE;
+    INSERT INTO mk_results VALUES ('a signed-in customer can save a public product', v_flag, v_flag::text);
+  EXCEPTION WHEN others THEN
+    RESET ROLE;
+    INSERT INTO mk_results VALUES ('a signed-in customer can save a public product', false, SQLERRM);
+  END;
+
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', v_other)::text, true);
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  SELECT count(*) INTO v_n FROM public.marketlink_favourites;
+  RESET ROLE;
+  INSERT INTO mk_results VALUES ('the customer reads back their own saved row', v_n = 1, v_n::text);
+
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', v_other)::text, true);
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  v_res := public.marketlink_my_favourites();
+  RESET ROLE;
+  INSERT INTO mk_results VALUES (
+    'saved products return the same public card payload',
+    jsonb_array_length(v_res) = 1 AND (v_res->0->>'id')::uuid = v_listing AND (v_res->0->>'price')::numeric = 120,
+    v_res::text
+  );
+
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', v_other)::text, true);
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  v_flag := public.marketlink_toggle_favourite(v_listing);
+  RESET ROLE;
+  INSERT INTO mk_results VALUES ('toggling the same product removes it', NOT v_flag, v_flag::text);
+
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', v_other)::text, true);
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  PERFORM public.marketlink_toggle_favourite(v_listing);
+  RESET ROLE;
+
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', v_owner)::text, true);
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  SELECT count(*) INTO v_n FROM public.marketlink_favourites;
+  RESET ROLE;
+  INSERT INTO mk_results VALUES ('another account cannot read the customer''s saved rows', v_n = 0, v_n::text);
+
+  UPDATE public.marketlink_listings SET is_published = false WHERE id = v_listing_old;
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', v_other)::text, true);
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  BEGIN
+    PERFORM public.marketlink_toggle_favourite(v_listing_old);
+    RESET ROLE;
+    INSERT INTO mk_results VALUES ('a hidden product cannot be saved', false, 'rpc succeeded');
+  EXCEPTION WHEN others THEN
+    RESET ROLE;
+    INSERT INTO mk_results VALUES ('a hidden product cannot be saved', true, SQLERRM);
+  END;
+
+  PERFORM set_config('request.jwt.claims', json_build_object('sub', v_other)::text, true);
+  EXECUTE 'SET LOCAL ROLE authenticated';
+  v_res := public.marketlink_my_favourites();
+  RESET ROLE;
+  INSERT INTO mk_results VALUES (
+    'a saved product disappears from the saved list when it is unpublished',
+    jsonb_array_length(v_res) = 1 AND (v_res->0->>'id')::uuid = v_listing, jsonb_array_length(v_res)::text
+  );
 
   SELECT quantity INTO v_after FROM public.products WHERE id = v_product;
   INSERT INTO mk_results VALUES ('stock is still unchanged after every test', v_after = 5, v_after::text);

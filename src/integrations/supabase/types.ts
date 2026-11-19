@@ -573,6 +573,32 @@ export type Database = {
           },
         ]
       }
+      marketlink_favourites: {
+        Row: {
+          created_at: string
+          listing_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          listing_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          listing_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketlink_favourites_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "marketlink_listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketlink_listings: {
         Row: {
           category: string | null
@@ -1724,6 +1750,7 @@ export type Database = {
         Returns: string
       }
       marketlink_categories: { Args: never; Returns: Json }
+      marketlink_favourite_ids: { Args: never; Returns: Json }
       marketlink_feed: {
         Args: {
           p_category?: string
@@ -1738,6 +1765,7 @@ export type Database = {
           p_region?: string
           p_search?: string
           p_shop_slug?: string
+          p_sort?: string
         }
         Returns: Json
       }
@@ -1753,6 +1781,7 @@ export type Database = {
         }
         Returns: Json
       }
+      marketlink_my_favourites: { Args: never; Returns: Json }
       marketlink_my_orders: { Args: never; Returns: Json }
       marketlink_product: {
         Args: { p_listing_id: string; p_slug: string }
@@ -1820,6 +1849,10 @@ export type Database = {
           p_slug: string
         }
         Returns: Json
+      }
+      marketlink_toggle_favourite: {
+        Args: { p_listing_id: string }
+        Returns: boolean
       }
       marketlink_zone_matches: {
         Args: {
