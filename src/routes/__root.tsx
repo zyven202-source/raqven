@@ -17,6 +17,7 @@ import { Toaster } from "@/components/ui/sonner";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { trackError } from "@/lib/analytics-tracker";
 import { BUILD_ID } from "@/lib/build";
+import { CLIENT_BOOT_SCRIPT } from "@/lib/client-boot";
 import { useServiceWorker } from "@/hooks/useServiceWorker";
 import { useSession } from "@/hooks/useSession";
 import {
@@ -207,6 +208,14 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       keeps the prerendered tag and the hydrated tag identical.
     */
     scripts: [
+      /*
+        First, and inline: this runs from the document itself, so a client
+        holding a stale shell whose bundle has been replaced can still install
+        the current service worker and recover. See `src/lib/client-boot.ts`.
+      */
+      {
+        children: CLIENT_BOOT_SCRIPT,
+      },
       {
         type: "application/ld+json",
         children: JSON.stringify(siteJsonLd()),
