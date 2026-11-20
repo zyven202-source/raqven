@@ -599,6 +599,64 @@ export type Database = {
           },
         ]
       }
+      marketlink_list_items: {
+        Row: {
+          created_at: string
+          id: string
+          list_id: string
+          listing_id: string | null
+          name: string
+          note: string | null
+          product_id: string | null
+          quantity: number
+          resolved_at: string | null
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          list_id: string
+          listing_id?: string | null
+          name: string
+          note?: string | null
+          product_id?: string | null
+          quantity?: number
+          resolved_at?: string | null
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          list_id?: string
+          listing_id?: string | null
+          name?: string
+          note?: string | null
+          product_id?: string | null
+          quantity?: number
+          resolved_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketlink_list_items_list_id_fkey"
+            columns: ["list_id"]
+            isOneToOne: false
+            referencedRelation: "marketlink_lists"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketlink_list_items_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "marketlink_listings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketlink_list_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       marketlink_listings: {
         Row: {
           category: string | null
@@ -656,36 +714,78 @@ export type Database = {
           },
         ]
       }
+      marketlink_lists: {
+        Row: {
+          archived_at: string | null
+          created_at: string
+          id: string
+          name: string
+          owner_id: string
+          share_enabled: boolean
+          share_token: string
+          updated_at: string
+        }
+        Insert: {
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          owner_id: string
+          share_enabled?: boolean
+          share_token?: string
+          updated_at?: string
+        }
+        Update: {
+          archived_at?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          owner_id?: string
+          share_enabled?: boolean
+          share_token?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       marketlink_notifications: {
         Row: {
           body: string | null
           created_at: string
+          dedupe_key: string | null
           id: string
           kind: string
           order_id: string | null
           read_at: string | null
           shop_id: string
+          target_path: string | null
           title: string
+          user_id: string | null
         }
         Insert: {
           body?: string | null
           created_at?: string
+          dedupe_key?: string | null
           id?: string
           kind?: string
           order_id?: string | null
           read_at?: string | null
           shop_id: string
+          target_path?: string | null
           title: string
+          user_id?: string | null
         }
         Update: {
           body?: string | null
           created_at?: string
+          dedupe_key?: string | null
           id?: string
           kind?: string
           order_id?: string | null
           read_at?: string | null
           shop_id?: string
+          target_path?: string | null
           title?: string
+          user_id?: string | null
         }
         Relationships: [
           {
@@ -697,6 +797,69 @@ export type Database = {
           },
           {
             foreignKeyName: "marketlink_notifications_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketlink_order_events: {
+        Row: {
+          actor_id: string | null
+          actor_role: string
+          created_at: string
+          from_status:
+            | Database["public"]["Enums"]["marketlink_order_status"]
+            | null
+          id: string
+          note: string | null
+          order_id: string
+          shop_id: string
+          to_status:
+            | Database["public"]["Enums"]["marketlink_order_status"]
+            | null
+        }
+        Insert: {
+          actor_id?: string | null
+          actor_role?: string
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["marketlink_order_status"]
+            | null
+          id?: string
+          note?: string | null
+          order_id: string
+          shop_id: string
+          to_status?:
+            | Database["public"]["Enums"]["marketlink_order_status"]
+            | null
+        }
+        Update: {
+          actor_id?: string | null
+          actor_role?: string
+          created_at?: string
+          from_status?:
+            | Database["public"]["Enums"]["marketlink_order_status"]
+            | null
+          id?: string
+          note?: string | null
+          order_id?: string
+          shop_id?: string
+          to_status?:
+            | Database["public"]["Enums"]["marketlink_order_status"]
+            | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketlink_order_events_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: false
+            referencedRelation: "marketlink_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketlink_order_events_shop_id_fkey"
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "shops"
@@ -777,9 +940,11 @@ export type Database = {
       }
       marketlink_orders: {
         Row: {
+          accepted_at: string | null
           client_token: string
           created_at: string
           currency: string
+          customer_confirmed_at: string | null
           customer_email: string | null
           customer_id: string | null
           customer_name: string
@@ -791,11 +956,16 @@ export type Database = {
           destination_city: string | null
           destination_country: string | null
           destination_region: string | null
+          dispute_reason: string | null
+          disputed_at: string | null
           fulfillment: string
           id: string
           owner_note: string | null
           preferred_contact: string
           reference: string
+          sale_id: string | null
+          seller_confirmed_at: string | null
+          settled_at: string | null
           shop_id: string
           status: Database["public"]["Enums"]["marketlink_order_status"]
           status_updated_at: string | null
@@ -804,9 +974,11 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          accepted_at?: string | null
           client_token: string
           created_at?: string
           currency?: string
+          customer_confirmed_at?: string | null
           customer_email?: string | null
           customer_id?: string | null
           customer_name: string
@@ -818,11 +990,16 @@ export type Database = {
           destination_city?: string | null
           destination_country?: string | null
           destination_region?: string | null
+          dispute_reason?: string | null
+          disputed_at?: string | null
           fulfillment?: string
           id?: string
           owner_note?: string | null
           preferred_contact?: string
           reference: string
+          sale_id?: string | null
+          seller_confirmed_at?: string | null
+          settled_at?: string | null
           shop_id: string
           status?: Database["public"]["Enums"]["marketlink_order_status"]
           status_updated_at?: string | null
@@ -831,9 +1008,11 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          accepted_at?: string | null
           client_token?: string
           created_at?: string
           currency?: string
+          customer_confirmed_at?: string | null
           customer_email?: string | null
           customer_id?: string | null
           customer_name?: string
@@ -845,11 +1024,16 @@ export type Database = {
           destination_city?: string | null
           destination_country?: string | null
           destination_region?: string | null
+          dispute_reason?: string | null
+          disputed_at?: string | null
           fulfillment?: string
           id?: string
           owner_note?: string | null
           preferred_contact?: string
           reference?: string
+          sale_id?: string | null
+          seller_confirmed_at?: string | null
+          settled_at?: string | null
           shop_id?: string
           status?: Database["public"]["Enums"]["marketlink_order_status"]
           status_updated_at?: string | null
@@ -866,7 +1050,139 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "marketlink_orders_sale_id_fkey"
+            columns: ["sale_id"]
+            isOneToOne: false
+            referencedRelation: "sales"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "marketlink_orders_shop_id_fkey"
+            columns: ["shop_id"]
+            isOneToOne: false
+            referencedRelation: "shops"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketlink_release_reads: {
+        Row: {
+          read_at: string
+          release_id: string
+          user_id: string
+        }
+        Insert: {
+          read_at?: string
+          release_id: string
+          user_id: string
+        }
+        Update: {
+          read_at?: string
+          release_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketlink_release_reads_release_id_fkey"
+            columns: ["release_id"]
+            isOneToOne: false
+            referencedRelation: "marketlink_releases"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      marketlink_releases: {
+        Row: {
+          created_at: string
+          fixes: Json
+          highlights: Json
+          id: string
+          notes_path: string | null
+          published_at: string
+          published_by: string | null
+          summary: string | null
+          title: string
+          version: string
+        }
+        Insert: {
+          created_at?: string
+          fixes?: Json
+          highlights?: Json
+          id?: string
+          notes_path?: string | null
+          published_at?: string
+          published_by?: string | null
+          summary?: string | null
+          title: string
+          version: string
+        }
+        Update: {
+          created_at?: string
+          fixes?: Json
+          highlights?: Json
+          id?: string
+          notes_path?: string | null
+          published_at?: string
+          published_by?: string | null
+          summary?: string | null
+          title?: string
+          version?: string
+        }
+        Relationships: []
+      }
+      marketlink_reviews: {
+        Row: {
+          body: string | null
+          created_at: string
+          customer_id: string
+          edited_at: string | null
+          id: string
+          last_reported_at: string | null
+          moderation: string
+          order_id: string
+          rating: number
+          report_count: number
+          shop_id: string
+          verified_purchase: boolean
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          customer_id: string
+          edited_at?: string | null
+          id?: string
+          last_reported_at?: string | null
+          moderation?: string
+          order_id: string
+          rating: number
+          report_count?: number
+          shop_id: string
+          verified_purchase?: boolean
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          customer_id?: string
+          edited_at?: string | null
+          id?: string
+          last_reported_at?: string | null
+          moderation?: string
+          order_id?: string
+          rating?: number
+          report_count?: number
+          shop_id?: string
+          verified_purchase?: boolean
+        }
+        Relationships: [
+          {
+            foreignKeyName: "marketlink_reviews_order_id_fkey"
+            columns: ["order_id"]
+            isOneToOne: true
+            referencedRelation: "marketlink_orders"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "marketlink_reviews_shop_id_fkey"
             columns: ["shop_id"]
             isOneToOne: false
             referencedRelation: "shops"
@@ -1361,6 +1677,7 @@ export type Database = {
         Row: {
           amount_paid: number
           balance_due: number
+          channel: string
           client_tx_id: string | null
           created_at: string
           customer_name: string | null
@@ -1368,6 +1685,7 @@ export type Database = {
           debtor_id: string | null
           discount_amount: number
           id: string
+          marketplace_order_id: string | null
           note: string | null
           receipt_number: string
           shop_id: string
@@ -1382,6 +1700,7 @@ export type Database = {
         Insert: {
           amount_paid?: number
           balance_due?: number
+          channel?: string
           client_tx_id?: string | null
           created_at?: string
           customer_name?: string | null
@@ -1389,6 +1708,7 @@ export type Database = {
           debtor_id?: string | null
           discount_amount?: number
           id?: string
+          marketplace_order_id?: string | null
           note?: string | null
           receipt_number: string
           shop_id: string
@@ -1403,6 +1723,7 @@ export type Database = {
         Update: {
           amount_paid?: number
           balance_due?: number
+          channel?: string
           client_tx_id?: string | null
           created_at?: string
           customer_name?: string | null
@@ -1410,6 +1731,7 @@ export type Database = {
           debtor_id?: string | null
           discount_amount?: number
           id?: string
+          marketplace_order_id?: string | null
           note?: string | null
           receipt_number?: string
           shop_id?: string
@@ -1427,6 +1749,13 @@ export type Database = {
             columns: ["debtor_id"]
             isOneToOne: false
             referencedRelation: "debtors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sales_marketplace_order_id_fkey"
+            columns: ["marketplace_order_id"]
+            isOneToOne: false
+            referencedRelation: "marketlink_orders"
             referencedColumns: ["id"]
           },
           {
@@ -1749,7 +2078,117 @@ export type Database = {
         Args: { p_details?: string; p_request_type: string; p_shop_id?: string }
         Returns: string
       }
+      marketlink_add_list_item: {
+        Args: {
+          p_list_id: string
+          p_listing_id?: string
+          p_name: string
+          p_note?: string
+          p_product_id?: string
+          p_quantity?: number
+        }
+        Returns: string
+      }
+      marketlink_advance_order: {
+        Args: {
+          p_note?: string
+          p_order_id: string
+          p_status: Database["public"]["Enums"]["marketlink_order_status"]
+        }
+        Returns: {
+          accepted_at: string | null
+          client_token: string
+          created_at: string
+          currency: string
+          customer_confirmed_at: string | null
+          customer_email: string | null
+          customer_id: string | null
+          customer_name: string
+          customer_phone: string | null
+          delivery_address: string | null
+          delivery_fee: number | null
+          delivery_note: string | null
+          delivery_zone_id: string | null
+          destination_city: string | null
+          destination_country: string | null
+          destination_region: string | null
+          dispute_reason: string | null
+          disputed_at: string | null
+          fulfillment: string
+          id: string
+          owner_note: string | null
+          preferred_contact: string
+          reference: string
+          sale_id: string | null
+          seller_confirmed_at: string | null
+          settled_at: string | null
+          shop_id: string
+          status: Database["public"]["Enums"]["marketlink_order_status"]
+          status_updated_at: string | null
+          status_updated_by: string | null
+          subtotal: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "marketlink_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       marketlink_categories: { Args: never; Returns: Json }
+      marketlink_confirm_settlement: {
+        Args: { p_order_id: string }
+        Returns: Json
+      }
+      marketlink_create_list: { Args: { p_name: string }; Returns: string }
+      marketlink_delete_list: {
+        Args: { p_list_id: string }
+        Returns: undefined
+      }
+      marketlink_dispute_order: {
+        Args: { p_order_id: string; p_reason: string }
+        Returns: {
+          accepted_at: string | null
+          client_token: string
+          created_at: string
+          currency: string
+          customer_confirmed_at: string | null
+          customer_email: string | null
+          customer_id: string | null
+          customer_name: string
+          customer_phone: string | null
+          delivery_address: string | null
+          delivery_fee: number | null
+          delivery_note: string | null
+          delivery_zone_id: string | null
+          destination_city: string | null
+          destination_country: string | null
+          destination_region: string | null
+          dispute_reason: string | null
+          disputed_at: string | null
+          fulfillment: string
+          id: string
+          owner_note: string | null
+          preferred_contact: string
+          reference: string
+          sale_id: string | null
+          seller_confirmed_at: string | null
+          settled_at: string | null
+          shop_id: string
+          status: Database["public"]["Enums"]["marketlink_order_status"]
+          status_updated_at: string | null
+          status_updated_by: string | null
+          subtotal: number
+          updated_at: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "marketlink_orders"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       marketlink_favourite_ids: { Args: never; Returns: Json }
       marketlink_feed: {
         Args: {
@@ -1769,6 +2208,15 @@ export type Database = {
         }
         Returns: Json
       }
+      marketlink_inbox_counts: { Args: never; Returns: Json }
+      marketlink_list_candidates: {
+        Args: { p_limit?: number; p_listing_id?: string; p_name: string }
+        Returns: Json
+      }
+      marketlink_list_payload: {
+        Args: { p_list_id: string; p_token: string }
+        Returns: Json
+      }
       marketlink_listing_json: {
         Args: {
           p_category: string
@@ -1781,23 +2229,103 @@ export type Database = {
         }
         Returns: Json
       }
+      marketlink_mark_all_notifications_read: { Args: never; Returns: number }
+      marketlink_mark_notification_read: {
+        Args: { p_id: string }
+        Returns: undefined
+      }
+      marketlink_mark_release_read: {
+        Args: { p_release_id: string }
+        Returns: undefined
+      }
       marketlink_my_favourites: { Args: never; Returns: Json }
+      marketlink_my_lists: { Args: never; Returns: Json }
       marketlink_my_orders: { Args: never; Returns: Json }
+      marketlink_norm: { Args: { p_text: string }; Returns: string }
+      marketlink_notification_feed: {
+        Args: { p_limit?: number }
+        Returns: Json
+      }
+      marketlink_notify: {
+        Args: {
+          p_body?: string
+          p_dedupe_key?: string
+          p_kind: string
+          p_order_id: string
+          p_shop_id: string
+          p_target_path?: string
+          p_title: string
+          p_user_id: string
+        }
+        Returns: undefined
+      }
+      marketlink_order_document: { Args: { p_order_id: string }; Returns: Json }
       marketlink_product: {
         Args: { p_listing_id: string; p_slug: string }
         Returns: Json
       }
       marketlink_public_listings: { Args: never; Returns: Json }
       marketlink_public_shops: { Args: never; Returns: Json }
+      marketlink_publish_release: {
+        Args: {
+          p_fixes?: Json
+          p_highlights?: Json
+          p_notes_path?: string
+          p_summary?: string
+          p_title: string
+          p_version: string
+        }
+        Returns: {
+          created_at: string
+          fixes: Json
+          highlights: Json
+          id: string
+          notes_path: string | null
+          published_at: string
+          published_by: string | null
+          summary: string | null
+          title: string
+          version: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "marketlink_releases"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      marketlink_release_feed: { Args: { p_limit?: number }; Returns: Json }
+      marketlink_remove_list_item: {
+        Args: { p_item_id: string }
+        Returns: undefined
+      }
+      marketlink_rename_list: {
+        Args: { p_list_id: string; p_name: string }
+        Returns: undefined
+      }
+      marketlink_report_review: {
+        Args: { p_reason?: string; p_review_id: string }
+        Returns: undefined
+      }
+      marketlink_rotate_list_share: {
+        Args: { p_list_id: string }
+        Returns: string
+      }
+      marketlink_set_list_share: {
+        Args: { p_enabled: boolean; p_list_id: string }
+        Returns: undefined
+      }
       marketlink_set_order_status: {
         Args: {
           p_order_id: string
           p_status: Database["public"]["Enums"]["marketlink_order_status"]
         }
         Returns: {
+          accepted_at: string | null
           client_token: string
           created_at: string
           currency: string
+          customer_confirmed_at: string | null
           customer_email: string | null
           customer_id: string | null
           customer_name: string
@@ -1809,11 +2337,16 @@ export type Database = {
           destination_city: string | null
           destination_country: string | null
           destination_region: string | null
+          dispute_reason: string | null
+          disputed_at: string | null
           fulfillment: string
           id: string
           owner_note: string | null
           preferred_contact: string
           reference: string
+          sale_id: string | null
+          seller_confirmed_at: string | null
+          settled_at: string | null
           shop_id: string
           status: Database["public"]["Enums"]["marketlink_order_status"]
           status_updated_at: string | null
@@ -1829,6 +2362,9 @@ export type Database = {
         }
       }
       marketlink_shop: { Args: { p_slug: string }; Returns: Json }
+      marketlink_shop_reputation: { Args: { p_slug: string }; Returns: Json }
+      marketlink_shop_reviews: { Args: { p_slug: string }; Returns: Json }
+      marketlink_shop_unread: { Args: { p_shop_id: string }; Returns: number }
       marketlink_slug_available: { Args: { p_slug: string }; Returns: boolean }
       marketlink_slug_reserved: { Args: { p_slug: string }; Returns: boolean }
       marketlink_submit_order: {
@@ -1850,9 +2386,42 @@ export type Database = {
         }
         Returns: Json
       }
+      marketlink_submit_review: {
+        Args: { p_body?: string; p_order_id: string; p_rating: number }
+        Returns: {
+          body: string | null
+          created_at: string
+          customer_id: string
+          edited_at: string | null
+          id: string
+          last_reported_at: string | null
+          moderation: string
+          order_id: string
+          rating: number
+          report_count: number
+          shop_id: string
+          verified_purchase: boolean
+        }
+        SetofOptions: {
+          from: "*"
+          to: "marketlink_reviews"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       marketlink_toggle_favourite: {
         Args: { p_listing_id: string }
         Returns: boolean
+      }
+      marketlink_update_list_item: {
+        Args: {
+          p_item_id: string
+          p_name?: string
+          p_note?: string
+          p_quantity?: number
+          p_resolved?: boolean
+        }
+        Returns: undefined
       }
       marketlink_zone_matches: {
         Args: {
@@ -1989,6 +2558,12 @@ export type Database = {
         | "rejected"
         | "cancelled"
         | "completed"
+        | "preparing"
+        | "ready_for_collection"
+        | "out_for_delivery"
+        | "awaiting_settlement"
+        | "settled"
+        | "disputed"
       member_status: "active" | "suspended" | "removed"
       movement_type:
         | "stock_in"
@@ -2136,6 +2711,12 @@ export const Constants = {
         "rejected",
         "cancelled",
         "completed",
+        "preparing",
+        "ready_for_collection",
+        "out_for_delivery",
+        "awaiting_settlement",
+        "settled",
+        "disputed",
       ],
       member_status: ["active", "suspended", "removed"],
       movement_type: [

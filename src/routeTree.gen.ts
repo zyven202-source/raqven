@@ -28,7 +28,9 @@ import { Route as AuthSignupRouteImport } from './routes/auth.signup'
 import { Route as LegalPrivacyRouteImport } from './routes/legal.privacy'
 import { Route as LegalRefundsRouteImport } from './routes/legal.refunds'
 import { Route as LegalTermsRouteImport } from './routes/legal.terms'
+import { Route as ListTokenRouteImport } from './routes/list.$token'
 import { Route as ShopSlugRouteImport } from './routes/shop.$slug'
+import { Route as AuthenticatedAccountListsRouteImport } from './routes/_authenticated/account.lists'
 import { Route as AuthenticatedAccountOrdersRouteImport } from './routes/_authenticated/account.orders'
 import { Route as AuthenticatedAdminAiRouteImport } from './routes/_authenticated/admin.ai'
 import { Route as AuthenticatedAdminAnalyticsRouteImport } from './routes/_authenticated/admin.analytics'
@@ -145,11 +147,22 @@ const LegalTermsRoute = LegalTermsRouteImport.update({
   path: '/terms',
   getParentRoute: () => LegalRoute,
 } as any)
+const ListTokenRoute = ListTokenRouteImport.update({
+  id: '/list/$token',
+  path: '/list/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ShopSlugRoute = ShopSlugRouteImport.update({
   id: '/shop/$slug',
   path: '/shop/$slug',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedAccountListsRoute =
+  AuthenticatedAccountListsRouteImport.update({
+    id: '/account/lists',
+    path: '/account/lists',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedAccountOrdersRoute =
   AuthenticatedAccountOrdersRouteImport.update({
     id: '/account/orders',
@@ -284,7 +297,9 @@ export interface FileRoutesByFullPath {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/refunds': typeof LegalRefundsRoute
   '/legal/terms': typeof LegalTermsRoute
+  '/list/$token': typeof ListTokenRoute
   '/shop/$slug': typeof ShopSlugRouteWithChildren
+  '/account/lists': typeof AuthenticatedAccountListsRoute
   '/account/orders': typeof AuthenticatedAccountOrdersRoute
   '/admin/ai': typeof AuthenticatedAdminAiRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
@@ -325,6 +340,8 @@ export interface FileRoutesByTo {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/refunds': typeof LegalRefundsRoute
   '/legal/terms': typeof LegalTermsRoute
+  '/list/$token': typeof ListTokenRoute
+  '/account/lists': typeof AuthenticatedAccountListsRoute
   '/account/orders': typeof AuthenticatedAccountOrdersRoute
   '/admin/ai': typeof AuthenticatedAdminAiRoute
   '/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
@@ -368,7 +385,9 @@ export interface FileRoutesById {
   '/legal/privacy': typeof LegalPrivacyRoute
   '/legal/refunds': typeof LegalRefundsRoute
   '/legal/terms': typeof LegalTermsRoute
+  '/list/$token': typeof ListTokenRoute
   '/shop/$slug': typeof ShopSlugRouteWithChildren
+  '/_authenticated/account/lists': typeof AuthenticatedAccountListsRoute
   '/_authenticated/account/orders': typeof AuthenticatedAccountOrdersRoute
   '/_authenticated/admin/ai': typeof AuthenticatedAdminAiRoute
   '/_authenticated/admin/analytics': typeof AuthenticatedAdminAnalyticsRoute
@@ -412,7 +431,9 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/refunds'
     | '/legal/terms'
+    | '/list/$token'
     | '/shop/$slug'
+    | '/account/lists'
     | '/account/orders'
     | '/admin/ai'
     | '/admin/analytics'
@@ -453,6 +474,8 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/refunds'
     | '/legal/terms'
+    | '/list/$token'
+    | '/account/lists'
     | '/account/orders'
     | '/admin/ai'
     | '/admin/analytics'
@@ -495,7 +518,9 @@ export interface FileRouteTypes {
     | '/legal/privacy'
     | '/legal/refunds'
     | '/legal/terms'
+    | '/list/$token'
     | '/shop/$slug'
+    | '/_authenticated/account/lists'
     | '/_authenticated/account/orders'
     | '/_authenticated/admin/ai'
     | '/_authenticated/admin/analytics'
@@ -529,6 +554,7 @@ export interface RootRouteChildren {
   MarketRoute: typeof MarketRoute
   PricingRoute: typeof PricingRoute
   SupportRoute: typeof SupportRoute
+  ListTokenRoute: typeof ListTokenRoute
   ShopSlugRoute: typeof ShopSlugRouteWithChildren
 }
 
@@ -667,12 +693,26 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof LegalTermsRouteImport
       parentRoute: typeof LegalRoute
     }
+    '/list/$token': {
+      id: '/list/$token'
+      path: '/list/$token'
+      fullPath: '/list/$token'
+      preLoaderRoute: typeof ListTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/shop/$slug': {
       id: '/shop/$slug'
       path: '/shop/$slug'
       fullPath: '/shop/$slug'
       preLoaderRoute: typeof ShopSlugRouteImport
       parentRoute: typeof rootRouteImport
+    }
+    '/_authenticated/account/lists': {
+      id: '/_authenticated/account/lists'
+      path: '/account/lists'
+      fullPath: '/account/lists'
+      preLoaderRoute: typeof AuthenticatedAccountListsRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
     }
     '/_authenticated/account/orders': {
       id: '/_authenticated/account/orders'
@@ -869,6 +909,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedAppRoute: typeof AuthenticatedAppRouteWithChildren
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
   AuthenticatedOnboardingRoute: typeof AuthenticatedOnboardingRoute
+  AuthenticatedAccountListsRoute: typeof AuthenticatedAccountListsRoute
   AuthenticatedAccountOrdersRoute: typeof AuthenticatedAccountOrdersRoute
   AuthenticatedAdminAiRoute: typeof AuthenticatedAdminAiRoute
   AuthenticatedAdminAnalyticsRoute: typeof AuthenticatedAdminAnalyticsRoute
@@ -878,6 +919,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedAppRoute: AuthenticatedAppRouteWithChildren,
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
   AuthenticatedOnboardingRoute: AuthenticatedOnboardingRoute,
+  AuthenticatedAccountListsRoute: AuthenticatedAccountListsRoute,
   AuthenticatedAccountOrdersRoute: AuthenticatedAccountOrdersRoute,
   AuthenticatedAdminAiRoute: AuthenticatedAdminAiRoute,
   AuthenticatedAdminAnalyticsRoute: AuthenticatedAdminAnalyticsRoute,
@@ -940,6 +982,7 @@ const rootRouteChildren: RootRouteChildren = {
   MarketRoute: MarketRoute,
   PricingRoute: PricingRoute,
   SupportRoute: SupportRoute,
+  ListTokenRoute: ListTokenRoute,
   ShopSlugRoute: ShopSlugRouteWithChildren,
 }
 export const routeTree = rootRouteImport

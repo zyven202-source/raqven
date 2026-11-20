@@ -165,7 +165,7 @@ export function ReceiptSheet({
         ) : payload ? (
           <>
             {/* ------------------------------------------- the receipt paper */}
-            <div className="mx-auto w-full max-w-sm rounded-md bg-white px-4 py-4 font-mono text-[11px] leading-relaxed text-black shadow-[0_10px_30px_-12px_rgb(0_0_0/0.5)]">
+            <div className="mx-auto w-full max-w-sm rounded-md border-t-[3px] border-[#0f6b52] bg-white px-4 py-4 font-mono text-[11px] leading-relaxed text-[#14201c] tabular-nums shadow-[0_10px_30px_-12px_rgb(0_0_0/0.5)]">
               <svg
                 viewBox={`0 0 ${VIEW_BOX} ${VIEW_BOX}`}
                 className="mx-auto size-6"
@@ -189,6 +189,9 @@ export function ReceiptSheet({
                 />
               ) : null}
 
+              <p className="text-center text-[8px] font-bold uppercase tracking-[0.18em] text-[#0f6b52]">
+                Sales receipt
+              </p>
               <p className="text-center text-[13px] font-bold uppercase tracking-wide">
                 {payload.shop.name}
               </p>
@@ -202,7 +205,15 @@ export function ReceiptSheet({
                 <p className="text-center text-neutral-600">{payload.shop.phone}</p>
               ) : null}
 
-              <div className="my-2.5 border-t border-dashed border-neutral-400" />
+              <p className="mt-1 text-center text-[8.5px] font-bold uppercase tracking-[0.12em] text-[#0f6b52]">
+                {payload.payments.length > 0 || Number(payload.sale.amount_paid) > 0
+                  ? "Payment recorded"
+                  : Number(payload.sale.balance_due) > 0
+                    ? "Balance outstanding"
+                    : "Completed sale"}
+              </p>
+
+              <div className="my-2.5 border-t border-neutral-300" />
 
               <div className="flex justify-between">
                 <span>Receipt</span>
@@ -225,7 +236,7 @@ export function ReceiptSheet({
                 </div>
               ) : null}
 
-              <div className="my-2.5 border-t border-dashed border-neutral-400" />
+              <div className="my-2.5 border-t border-neutral-300" />
 
               {payload.items.map((item) => (
                 <div key={item.id} className="mb-1.5">
@@ -315,7 +326,9 @@ export function ReceiptSheet({
               <p className="text-center text-neutral-600">
                 {payload.settings?.footer_text || "Thank you for your business!"}
               </p>
-              <p className="text-center text-neutral-600">Powered by SAVO</p>
+              <p className="text-center text-[9px] tracking-[0.08em] text-neutral-500">
+                SAVO Signature
+              </p>
             </div>
 
             {/* ----------------------------------------------------- actions */}

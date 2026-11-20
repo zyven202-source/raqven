@@ -1,34 +1,45 @@
 import { useEffect, useState } from "react";
-import { Check, CircleSlash, Loader2, Mail, Phone, Save, X } from "lucide-react";
+import { Check, CircleSlash, FileText, Loader2, Mail, Phone, Save, X } from "lucide-react";
 import { toast } from "sonner";
 
+import { MarketReceiptSheet } from "@/components/marketlink/MarketReceiptSheet";
 import { Button } from "@/components/ui/button";
 import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer";
-import { useSaveOwnerNote, useSetOrderStatus } from "@/hooks/useMarketlink";
+import { useAdvanceOrder, useConfirmSettlement } from "@/hooks/useMarketCommerce";
+import { useSaveOwnerNote } from "@/hooks/useMarketlink";
 import { formatDateTime, formatMoney } from "@/lib/format";
-import { feeLabel, zoneLabel } from "@/lib/marketlink";
+import { feeLabel } from "@/lib/marketlink";
 import { marketImageUrl, type SellerOrder } from "@/services/marketlink.service";
-import { MARKETLINK_STATUS_LABEL } from "@/types/marketlink";
-import type { MarketlinkOrderStatus } from "@/types/savo";
+import { MARKETLINK_STATUS_LABEL, isSettled, type MarketOrderState } from "@/types/marketlink";
 import { cn } from "@/lib/utils";
 
-const NEXT_STATUS: Record<
-  MarketlinkOrderStatus,
-  { status: MarketlinkOrderStatus; label: string }[]
-> = {
-  pending: [
-    { status: "accepted", label: "Accept request" },
-    { status: "rejected", label: "Reject" },
-    { status: "cancelled", label: "Cancel" },
-  ],
-  accepted: [
-    { status: "completed", label: "Mark completed" },
-    { status: "cancelled", label: "Cancel" },
-  ],
-  rejected: [],
-  cancelled: [],
-  completed: [],
-};
+/**
+ * The next honest step for this order. Only the states that fit its actual
+ * fulfilment method are offered: a collection order is never "out for
+ * delivery", and an order is only offered "awaiting completion" once the work
+ * is genuinely done.
+ */
+function nextSteps(status: MarketOrderState, fulfillment: string) {
+  const steps: { status: MarketOrderState; label: string }[] = [];
+  if (status === "pending") {
+    steps.push({ status: "accepted", label: "Accept request" });
+    steps.push({ status: "rejected", label: "Reject" });
+    steps.push({ status: "cancelled", label: "Cancel" });
+  } else if (status === "accepted" || status === "preparing") {
+    steps.push({ status: "preparing", label: "Start preparing" });
+    if (fulfillment === "delivery") {
+      steps.push({ status: "out_for_delivery", label: "Out for delivery" });
+    } else {
+      steps.push({ status: "ready_for_collection", label: "Ready for collection" });
+    }
+    steps.push({ status: "awaiting_settlement", label: "Mark done, ask to confirm" });
+    steps.push({ status: "cancelled", label: "Cancel" });
+  } else if (status === "ready_for_collection" || status === "out_for_delivery") {
+    steps.push({ status: "awaiting_settlement", label: "Mark done, ask to confirm" });
+    steps.push({ status: "cancelled", label: "Cancel" });
+  }
+  return steps.filter((step) => step.status !== status);
+}
 
 /**
  * One order request, as the seller needs to see it.
@@ -48,9 +59,11 @@ export function OrderDetailSheet({
   open: boolean;
   onOpenChange: (open: boolean) => void;
 }) {
-  const update = useSetOrderStatus(shopId);
+  const update = useAdvanceOrder();
+  const confirm = useConfirmSettlement();
   const saveNote = useSaveOwnerNote(shopId);
   const [note, setNote] = useState("");
+  const [documentOpen, setDocumentOpen] = useState(false);
 
   useEffect(() => {
     setNote(order?.owner_note ?? "");
@@ -69,9 +82,9 @@ export function OrderDetailSheet({
     .filter(Boolean)
     .join(", ");
 
-  async function change(status: MarketlinkOrderStatus) {
+  async function change(status: MarketOrderState) {
     try {
-      await update.mutateAsync({ order: order!, status });
+      await update.mutateAsync({ orderId: order!.id, status });
       toast.success(
         `Order ${order!.reference} marked ${MARKETLINK_STATUS_LABEL[status].toLowerCase()}`,
       );
@@ -79,6 +92,12 @@ export function OrderDetailSheet({
       toast.error(error instanceof Error ? error.message : "The status could not be changed.");
     }
   }
+
+  const settled = isSettled(order.status);
+  const sellerConfirmed = Boolean(
+    (order as { seller_confirmed_at?: string | null }).seller_confirmed_at,
+  );
+  const steps = nextSteps(order.status, order.fulfillment);
 
   return (
     <Drawer open={open} onOpenChange={onOpenChange} shouldScaleBackground={false}>
@@ -105,7 +124,7 @@ export function OrderDetailSheet({
                       : "bg-sunken text-muted-foreground",
               )}
             >
-              {MARKETLINK_STATUS_LABEL[order.status]}
+              {MARKETLINK_STATUS_LABEL[order.status as MarketOrderState]}
             </span>
           </div>
 
@@ -245,9 +264,57 @@ export function OrderDetailSheet({
               </Button>
             </div>
 
-            {NEXT_STATUS[order.status].length > 0 ? (
+            <div className="flex flex-wrap gap-2 pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                className="h-10 flex-1"
+                onClick={() => setDocumentOpen(true)}
+              >
+                <FileText className="size-4" aria-hidden /> Document
+              </Button>
+              {!settled &&
+              (order.status === "awaiting_settlement" || order.status === "disputed") &&
+              !sellerConfirmed ? (
+                <Button
+                  type="button"
+                  className="h-10 flex-1"
+                  disabled={confirm.isPending}
+                  onClick={() =>
+                    void confirm
+                      .mutateAsync(order.id)
+                      .then((state) =>
+                        toast.success(
+                          state.status === "settled"
+                            ? "Settled by both parties"
+                            : "Your confirmation is recorded. Waiting for the customer.",
+                        ),
+                      )
+                      .catch((error: unknown) =>
+                        toast.error(
+                          error instanceof Error ? error.message : "Could not confirm completion.",
+                        ),
+                      )
+                  }
+                >
+                  {confirm.isPending ? (
+                    <Loader2 className="size-4 animate-spin" />
+                  ) : (
+                    <Check className="size-4" />
+                  )}
+                  Confirm completion
+                </Button>
+              ) : null}
+              {sellerConfirmed && !settled ? (
+                <p className="inline-flex h-10 flex-1 items-center justify-center gap-1.5 rounded-md bg-positive-soft px-3 text-xs font-medium text-positive">
+                  <Check className="size-3.5" aria-hidden /> You confirmed
+                </p>
+              ) : null}
+            </div>
+
+            {steps.length > 0 ? (
               <div className="flex flex-col gap-2 pt-1">
-                {NEXT_STATUS[order.status].map((action) => (
+                {steps.map((action) => (
                   <Button
                     key={action.status}
                     type="button"
@@ -275,9 +342,16 @@ export function OrderDetailSheet({
             ) : null}
 
             <p className="pb-2 text-[11px] leading-relaxed text-muted-foreground">
-              Accepting a request does not record a sale or take payment. Complete the sale at the
-              till so stock and receipts stay correct.
+              Accepting a request does not record a sale. The order becomes a marketplace sale —
+              with its own stock movement — only when both sides confirm completion. It never claims
+              money was paid; record any payment you actually received separately.
             </p>
+
+            <MarketReceiptSheet
+              orderId={order.id}
+              open={documentOpen}
+              onOpenChange={setDocumentOpen}
+            />
           </div>
         </div>
       </DrawerContent>

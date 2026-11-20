@@ -8,6 +8,7 @@ import {
   Phone,
   Search,
   ShoppingBag,
+  Star,
   Store,
   Truck,
 } from "lucide-react";
@@ -24,13 +25,15 @@ import {
   usePublicShop,
   useToggleFavourite,
 } from "@/hooks/useMarketlink";
+import { useShopReputation, useShopReviews } from "@/hooks/useMarketCommerce";
 import { useSession } from "@/hooks/useSession";
 import { usePageSeo } from "@/hooks/usePageSeo";
 import { useShopCart } from "@/hooks/useShopCart";
 import { useDebouncedValue } from "@/hooks/useDebouncedValue";
 import { DELIVERY_SHORT, feeLabel } from "@/lib/marketlink";
-import { formatMoney } from "@/lib/format";
+import { formatDateTime, formatMoney } from "@/lib/format";
 import { SITE_URL } from "@/lib/seo";
+import { cn } from "@/lib/utils";
 import { marketImageUrl } from "@/services/marketlink.service";
 
 export const Route = createFileRoute("/shop/$slug/")({
@@ -77,6 +80,9 @@ function ShopPage() {
   );
   const feed = useMarketFeed(filters);
   const items = feed.data?.pages.flatMap((page) => page.items) ?? [];
+
+  const reputation = useShopReputation(slug);
+  const reviews = useShopReviews(slug);
 
   const shopUrl = `${SITE_URL}/shop/${slug}`;
   const jsonLd = useMemo(() => {
@@ -205,6 +211,18 @@ function ShopPage() {
                 <Truck className="size-3.5 text-[var(--brand-primary)]" aria-hidden />
                 Delivery
               </p>
+              {(reputation.data?.count ?? 0) > 0 ? (
+                <p className="mt-1 flex items-center gap-1 text-[11px] text-muted-foreground">
+                  <Star
+                    className="size-3 fill-[var(--brand-primary)] text-[var(--brand-primary)]"
+                    aria-hidden
+                  />
+                  {reputation.data?.average} from {reputation.data?.count} verified review
+                  {(reputation.data?.count ?? 0) === 1 ? "" : "s"}
+                </p>
+              ) : (
+                <p className="mt-1 text-[11px] text-muted-foreground">No reviews yet</p>
+              )}
               {delivery.length > 0 ? (
                 <div className="mt-1.5 flex flex-wrap gap-1">
                   {Array.from(new Set(delivery.map((zone) => zone.kind))).map((kind) => (
@@ -321,6 +339,48 @@ function ShopPage() {
                 </Button>
               </div>
             ) : null}
+          </>
+        )}
+      </section>
+
+      <section className="mx-auto w-full max-w-6xl px-4 pb-16 sm:px-6">
+        <h2 className="font-display text-lg font-semibold">Feedback from buyers</h2>
+        {(reputation.data?.count ?? 0) === 0 ? (
+          <p className="mt-1 text-sm text-muted-foreground">
+            This shop has no published reviews yet. SAVO never invents a rating.
+          </p>
+        ) : (
+          <>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {reputation.data?.average} average · {reputation.data?.count} verified
+              {reputation.data?.count === 1 ? " purchase" : " purchases"}
+            </p>
+            <ul className="mt-3 space-y-2">
+              {(reviews.data ?? []).map((review) => (
+                <li key={review.id} className="rounded-lg border border-[var(--brand-line)] p-3">
+                  <div className="flex items-center gap-1">
+                    {[1, 2, 3, 4, 5].map((value) => (
+                      <Star
+                        key={value}
+                        className={cn(
+                          "size-3.5",
+                          value <= review.rating
+                            ? "fill-[var(--brand-primary)] text-[var(--brand-primary)]"
+                            : "text-muted-foreground/40",
+                        )}
+                        aria-hidden
+                      />
+                    ))}
+                    <span className="ml-1 text-[11px] text-muted-foreground">
+                      {review.author} · {formatDateTime(review.created_at)}
+                    </span>
+                  </div>
+                  {review.body ? (
+                    <p className="mt-1 text-sm leading-relaxed">{review.body}</p>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
           </>
         )}
       </section>

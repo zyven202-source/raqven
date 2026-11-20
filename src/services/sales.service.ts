@@ -167,7 +167,7 @@ export async function listSales(options: ListSalesOptions): Promise<Sale[]> {
   let query = supabase
     .from("sales")
     .select(
-      "id, shop_id, receipt_number, debtor_id, customer_name, customer_phone, subtotal, discount_amount, tax_amount, total_amount, amount_paid, balance_due, status, note, user_id, sold_at, created_at, updated_at, client_tx_id",
+      "id, shop_id, receipt_number, debtor_id, customer_name, customer_phone, subtotal, discount_amount, tax_amount, total_amount, amount_paid, balance_due, status, note, user_id, sold_at, created_at, updated_at, client_tx_id, channel, marketplace_order_id",
     )
     .eq("shop_id", options.shopId)
     .order("sold_at", { ascending: false })

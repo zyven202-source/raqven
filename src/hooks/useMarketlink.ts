@@ -33,7 +33,7 @@ import {
   type PublishListingInput,
   type SellerOrder,
 } from "@/services/marketlink.service";
-import type { MarketlinkStorefrontUpdate } from "@/types/savo";
+import type { MarketlinkOrder, MarketlinkStorefrontUpdate } from "@/types/savo";
 import type { SubmitOrderInput } from "@/types/marketlink";
 
 /** Every key is shop-scoped, so switching shops can never serve another shop's rows. */
@@ -167,7 +167,7 @@ export function useSetOrderStatus(shopId: string) {
   const client = useQueryClient();
   return useMutation({
     mutationFn: ({ order, status }: { order: SellerOrder; status: SellerOrder["status"] }) =>
-      setOrderStatus(order.id, status),
+      setOrderStatus(order.id, status as MarketlinkOrder["status"]),
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: marketlinkKeys.orders(shopId) });
       void client.invalidateQueries({ queryKey: marketlinkKeys.notifications(shopId) });
@@ -220,11 +220,12 @@ export function useMarkNotificationsRead(shopId: string) {
 
 // ----------------------------------------------------------------- public feed
 
-export function useMarketFeed(filters: Omit<FeedQuery, "offset">) {
+export function useMarketFeed(filters: Omit<FeedQuery, "offset">, enabled = true) {
   return useInfiniteQuery({
     queryKey: marketlinkKeys.feed(filters),
     queryFn: ({ pageParam }) => fetchMarketplaceFeed({ ...filters, offset: pageParam as number }),
     initialPageParam: 0,
+    enabled,
     getNextPageParam: (lastPage, allPages) =>
       lastPage.has_more
         ? allPages.reduce((count, page) => count + page.items.length, 0)

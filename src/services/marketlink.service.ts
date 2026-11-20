@@ -32,6 +32,7 @@ import type {
   MarketFeedItem,
   MarketFeedSort,
   MarketFeedResult,
+  MarketOrderState,
   PublicProductPayload,
   PublicShopPayload,
   SubmitOrderInput,
@@ -291,7 +292,9 @@ export async function removeDeliveryZone(shopId: string, zoneId: string) {
 
 // ---------------------------------------------------------------------- orders
 
-export interface SellerOrder extends MarketlinkOrder {
+export interface SellerOrder extends Omit<MarketlinkOrder, "status"> {
+  /** The full lifecycle, including the settlement states. */
+  status: MarketOrderState;
   items: MarketlinkOrderItem[];
 }
 
@@ -336,17 +339,25 @@ export async function listNotifications(shopId: string): Promise<MarketlinkNotif
     .order("created_at", { ascending: false })
     .limit(20);
   if (error) throw error;
-  return data ?? [];
+  // Customer rows share the shop_id column but are addressed to a person, not
+  // to this shop's inbox. They never belong in a seller's notification list.
+  return (data ?? []).filter((row) => (row as { user_id?: string | null }).user_id == null);
 }
 
+/**
+ * One RPC added after the generated types were last built. The cast is narrow:
+ * an RPC call returning JSON, with no table handle and no column access.
+ */
+type LooseRpc = (
+  name: string,
+  args?: Record<string, unknown>,
+) => PromiseLike<{ data: unknown; error: { message: string } | null }>;
+
 export async function unreadNotificationCount(shopId: string): Promise<number> {
-  const { count, error } = await supabase
-    .from("marketlink_notifications")
-    .select("id", { count: "exact", head: true })
-    .eq("shop_id", shopId)
-    .is("read_at", null);
+  const rpc = supabase.rpc.bind(supabase) as unknown as LooseRpc;
+  const { data, error } = await rpc("marketlink_shop_unread", { p_shop_id: shopId });
   if (error) throw error;
-  return count ?? 0;
+  return typeof data === "number" ? data : 0;
 }
 
 export async function markNotificationsRead(shopId: string) {

@@ -9,6 +9,7 @@ import {
   PageHeader,
 } from "@/components/app/AppChrome";
 import { MarketShell } from "@/components/marketlink/MarketShell";
+import { OrderLifecycle } from "@/components/marketlink/OrderLifecycle";
 import { Button } from "@/components/ui/button";
 import { useMyOrders } from "@/hooks/useMarketlink";
 import { useSession } from "@/hooks/useSession";
@@ -81,11 +82,18 @@ function AccountOrders() {
                       "rounded-full px-2.5 py-1 text-[11px] font-semibold",
                       order.status === "pending"
                         ? "bg-caution-soft text-caution"
-                        : order.status === "accepted"
+                        : [
+                              "accepted",
+                              "preparing",
+                              "ready_for_collection",
+                              "out_for_delivery",
+                            ].includes(order.status)
                           ? "bg-positive-soft text-positive"
-                          : order.status === "completed"
+                          : ["settled", "completed"].includes(order.status)
                             ? "bg-info-soft text-info"
-                            : "bg-sunken text-muted-foreground",
+                            : order.status === "disputed"
+                              ? "bg-negative-soft text-negative"
+                              : "bg-sunken text-muted-foreground",
                     )}
                   >
                     {MARKETLINK_STATUS_LABEL[order.status]}
@@ -128,6 +136,8 @@ function AccountOrders() {
                     The shop has not confirmed this yet. Nothing has been paid.
                   </p>
                 ) : null}
+
+                <OrderLifecycle order={order} />
               </li>
             ))}
           </ul>

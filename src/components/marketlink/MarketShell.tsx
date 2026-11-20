@@ -1,7 +1,8 @@
 import { Link } from "@tanstack/react-router";
-import { ArrowLeft, LayoutGrid, ShoppingBag } from "lucide-react";
+import { ArrowLeft, LayoutGrid, ListChecks, ShoppingBag, User } from "lucide-react";
 
 import { Logo } from "@/components/brand/Logo";
+import { InboxButton } from "@/components/marketlink/InboxSheet";
 import { useSession } from "@/hooks/useSession";
 
 /**
@@ -48,12 +49,32 @@ export function MarketShell({
                 <span className="hidden sm:inline">Workspace</span>
               </Link>
             ) : null}
-            <Link
-              to="/account/orders"
-              className="rounded-full px-3 py-1.5 text-xs font-medium text-cream/80 transition-colors hover:bg-[var(--brand-raised)] hover:text-cream"
-            >
-              My requests
-            </Link>
+            {!loading && user ? (
+              <>
+                <InboxButton enabled={Boolean(user)} />
+                <Link
+                  to="/account/lists"
+                  className="grid size-9 place-items-center rounded-full text-cream/80 transition-colors hover:bg-[var(--brand-raised)] hover:text-cream"
+                  aria-label="Shopping lists"
+                >
+                  <ListChecks className="size-4" aria-hidden />
+                </Link>
+                <Link
+                  to="/account/orders"
+                  className="grid size-9 place-items-center rounded-full text-cream/80 transition-colors hover:bg-[var(--brand-raised)] hover:text-cream"
+                  aria-label="Your account and orders"
+                >
+                  <User className="size-4" aria-hidden />
+                </Link>
+              </>
+            ) : (
+              <Link
+                to="/account/orders"
+                className="rounded-full px-3 py-1.5 text-xs font-medium text-cream/80 transition-colors hover:bg-[var(--brand-raised)] hover:text-cream"
+              >
+                My requests
+              </Link>
+            )}
             {!loading && !user ? (
               <Link
                 to="/auth/login"

@@ -191,50 +191,62 @@ export function receiptHtml(
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Receipt ${esc(sale.receipt_number)} — ${esc(shop.name)}</title>
 <style>
+  /* SAVO Signature: one ink for the thermal head, emerald only as a rule. */
   @page { margin: 4mm; }
   * { box-sizing: border-box; }
   body {
-    margin: 0 auto; padding: 8px;
+    margin: 0 auto; padding: 9px 8px;
     width: ${width}mm; max-width: 100%;
     font-family: ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace;
-    font-size: 11px; line-height: 1.45; color: #000; background: #fff;
+    font-size: 10.5px; line-height: 1.5; color: #14201c; background: #fff;
+    font-variant-numeric: tabular-nums;
   }
-  h1 { font-size: 14px; margin: 2px 0 2px; text-align: center; letter-spacing: .04em; }
-  .muted { color: #444; }
+  .band { border-top: 3px solid #0f6b52; padding-top: 6px; }
+  .kicker { font-size: 8px; font-weight: 700; letter-spacing: .18em; text-transform: uppercase; color: #0f6b52; text-align: center; }
+  h1 { font-size: 13px; margin: 3px 0 1px; text-align: center; letter-spacing: .05em; text-transform: uppercase; }
+  .muted { color: #55635d; }
   .centre { text-align: center; }
   .right { text-align: right; }
-  hr { border: 0; border-top: 1px dashed #999; margin: 6px 0; }
+  hr { border: 0; border-top: 1px solid #ccd8d2; margin: 7px 0; }
   table { width: 100%; border-collapse: collapse; }
   td { padding: 1px 0; vertical-align: top; }
-  td.name { font-weight: 600; padding-top: 4px; }
-  .total { font-size: 13px; font-weight: 700; }
+  td.name { font-weight: 700; padding-top: 5px; }
+  .label { color: #55635d; }
+  .total { font-size: 13px; font-weight: 700; border-top: 1.5px solid #14201c; }
+  .total td { padding-top: 4px; }
+  .state { margin: 4px 0 0; text-align: center; font-size: 8.5px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase; color: #0f6b52; }
   .logo { display: block; margin: 0 auto 6px; max-height: 48px; max-width: 70%; object-fit: contain; }
-  .mark { display: block; margin: 0 auto 4px; }
-  footer { margin-top: 8px; text-align: center; }
+  .mark { display: block; margin: 0 auto 5px; }
+  footer { margin-top: 9px; text-align: center; font-size: 9.5px; }
+  footer .sig { margin-top: 3px; color: #55635d; font-size: 8.5px; letter-spacing: .08em; }
 </style>
 </head>
 <body>
-  ${receiptMark()}
-  ${showLogo ? `<img class="logo" src="${esc(options.logoUrl)}" alt="${esc(shop.name)} logo" />` : ""}
-  <h1>${esc(shop.name)}</h1>
-  ${settings?.header_text ? `<p class="centre muted">${esc(settings.header_text)}</p>` : ""}
-  ${shop.location ? `<p class="centre muted">${esc(shop.location)}</p>` : ""}
-  ${shop.phone ? `<p class="centre muted">${esc(shop.phone)}</p>` : ""}
+  <div class="band">
+    ${receiptMark()}
+    ${showLogo ? `<img class="logo" src="${esc(options.logoUrl)}" alt="${esc(shop.name)} logo" />` : ""}
+    <p class="kicker">Sales receipt</p>
+    <h1>${esc(shop.name)}</h1>
+    ${settings?.header_text ? `<p class="centre muted">${esc(settings.header_text)}</p>` : ""}
+    ${shop.location ? `<p class="centre muted">${esc(shop.location)}</p>` : ""}
+    ${shop.phone ? `<p class="centre muted">${esc(shop.phone)}</p>` : ""}
+    <p class="state">${payments.length > 0 || Number(sale.amount_paid) > 0 ? "Payment recorded" : Number(sale.balance_due) > 0 ? "Balance outstanding" : "Completed sale"}</p>
+  </div>
   <hr />
   <table>
-    <tr><td>Receipt</td><td class="right" colspan="2">${esc(sale.receipt_number)}</td></tr>
-    <tr><td>Date</td><td class="right" colspan="2">${esc(formatDateTime(sale.sold_at))}</td></tr>
-    ${cashierName ? `<tr><td>Served by</td><td class="right" colspan="2">${esc(cashierName)}</td></tr>` : ""}
-    ${sale.customer_name ? `<tr><td>Customer</td><td class="right" colspan="2">${esc(sale.customer_name)}</td></tr>` : ""}
+    <tr><td class="label">Receipt</td><td class="right" colspan="2">${esc(sale.receipt_number)}</td></tr>
+    <tr><td class="label">Date</td><td class="right" colspan="2">${esc(formatDateTime(sale.sold_at))}</td></tr>
+    ${cashierName ? `<tr><td class="label">Served by</td><td class="right" colspan="2">${esc(cashierName)}</td></tr>` : ""}
+    ${sale.customer_name ? `<tr><td class="label">Customer</td><td class="right" colspan="2">${esc(sale.customer_name)}</td></tr>` : ""}
   </table>
   <hr />
   <table>${itemRows}</table>
   <hr />
   <table>
-    <tr><td>Subtotal</td><td class="right" colspan="2">${esc(formatMoney(sale.subtotal, currency))}</td></tr>
+    <tr><td class="label">Subtotal</td><td class="right" colspan="2">${esc(formatMoney(sale.subtotal, currency))}</td></tr>
     ${
       Number(sale.discount_amount) > 0
-        ? `<tr><td>Discount</td><td class="right" colspan="2">-${esc(formatMoney(sale.discount_amount, currency))}</td></tr>`
+        ? `<tr><td class="label">Discount</td><td class="right" colspan="2">-${esc(formatMoney(sale.discount_amount, currency))}</td></tr>`
         : ""
     }
     <tr class="total"><td>TOTAL</td><td class="right" colspan="2">${esc(formatMoney(sale.total_amount, currency))}</td></tr>
@@ -270,8 +282,9 @@ export function receiptHtml(
   }
   <hr />
   <footer>
+    <hr />
     <p>${esc(settings?.footer_text || "Thank you for your business!")}</p>
-    <p class="muted">Powered by SAVO</p>
+    <p class="sig">SAVO Signature</p>
   </footer>
 </body>
 </html>`;
