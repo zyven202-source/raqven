@@ -4,6 +4,7 @@ import {
   Activity,
   BarChart3,
   Boxes,
+  Camera,
   HandCoins,
   History,
   House,
@@ -16,6 +17,7 @@ import {
   ScrollText,
   ShoppingBag,
   Store,
+  UserRound,
   Users,
   Wallet,
 } from "lucide-react";
@@ -62,6 +64,8 @@ type AppPath =
   | "/app/debtors"
   | "/app/employees"
   | "/app/marketlink"
+  | "/app/studio"
+  | "/app/profile"
   | "/app/settings"
   | "/app/sync"
   | "/dashboard";
@@ -172,6 +176,13 @@ const OWNER_MORE: MoreGroup[] = [
         icon: ShoppingBag,
         ownerOnly: true,
       },
+      {
+        to: "/app/studio",
+        label: "Photo studio",
+        note: "Cut out a plain background, save a new product photo",
+        icon: Camera,
+        ownerOnly: true,
+      },
       { to: "/dashboard", label: "All my shops", icon: Store },
     ],
   },
@@ -203,6 +214,12 @@ const OWNER_MORE: MoreGroup[] = [
       // find. Same icon the log itself renders under, so the row and the
       // section it opens agree.
       { to: "/app/settings", hash: "activity", label: "Activity log", icon: History },
+      {
+        to: "/app/profile",
+        label: "Your profile",
+        note: "Your name, phone and sign-in email",
+        icon: UserRound,
+      },
     ],
   },
 ];
@@ -240,7 +257,15 @@ const STAFF_MORE: MoreGroup[] = [
   },
   {
     heading: "Shop",
-    items: [{ to: "/dashboard", label: "All my shops", icon: Store }],
+    items: [
+      { to: "/dashboard", label: "All my shops", icon: Store },
+      {
+        to: "/app/profile",
+        label: "Your profile",
+        note: "Your name, phone and sign-in email",
+        icon: UserRound,
+      },
+    ],
   },
   {
     heading: "This device",

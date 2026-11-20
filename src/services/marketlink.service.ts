@@ -243,6 +243,25 @@ export async function copyProductImage(shopId: string, sourcePath: string): Prom
   return uploadImage(STORAGE_BUCKETS.marketlink, shopId, file);
 }
 
+/**
+ * Points a listing at another already-uploaded image.
+ *
+ * Unlike `publishListing`, this never removes the object it replaces. Studio
+ * uses it so an edited photo can reach a listing while the photograph it was
+ * made from stays in storage.
+ */
+export async function setListingImage(shopId: string, productId: string, imagePath: string) {
+  const { data, error } = await supabase
+    .from("marketlink_listings")
+    .update({ image_path: imagePath })
+    .eq("shop_id", shopId)
+    .eq("product_id", productId)
+    .select("*")
+    .single();
+  if (error) throw error;
+  return data;
+}
+
 export async function setListingPublished(shopId: string, listingId: string, published: boolean) {
   const { data, error } = await supabase
     .from("marketlink_listings")

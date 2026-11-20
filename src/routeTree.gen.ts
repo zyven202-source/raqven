@@ -42,12 +42,14 @@ import { Route as AuthenticatedAppInventoryRouteImport } from './routes/_authent
 import { Route as AuthenticatedAppMarketlinkRouteImport } from './routes/_authenticated/app.marketlink'
 import { Route as AuthenticatedAppOverviewRouteImport } from './routes/_authenticated/app.overview'
 import { Route as AuthenticatedAppPosRouteImport } from './routes/_authenticated/app.pos'
+import { Route as AuthenticatedAppProfileRouteImport } from './routes/_authenticated/app.profile'
 import { Route as AuthenticatedAppPulseRouteImport } from './routes/_authenticated/app.pulse'
 import { Route as AuthenticatedAppRefundsRouteImport } from './routes/_authenticated/app.refunds'
 import { Route as AuthenticatedAppReportsRouteImport } from './routes/_authenticated/app.reports'
 import { Route as AuthenticatedAppRestockRouteImport } from './routes/_authenticated/app.restock'
 import { Route as AuthenticatedAppSettingsRouteImport } from './routes/_authenticated/app.settings'
 import { Route as AuthenticatedAppStockRouteImport } from './routes/_authenticated/app.stock'
+import { Route as AuthenticatedAppStudioRouteImport } from './routes/_authenticated/app.studio'
 import { Route as AuthenticatedAppSyncRouteImport } from './routes/_authenticated/app.sync'
 import { Route as AuthenticatedAppTransactionsRouteImport } from './routes/_authenticated/app.transactions'
 import { Route as ShopSlugIndexRouteImport } from './routes/shop.$slug.index'
@@ -225,6 +227,11 @@ const AuthenticatedAppPosRoute = AuthenticatedAppPosRouteImport.update({
   path: '/pos',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
+const AuthenticatedAppProfileRoute = AuthenticatedAppProfileRouteImport.update({
+  id: '/profile',
+  path: '/profile',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
 const AuthenticatedAppPulseRoute = AuthenticatedAppPulseRouteImport.update({
   id: '/pulse',
   path: '/pulse',
@@ -254,6 +261,11 @@ const AuthenticatedAppSettingsRoute =
 const AuthenticatedAppStockRoute = AuthenticatedAppStockRouteImport.update({
   id: '/stock',
   path: '/stock',
+  getParentRoute: () => AuthenticatedAppRoute,
+} as any)
+const AuthenticatedAppStudioRoute = AuthenticatedAppStudioRouteImport.update({
+  id: '/studio',
+  path: '/studio',
   getParentRoute: () => AuthenticatedAppRoute,
 } as any)
 const AuthenticatedAppSyncRoute = AuthenticatedAppSyncRouteImport.update({
@@ -310,12 +322,14 @@ export interface FileRoutesByFullPath {
   '/app/marketlink': typeof AuthenticatedAppMarketlinkRoute
   '/app/overview': typeof AuthenticatedAppOverviewRoute
   '/app/pos': typeof AuthenticatedAppPosRoute
+  '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/pulse': typeof AuthenticatedAppPulseRoute
   '/app/refunds': typeof AuthenticatedAppRefundsRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
   '/app/restock': typeof AuthenticatedAppRestockRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/stock': typeof AuthenticatedAppStockRoute
+  '/app/studio': typeof AuthenticatedAppStudioRoute
   '/app/sync': typeof AuthenticatedAppSyncRoute
   '/app/transactions': typeof AuthenticatedAppTransactionsRoute
   '/app/': typeof AuthenticatedAppIndexRoute
@@ -352,12 +366,14 @@ export interface FileRoutesByTo {
   '/app/marketlink': typeof AuthenticatedAppMarketlinkRoute
   '/app/overview': typeof AuthenticatedAppOverviewRoute
   '/app/pos': typeof AuthenticatedAppPosRoute
+  '/app/profile': typeof AuthenticatedAppProfileRoute
   '/app/pulse': typeof AuthenticatedAppPulseRoute
   '/app/refunds': typeof AuthenticatedAppRefundsRoute
   '/app/reports': typeof AuthenticatedAppReportsRoute
   '/app/restock': typeof AuthenticatedAppRestockRoute
   '/app/settings': typeof AuthenticatedAppSettingsRoute
   '/app/stock': typeof AuthenticatedAppStockRoute
+  '/app/studio': typeof AuthenticatedAppStudioRoute
   '/app/sync': typeof AuthenticatedAppSyncRoute
   '/app/transactions': typeof AuthenticatedAppTransactionsRoute
   '/app': typeof AuthenticatedAppIndexRoute
@@ -398,12 +414,14 @@ export interface FileRoutesById {
   '/_authenticated/app/marketlink': typeof AuthenticatedAppMarketlinkRoute
   '/_authenticated/app/overview': typeof AuthenticatedAppOverviewRoute
   '/_authenticated/app/pos': typeof AuthenticatedAppPosRoute
+  '/_authenticated/app/profile': typeof AuthenticatedAppProfileRoute
   '/_authenticated/app/pulse': typeof AuthenticatedAppPulseRoute
   '/_authenticated/app/refunds': typeof AuthenticatedAppRefundsRoute
   '/_authenticated/app/reports': typeof AuthenticatedAppReportsRoute
   '/_authenticated/app/restock': typeof AuthenticatedAppRestockRoute
   '/_authenticated/app/settings': typeof AuthenticatedAppSettingsRoute
   '/_authenticated/app/stock': typeof AuthenticatedAppStockRoute
+  '/_authenticated/app/studio': typeof AuthenticatedAppStudioRoute
   '/_authenticated/app/sync': typeof AuthenticatedAppSyncRoute
   '/_authenticated/app/transactions': typeof AuthenticatedAppTransactionsRoute
   '/_authenticated/app/': typeof AuthenticatedAppIndexRoute
@@ -444,12 +462,14 @@ export interface FileRouteTypes {
     | '/app/marketlink'
     | '/app/overview'
     | '/app/pos'
+    | '/app/profile'
     | '/app/pulse'
     | '/app/refunds'
     | '/app/reports'
     | '/app/restock'
     | '/app/settings'
     | '/app/stock'
+    | '/app/studio'
     | '/app/sync'
     | '/app/transactions'
     | '/app/'
@@ -486,12 +506,14 @@ export interface FileRouteTypes {
     | '/app/marketlink'
     | '/app/overview'
     | '/app/pos'
+    | '/app/profile'
     | '/app/pulse'
     | '/app/refunds'
     | '/app/reports'
     | '/app/restock'
     | '/app/settings'
     | '/app/stock'
+    | '/app/studio'
     | '/app/sync'
     | '/app/transactions'
     | '/app'
@@ -531,12 +553,14 @@ export interface FileRouteTypes {
     | '/_authenticated/app/marketlink'
     | '/_authenticated/app/overview'
     | '/_authenticated/app/pos'
+    | '/_authenticated/app/profile'
     | '/_authenticated/app/pulse'
     | '/_authenticated/app/refunds'
     | '/_authenticated/app/reports'
     | '/_authenticated/app/restock'
     | '/_authenticated/app/settings'
     | '/_authenticated/app/stock'
+    | '/_authenticated/app/studio'
     | '/_authenticated/app/sync'
     | '/_authenticated/app/transactions'
     | '/_authenticated/app/'
@@ -791,6 +815,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppPosRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/profile': {
+      id: '/_authenticated/app/profile'
+      path: '/profile'
+      fullPath: '/app/profile'
+      preLoaderRoute: typeof AuthenticatedAppProfileRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/pulse': {
       id: '/_authenticated/app/pulse'
       path: '/pulse'
@@ -833,6 +864,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedAppStockRouteImport
       parentRoute: typeof AuthenticatedAppRoute
     }
+    '/_authenticated/app/studio': {
+      id: '/_authenticated/app/studio'
+      path: '/studio'
+      fullPath: '/app/studio'
+      preLoaderRoute: typeof AuthenticatedAppStudioRouteImport
+      parentRoute: typeof AuthenticatedAppRoute
+    }
     '/_authenticated/app/sync': {
       id: '/_authenticated/app/sync'
       path: '/sync'
@@ -872,12 +910,14 @@ interface AuthenticatedAppRouteChildren {
   AuthenticatedAppMarketlinkRoute: typeof AuthenticatedAppMarketlinkRoute
   AuthenticatedAppOverviewRoute: typeof AuthenticatedAppOverviewRoute
   AuthenticatedAppPosRoute: typeof AuthenticatedAppPosRoute
+  AuthenticatedAppProfileRoute: typeof AuthenticatedAppProfileRoute
   AuthenticatedAppPulseRoute: typeof AuthenticatedAppPulseRoute
   AuthenticatedAppRefundsRoute: typeof AuthenticatedAppRefundsRoute
   AuthenticatedAppReportsRoute: typeof AuthenticatedAppReportsRoute
   AuthenticatedAppRestockRoute: typeof AuthenticatedAppRestockRoute
   AuthenticatedAppSettingsRoute: typeof AuthenticatedAppSettingsRoute
   AuthenticatedAppStockRoute: typeof AuthenticatedAppStockRoute
+  AuthenticatedAppStudioRoute: typeof AuthenticatedAppStudioRoute
   AuthenticatedAppSyncRoute: typeof AuthenticatedAppSyncRoute
   AuthenticatedAppTransactionsRoute: typeof AuthenticatedAppTransactionsRoute
   AuthenticatedAppIndexRoute: typeof AuthenticatedAppIndexRoute
@@ -891,12 +931,14 @@ const AuthenticatedAppRouteChildren: AuthenticatedAppRouteChildren = {
   AuthenticatedAppMarketlinkRoute: AuthenticatedAppMarketlinkRoute,
   AuthenticatedAppOverviewRoute: AuthenticatedAppOverviewRoute,
   AuthenticatedAppPosRoute: AuthenticatedAppPosRoute,
+  AuthenticatedAppProfileRoute: AuthenticatedAppProfileRoute,
   AuthenticatedAppPulseRoute: AuthenticatedAppPulseRoute,
   AuthenticatedAppRefundsRoute: AuthenticatedAppRefundsRoute,
   AuthenticatedAppReportsRoute: AuthenticatedAppReportsRoute,
   AuthenticatedAppRestockRoute: AuthenticatedAppRestockRoute,
   AuthenticatedAppSettingsRoute: AuthenticatedAppSettingsRoute,
   AuthenticatedAppStockRoute: AuthenticatedAppStockRoute,
+  AuthenticatedAppStudioRoute: AuthenticatedAppStudioRoute,
   AuthenticatedAppSyncRoute: AuthenticatedAppSyncRoute,
   AuthenticatedAppTransactionsRoute: AuthenticatedAppTransactionsRoute,
   AuthenticatedAppIndexRoute: AuthenticatedAppIndexRoute,
