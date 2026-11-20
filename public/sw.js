@@ -7,78 +7,172 @@
  * number a shop sees; a cached page must never be what a customer's till
  * shows when a fresher one was one request away.
  *
- * What the cache is allowed to do, in the order the fetch handler decides:
+ * ## What went wrong in v3 (and must not come back)
  *
- *   - Navigations: network first, with a short timeout when a cached shell
- *     exists — a dying network falls back to the shell instead of parking the
- *     till on a blank spinner. A successful HTML response replaces the
- *     cached shell (only text/html is ever stored at /index.html — a
- *     navigation to robots.txt or the manifest must not clobber the shell
- *     with it). When the network is gone, the cached shell renders so the
- *     user sees the app instead of a browser error, and the ConnectivityBar
- *     banner says the truth about what will and will not load.
- *   - Hashed build assets (/assets/*): cache first, network on a miss. The
- *     filename carries the content hash, so a URL's bytes cannot change
- *     under it — serving the stored copy on a repeat visit is what makes the
- *     second load instant, and a *new* deploy is a *new* URL that the fresh
- *     (network-first) navigation just pointed at. Old entries can never mix
- *     with new HTML: they are simply unreferenced until the next version
- *     bump clears them.
- *   - Fonts: the file URLs on fonts.gstatic.com are content-addressed, so
- *     cache first for the same reason. The stylesheet on
- *     fonts.googleapis.com can change at the same URL, so it is served
- *     stale-while-revalidate: the page paints immediately with the last
- *     approved typography, and the fresh sheet lands for the next one.
+ * v3 gave every navigation a four-second leash and then answered with the
+ * cached shell. On a slow mobile network that is a normal load time, so a
+ * phone online and working was handed the *previous* release's HTML. Because
+ * v3 also kept every hashed chunk it had ever seen in one cache named for the
+ * strategy rather than for the build, that old HTML found its old chunks and
+ * rendered completely — the app really did go back a version, and a reload
+ * could bring back a third one. v3's own bytes never changed between releases,
+ * so no new worker ever installed and nothing ever offered an update.
+ *
+ * v4 removes the cause rather than the symptom:
+ *
+ *   - Navigations are network-first with **no timeout**. The cached shell is
+ *     used only when the fetch itself rejects — that is, the network is gone.
+ *     Being slow is not being offline.
+ *   - Every cache is namespaced by the release id from `/version.json`, the
+ *     same id the running bundle carries. A shell from an earlier build can
+ *     never be matched against this build's cache, so it cannot be served as
+ *     if it were current.
+ *   - The previous release's caches are kept until the following release, so
+ *     a tab that is still open finishes its lazy chunks; assets that are
+ *     missing from both fall through to the app's stale-chunk recovery, which
+ *     reloads once into the current build.
+ *
+ * ## What the cache is allowed to do
+ *
+ *   - Navigations: network first, cached shell only when the network fails.
+ *     Only `text/html` may replace the stored shell (a navigation to
+ *     robots.txt must not clobber it).
+ *   - Hashed build assets (`/assets/*`): cache first within this build's
+ *     cache. The filename carries the content hash, so the bytes are correct
+ *     forever; a new deploy is a new name the fresh navigation points at.
+ *     On a miss the network is asked; if that fails or 404s (a tab from the
+ *     previous build asking for a chunk that has been replaced), the previous
+ *     build's cache is consulted before giving up.
+ *   - Fonts: content-addressed files cache first; the Google stylesheet is
+ *     stale-while-revalidate because its URL is stable across releases.
  *   - Other same-origin miscellany (manifest, icons, robots.txt): network
- *     first, cache on failure, in the runtime bucket.
+ *     first, cache on failure.
  *   - Everything else cross-origin — Supabase above all — is the network's
- *     business, full stop. The worker never answers for it and never stores
- *     it: a number that cannot tell "old" from "wrong" has no place in a
- *     ledger. Offline, those requests simply fail, and the UI says so.
+ *     business, full stop. Offline those requests fail, and the UI says so.
  *
- * There is no install-time precache. The cache starts empty and fills only
- * from successful network responses, so nothing can ever be served from a
- * cache the network has not already confirmed the shape of — and the first
- * successful navigation stores the shell, which is what the offline
- * fallback serves.
+ * There is no install-time precache and no timeout-triggered fallback, so the
+ * cache can never be served on the strength of the network merely being slow.
  *
- * Versioning: bump SERVICE_WORKER_VERSION whenever the caching strategy
- * changes shape — clients holding the old strategy must refresh. The old
- * caches are deleted on activate. The byte-identical build does not need a
- * bump — hashed asset names change on their own.
- *
- * Plain JavaScript on purpose: it ships from `public/` verbatim, it must
- * never be transpiled or code-split, and it must stay reviewable by anyone
- * who audits what runs on their phone with no build between them and it.
+ * Plain JavaScript on purpose: it ships from `public/` verbatim, it must never
+ * be transpiled or code-split, and it must stay reviewable by anyone who
+ * audits what runs on their phone with no build between them and it.
  */
 
-const SERVICE_WORKER_VERSION = "savo-pwa-v3";
+/** Bump when the caching strategy changes shape. */
+const SERVICE_WORKER_VERSION = "savo-pwa-v4";
+
+const BUILD_INFO_URL = "/version.json";
+const BUILD_TAG_PATTERN = /^[A-Za-z0-9._+-]{1,64}$/;
+/** How long a resolved build tag is trusted before asking again. */
+const BUILD_TAG_TTL_MS = 60_000;
+
+const META_CACHE = `${SERVICE_WORKER_VERSION}-meta`;
+const META_BUILDS_KEY = "/builds";
+
+/** Resolved release id, and when it was resolved. */
+let resolvedTag = null;
+let resolvedAt = 0;
+
+function cacheNames(tag) {
+  return {
+    shell: `${SERVICE_WORKER_VERSION}-${tag}-shell`,
+    runtime: `${SERVICE_WORKER_VERSION}-${tag}-runtime`,
+    fonts: `${SERVICE_WORKER_VERSION}-${tag}-fonts`,
+  };
+}
 
 /**
- * How long a navigation waits for the network before falling back to the
- * cached shell — but only when a cached shell exists to fall back to. On a
- * first visit there is nothing in the cache, so the request is given as long
- * as the network needs; aborting it would turn a slow-but-working first load
- * into a blank error page.
+ * The release currently published at our origin.
+ *
+ * `/version.json` is written by every build and served with `no-store`, so this
+ * is the deployment's own statement about itself. If it cannot be read we keep
+ * the last known tag rather than inventing one: an unknown tag is a separate,
+ * still-safe namespace.
  */
-const NAVIGATION_TIMEOUT_MS = 4_000;
-const SHELL_CACHE = `${SERVICE_WORKER_VERSION}-shell`;
-const RUNTIME_CACHE = `${SERVICE_WORKER_VERSION}-runtime`;
-const FONT_CACHE = `${SERVICE_WORKER_VERSION}-fonts`;
+async function currentBuildTag() {
+  const now = Date.now();
+  if (resolvedTag !== null && now - resolvedAt < BUILD_TAG_TTL_MS) return resolvedTag;
+
+  let tag = resolvedTag ?? "unknown";
+  try {
+    const response = await fetch(`${BUILD_INFO_URL}?t=${now}`, { cache: "no-store" });
+    if (response.ok) {
+      const info = await response.json();
+      if (typeof info?.buildId === "string" && BUILD_TAG_PATTERN.test(info.buildId)) {
+        tag = info.buildId;
+      }
+    }
+  } catch {
+    /* Offline or blocked: keep the last tag we knew. */
+  }
+
+  resolvedTag = tag;
+  resolvedAt = now;
+  return tag;
+}
+
+/**
+ * Remembers this build and keeps exactly two generations of caches: the
+ * current release and the one before it. The older generation is what lets a
+ * tab opened before the deploy finish loading its lazy chunks; anything older
+ * is unreachable and is deleted.
+ */
+async function pruneCaches(tag) {
+  const meta = await caches.open(META_CACHE);
+  const stored = await meta.match(META_BUILDS_KEY);
+  let history = [];
+  if (stored) {
+    const parsed = await stored.json().catch(() => []);
+    if (Array.isArray(parsed)) history = parsed.filter((entry) => typeof entry === "string");
+  }
+
+  history = history.filter((entry) => entry !== tag);
+  history.push(tag);
+  const keepTags = history.slice(-2);
+
+  await meta.put(
+    META_BUILDS_KEY,
+    new Response(JSON.stringify(keepTags), { headers: { "content-type": "application/json" } }),
+  );
+
+  const keep = new Set([META_CACHE]);
+  for (const keptTag of keepTags) {
+    const names = cacheNames(keptTag);
+    keep.add(names.shell);
+    keep.add(names.runtime);
+    keep.add(names.fonts);
+  }
+
+  for (const name of await caches.keys()) {
+    // Anything from an older strategy (savo-pwa-v3-*) or an unreachable build.
+    if (!keep.has(name)) await caches.delete(name);
+  }
+}
+
+/** Looks in other builds' shell caches — used only when this build misses. */
+async function matchInOtherBuilds(request, currentShellName) {
+  for (const name of await caches.keys()) {
+    if (name === currentShellName || !name.endsWith("-shell")) continue;
+    const cache = await caches.open(name);
+    const hit = await cache.match(request);
+    if (hit) return hit;
+  }
+  return null;
+}
 
 self.addEventListener("install", () => {
-  // Nothing to precache: the cache starts empty and only ever holds what a
-  // successful network response has put there.
+  // Nothing to precache: the cache only ever holds what a successful network
+  // response has put there. This worker is release-agnostic (it reads the
+  // release id at runtime), so activating it immediately is safe and is what
+  // gets the corrected strategy onto phones that are still running v3.
   self.skipWaiting();
 });
 
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     (async () => {
-      const keep = new Set([SHELL_CACHE, RUNTIME_CACHE, FONT_CACHE]);
-      for (const name of await caches.keys()) {
-        if (!keep.has(name)) await caches.delete(name);
-      }
+      const tag = await currentBuildTag();
+      await pruneCaches(tag);
       await self.clients.claim();
     })(),
   );
@@ -95,15 +189,14 @@ self.addEventListener("fetch", (event) => {
   const url = new URL(request.url);
 
   // Fonts, checked before the same-origin gate because these are the one
-  // cross-origin response this worker is allowed to store — and only these
-  // two hosts ever are.
+  // cross-origin response this worker may store — and only these hosts.
   if (url.hostname === "fonts.googleapis.com" || url.hostname === "fonts.gstatic.com") {
-    // The stylesheet URL is stable across releases, so its bytes can change:
-    // paint the approved copy now, refresh it for the next visit.
     if (url.hostname === "fonts.googleapis.com") {
+      // Stable URL, changeable bytes: paint the stored copy, refresh for later.
       event.respondWith(
         (async () => {
-          const cache = await caches.open(FONT_CACHE);
+          const tag = await currentBuildTag();
+          const cache = await caches.open(cacheNames(tag).fonts);
           const stored = await cache.match(request);
           const refresh = fetch(request)
             .then((fresh) => {
@@ -117,11 +210,10 @@ self.addEventListener("fetch", (event) => {
       return;
     }
 
-    // Font files are content-addressed: their URL can only ever be those
-    // bytes, so a stored copy is a correct copy.
     event.respondWith(
       (async () => {
-        const cache = await caches.open(FONT_CACHE);
+        const tag = await currentBuildTag();
+        const cache = await caches.open(cacheNames(tag).fonts);
         const hit = await cache.match(request);
         if (hit) return hit;
         try {
@@ -136,82 +228,91 @@ self.addEventListener("fetch", (event) => {
     return;
   }
 
-  // Everything else cross-origin — Supabase above all — is the network's
-  // business. A shop's numbers must not be served from a cache that cannot
-  // tell "old" from "wrong", so no worker here ever answers for them, online
-  // or off.
+  // Everything cross-origin — Supabase above all — is the network's business.
   if (url.origin !== self.location.origin) return;
 
-  // Navigations: network first, with a short leash. The cache is only what a
-  // shop sees when the network itself is gone — never a substitute for a fresh
-  // document. The timeout is what keeps a dying network from parking the till
-  // on a blank spinner for half a minute: once a few seconds have passed and a
-  // cached shell is known to exist, the shell renders and the app's own data
-  // layer keeps retrying underneath it. Without a cached shell there is
-  // nothing honest to fall back to, so no timeout is applied.
+  // Navigations: network first, with no leash at all. A slow network is still
+  // a working network, and serving a previous release because this one took
+  // four seconds is precisely the bug this version exists to remove.
   if (request.mode === "navigate") {
     event.respondWith(
       (async () => {
-        const cache = await caches.open(SHELL_CACHE);
-        const shell =
-          (await cache.match("/index.html")) ?? (await cache.match("/")) ?? null;
-
-        const canTimeOut = shell !== null && typeof AbortSignal?.timeout === "function";
+        const tag = await currentBuildTag();
+        const shellName = cacheNames(tag).shell;
+        const cache = await caches.open(shellName);
 
         try {
-          const fresh = await fetch(
-            request,
-            canTimeOut ? { signal: AbortSignal.timeout(NAVIGATION_TIMEOUT_MS) } : undefined,
-          );
-          // Only an HTML document may replace the cached shell. A navigation
-          // to a plain file (robots.txt, the manifest) is served as itself;
-          // storing it under /index.html would clobber the shell with it.
-          const type = fresh.headers.get("content-type") ?? "";
-          if (type.includes("text/html")) cache.put("/index.html", fresh.clone());
+          const fresh = await fetch(request);
+          if (fresh.ok) {
+            const type = fresh.headers.get("content-type") ?? "";
+            if (type.includes("text/html")) {
+              await cache.put("/index.html", fresh.clone());
+              // A fresh shell means this release is live: drop generations
+              // older than the previous one.
+              void pruneCaches(tag);
+            }
+          }
           return fresh;
         } catch {
-          return shell ?? Response.error();
+          // The network is genuinely gone: the shell is all we can honestly
+          // offer, and the app's connectivity banner says so.
+          const shell = (await cache.match("/index.html")) ?? (await cache.match("/"));
+          if (shell) return shell;
+          const previous = await matchInOtherBuilds("/index.html", shellName);
+          return previous ?? Response.error();
         }
       })(),
     );
     return;
   }
 
-  // Hashed build assets: cache first, network on a miss. The name contains
-  // the content hash, so the stored bytes are the correct bytes forever —
-  // and a deploy that changes them changes the name too, which the
-  // network-first navigation above picks up before anything asks for it.
+  // Hashed build assets: cache first within this build.
   if (url.pathname.startsWith("/assets/")) {
     event.respondWith(
       (async () => {
-        const cache = await caches.open(SHELL_CACHE);
+        const tag = await currentBuildTag();
+        const shellName = cacheNames(tag).shell;
+        const cache = await caches.open(shellName);
+
         const hit = await cache.match(request);
         if (hit) return hit;
+
+        let fresh = null;
         try {
-          const fresh = await fetch(request);
-          if (fresh.ok) cache.put(request, fresh.clone());
-          return fresh;
+          fresh = await fetch(request);
+          if (fresh.ok) {
+            cache.put(request, fresh.clone());
+            return fresh;
+          }
         } catch {
-          return Response.error();
+          fresh = null;
         }
+
+        // Missing here or rejected by the network: a tab opened before the
+        // deploy may still need this chunk from the previous release.
+        const previous = await matchInOtherBuilds(request, shellName);
+        if (previous) return previous;
+        return fresh ?? Response.error();
       })(),
     );
     return;
   }
 
   // Everything else same-origin (icons, manifest, robots): network first,
-  // cache on failure, in the runtime bucket.
+  // cache on failure.
   event.respondWith(
     (async () => {
       try {
         const fresh = await fetch(request);
         if (fresh.ok) {
-          const cache = await caches.open(RUNTIME_CACHE);
+          const tag = await currentBuildTag();
+          const cache = await caches.open(cacheNames(tag).runtime);
           cache.put(request, fresh.clone());
         }
         return fresh;
       } catch {
-        const cache = await caches.open(RUNTIME_CACHE);
+        const tag = await currentBuildTag();
+        const cache = await caches.open(cacheNames(tag).runtime);
         const hit = await cache.match(request);
         return hit ?? Response.error();
       }

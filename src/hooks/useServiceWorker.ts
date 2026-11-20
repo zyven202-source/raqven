@@ -1,5 +1,7 @@
 import { useCallback, useEffect, useState } from "react";
 
+import { BUILD_ID, HAS_BUILD_ID } from "@/lib/build";
+
 /**
  * Service-worker lifecycle, in one hook.
  *
@@ -32,6 +34,29 @@ import { useCallback, useEffect, useState } from "react";
  */
 /** How often a confirmed-offline app re-tests the network. */
 const REPROBE_INTERVAL_MS = 10_000;
+/** How often a live tab re-reads the published release id. */
+const BUILD_CHECK_INTERVAL_MS = 5 * 60_000;
+/** Ignore focus-driven checks that arrive moments after the previous one. */
+const BUILD_CHECK_MIN_GAP_MS = 30_000;
+
+/**
+ * The release the server says is live right now, or null if it cannot be read.
+ *
+ * `no-store` and a cache-busting query on purpose: this answer is only useful
+ * if it is the deployment's current statement, never a copy from an hour ago.
+ * A missing `/version.json` comes back as the SPA shell, whose JSON parse
+ * fails — that is a null, not a false "update available".
+ */
+async function fetchPublishedBuildId(): Promise<string | null> {
+  try {
+    const response = await fetch(`/version.json?b=${Date.now()}`, { cache: "no-store" });
+    if (!response.ok) return null;
+    const info = (await response.json()) as { buildId?: unknown };
+    return typeof info?.buildId === "string" ? info.buildId : null;
+  } catch {
+    return null;
+  }
+}
 /** A probe slower than this has not proven reachability; treat as offline. */
 const PROBE_TIMEOUT_MS = 8_000;
 
@@ -140,7 +165,10 @@ export function useServiceWorker() {
     };
 
     void navigator.serviceWorker
-      .register("/sw.js", { scope: "/" })
+      // `updateViaCache: "none"` keeps the worker script itself revalidated:
+      // a phone must be able to discover a corrected caching strategy instead
+      // of trusting an HTTP copy of yesterday's worker.
+      .register("/sw.js", { scope: "/", updateViaCache: "none" })
       .then((reg) => {
         if (cancelled) return;
         registration = reg;
@@ -161,6 +189,55 @@ export function useServiceWorker() {
     return () => {
       cancelled = true;
       registration = null;
+    };
+  }, []);
+
+  /**
+   * Is this page still the published build?
+   *
+   * The lifecycle events above only fire when the *worker script* changes,
+   * and it deliberately does not change between ordinary releases — so on
+   * their own they can never notice a new build. This compares the id baked
+   * into this bundle with the id the server is serving. It runs on load, when
+   * the tab becomes visible again (a phone picked up after lunch), and on a
+   * slow timer for tabs left open all day.
+   *
+   * A build with no injected id cannot prove it is stale, so it stays quiet
+   * rather than nagging with a banner it cannot justify.
+   */
+  useEffect(() => {
+    if (!import.meta.env.PROD || !HAS_BUILD_ID) return;
+
+    let disposed = false;
+    let lastCheck = 0;
+
+    const check = async () => {
+      if (disposed) return;
+      lastCheck = Date.now();
+      const published = await fetchPublishedBuildId();
+      if (disposed || published === null) return;
+      if (published !== BUILD_ID) setUpdateReady(true);
+    };
+
+    // Not during first paint: the shop's own numbers come first.
+    const initial = window.setTimeout(() => void check(), 2_000);
+    const timer = window.setInterval(() => void check(), BUILD_CHECK_INTERVAL_MS);
+
+    const onVisible = () => {
+      if (document.visibilityState !== "visible") return;
+      if (Date.now() - lastCheck < BUILD_CHECK_MIN_GAP_MS) return;
+      void check();
+    };
+
+    document.addEventListener("visibilitychange", onVisible);
+    window.addEventListener("focus", onVisible);
+
+    return () => {
+      disposed = true;
+      window.clearTimeout(initial);
+      window.clearInterval(timer);
+      document.removeEventListener("visibilitychange", onVisible);
+      window.removeEventListener("focus", onVisible);
     };
   }, []);
 

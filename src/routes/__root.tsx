@@ -16,6 +16,7 @@ import { Button } from "@/components/ui/button";
 import { Toaster } from "@/components/ui/sonner";
 import { useAnalytics } from "@/hooks/useAnalytics";
 import { trackError } from "@/lib/analytics-tracker";
+import { BUILD_ID } from "@/lib/build";
 import { useServiceWorker } from "@/hooks/useServiceWorker";
 import { useSession } from "@/hooks/useSession";
 import {
@@ -139,6 +140,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       // hide. Without this the per-page `robots` meta on the landing page
       // disagrees with pages that carry none at all.
       { name: "robots", content: "index, follow" },
+      // The release this document belongs to. Readable without any secret, and
+      // the quickest way to answer "which build is this phone running?"
+      { name: "savo-build", content: BUILD_ID },
       // Search Console's HTML-tag verification, emitted on every route. The
       // token is empty until it is pasted from the Search Console console,
       // and an empty value renders no tag at all.
@@ -253,6 +257,46 @@ function RootComponent() {
   const { online, updateReady, applyUpdate, dismissUpdate } = useServiceWorker();
   // Opens this tab's analytics session and records the screens it reaches.
   useAnalytics();
+
+  /**
+   * Stale-chunk recovery.
+   *
+   * A tab left open across a deployment is running an older build, and the
+   * chunk it asks for when the user opens a new screen may have been replaced.
+   * Vite reports that as `vite:preloadError`; without handling it the shop sees
+   * an error page for a page that works perfectly after a refresh.
+   *
+   * One reload into the current build is the honest recovery. The session flag
+   * bounds it: if the chunk still cannot be fetched a minute later, the network
+   * or the deployment is the problem and a loop would hide that, not fix it —
+   * the error boundary then shows the real message.
+   */
+  useEffect(() => {
+    const STORAGE_KEY = "savo:stale-chunk-reload";
+    const MIN_INTERVAL_MS = 60_000;
+
+    const onPreloadError = (event: Event) => {
+      event.preventDefault();
+
+      let lastAttempt = 0;
+      try {
+        lastAttempt = Number(window.sessionStorage.getItem(STORAGE_KEY) ?? 0);
+      } catch {
+        lastAttempt = 0;
+      }
+      if (Number.isFinite(lastAttempt) && Date.now() - lastAttempt < MIN_INTERVAL_MS) return;
+
+      try {
+        window.sessionStorage.setItem(STORAGE_KEY, String(Date.now()));
+      } catch {
+        /* Private mode: reload anyway, the in-page guard is what matters. */
+      }
+      window.location.reload();
+    };
+
+    window.addEventListener("vite:preloadError", onPreloadError);
+    return () => window.removeEventListener("vite:preloadError", onPreloadError);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

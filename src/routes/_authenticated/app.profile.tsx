@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input";
 import { useActiveShop } from "@/hooks/useActiveShop";
 import { useMyProfile, useUpdateMyProfile } from "@/hooks/useProfile";
 import { useSession } from "@/hooks/useSession";
+import { BUILD_ID } from "@/lib/build";
 import { requestPasswordReset } from "@/services/auth.service";
 
 export const Route = createFileRoute("/_authenticated/app/profile")({
@@ -236,6 +237,12 @@ function ProfilePage() {
               </Button>
             </section>
           ) : null}
+
+          {/* Which release this phone is running. Support can ask for it, and
+              the update check compares it with /version.json. */}
+          <p className="px-1 text-[11px] leading-relaxed text-muted-foreground">
+            App build <span className="tnum">{BUILD_ID}</span>
+          </p>
         </div>
       )}
     </PageContainer>

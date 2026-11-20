@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite dev",
-    "build": "vite build && rm -rf dist/server && node scripts/prerender-heads.mjs && node scripts/generate-market-seo.mjs",
+    "build": "vite build && rm -rf dist/server && node scripts/prerender-heads.mjs && node scripts/generate-market-seo.mjs && node scripts/write-build-info.mjs",
     "build:dev": "vite build --mode development",
     "preview": "vite preview",
     "routes:generate": "tsr generate",
