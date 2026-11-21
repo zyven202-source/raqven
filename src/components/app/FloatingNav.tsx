@@ -44,7 +44,7 @@ import { cn } from "@/lib/utils";
  *
  *   1. It is a *floating* object, so it is the only surface in the product with
  *      a large radius and a blur. Everything else stays flat with hairlines.
- *   2. It shows what the role can actually reach. An owner gets Dashboard; an
+ *   2. It shows what the role can actually reach. An owner gets Home; an
  *      employee never sees it, and never sees the destinations behind More that
  *      the database would refuse them anyway.
  *   3. It never covers the last row of a screen — see the clearance in
@@ -95,34 +95,52 @@ type TabItem = Omit<NavItem, "to"> & {
 };
 
 /**
- * The destinations that earn a permanent place, in the order a shop uses them.
+ * The four destinations that earn a permanent tab. `dockSlots` inserts More
+ * before the last of them, so the dock reads:
  *
- * The arrangement follows the supplied navigation sketch — two compact
- * destinations, the prominent POS in the centre, then two more — for five
- * targets in total. Seven was the sketch's other reading (three + POS +
- * three); at 320–360px it would leave ~47px per target, which is under the
- * 44px floor once labels are counted, so the secondary screens live behind
- * More instead of shrinking every tap.
+ *   Home · Inventory · POS · More · Profile
  *
- * Expenses is here rather than behind More because recording what the shop
- * spent is a daily job, not an occasional one — and the counter needs it as
- * much as the owner does. Only the Dashboard is owner-only: it reads the
- * owner's own figures, which the database will not serve to staff at all —
- * staff get Sales as their leftmost destination instead.
+ * Five targets, which is the ceiling: at 320–360px a sixth would leave ~47px
+ * per target before labels, under the 44px floor, so everything else lives
+ * behind More rather than shrinking every tap.
+ *
+ * Home is first and Profile last because that is where every phone puts them —
+ * the left edge is "where I start" and the right edge is "me" (Jakob's Law).
+ * POS stays the raised centre puck, so the till is still the most prominent
+ * thing in the app and still one thumb away.
+ *
+ * Only Home is owner-only: it reads the owner's own figures, which the database
+ * will not serve to staff at all. Staff get Sales — their landing screen, and
+ * the record of what they sold today — in the same leftmost position.
  */
 const STAFF_TABS: TabItem[] = [
   { to: "/app/transactions", label: "Sales", icon: ReceiptText },
   { to: "/app/inventory", label: "Inventory", icon: Boxes },
   { to: "/app/pos", label: "POS", icon: ScanLine, center: true },
-  { to: "/app/expenses", label: "Expenses", icon: Wallet },
+  { to: "/app/profile", label: "Profile", icon: UserRound },
 ];
 
 const OWNER_TABS: TabItem[] = [
-  { to: "/app/overview", label: "Dashboard", icon: House },
+  { to: "/app/overview", label: "Home", icon: House },
   { to: "/app/inventory", label: "Inventory", icon: Boxes },
   { to: "/app/pos", label: "POS", icon: ScanLine, center: true },
-  { to: "/app/expenses", label: "Expenses", icon: Wallet },
+  { to: "/app/profile", label: "Profile", icon: UserRound },
 ];
+
+/**
+ * The dock in reading order, with More placed before the profile tab.
+ *
+ * More is a slot rather than an appendage because Profile has to be the far
+ * right target: putting the menu after it would leave the last tab a menu
+ * instead of the account. Deriving the order here keeps the two role lists
+ * from drifting apart, and keeps the hold-to-slide index in step with what is
+ * actually drawn.
+ */
+type DockSlot = TabItem | "more";
+
+function dockSlots(tabs: TabItem[]): DockSlot[] {
+  return [...tabs.slice(0, -1), "more", ...tabs.slice(-1)];
+}
 
 /** Everything that did not earn one of the four taps. Grouped by intent. */
 type MoreGroup = { heading: string; items: NavItem[] };
@@ -142,6 +160,15 @@ const OWNER_MORE: MoreGroup[] = [
         label: "Sales history",
         note: "Every sale, payment and refund",
         icon: ReceiptText,
+      },
+      // Recording what the shop spent is a daily job, but Profile now holds the
+      // last tab, so Expenses lives one tap inside More rather than being
+      // dropped. It is the first entry in this group for that reason.
+      {
+        to: "/app/expenses",
+        label: "Expenses",
+        note: "Record what the shop spent",
+        icon: Wallet,
       },
     ],
   },
@@ -214,12 +241,8 @@ const OWNER_MORE: MoreGroup[] = [
       // find. Same icon the log itself renders under, so the row and the
       // section it opens agree.
       { to: "/app/settings", hash: "activity", label: "Activity log", icon: History },
-      {
-        to: "/app/profile",
-        label: "Your profile",
-        note: "Your name, phone and sign-in email",
-        icon: UserRound,
-      },
+      // Profile is a tab of its own now, so it is deliberately not repeated
+      // here: one screen listed twice reads as two different screens.
     ],
   },
 ];
@@ -238,9 +261,10 @@ const STAFF_MORE: MoreGroup[] = [
         note: "Credit customers and repayments",
         icon: HandCoins,
       },
-      // Sales history is deliberately absent: it earned a permanent tab on
+      // Sales history is deliberately absent: it earned the leftmost tab on
       // this role's dock, and a destination listed twice reads as two
       // different screens.
+      { to: "/app/expenses", label: "Expenses", note: "Record what the shop spent", icon: Wallet },
     ],
   },
   {
@@ -257,15 +281,8 @@ const STAFF_MORE: MoreGroup[] = [
   },
   {
     heading: "Shop",
-    items: [
-      { to: "/dashboard", label: "All my shops", icon: Store },
-      {
-        to: "/app/profile",
-        label: "Your profile",
-        note: "Your name, phone and sign-in email",
-        icon: UserRound,
-      },
-    ],
+    // Profile has its own tab on this role's dock too, so it is not repeated.
+    items: [{ to: "/dashboard", label: "All my shops", icon: Store }],
   },
   {
     heading: "This device",
@@ -398,6 +415,7 @@ export function FloatingNav({
   const unreadMarketlink = isOwner ? (unread.data ?? 0) : 0;
 
   const tabs = isOwner ? OWNER_TABS : STAFF_TABS;
+  const slots = dockSlots(tabs);
   const groups = (isOwner ? OWNER_MORE : STAFF_MORE)
     .map((group) => ({
       ...group,
@@ -439,16 +457,15 @@ export function FloatingNav({
       }
     }
 
-    const index = hold.index;
-    if (index < 0 || index >= hold.slots.length) return; // released on nothing
-    if (index < tabs.length) {
-      const target = tabs[index];
-      if (target && target.to !== pathname) {
-        void navigate({ to: target.to, search: { shop: undefined } });
-      }
+    const target = hold.index >= 0 ? slots[hold.index] : undefined;
+    if (!target) return; // released on nothing
+    if (target === "more") {
+      setMoreOpen(true);
       return;
     }
-    setMoreOpen(true);
+    if (target.to !== pathname) {
+      void navigate({ to: target.to, search: { shop: undefined } });
+    }
   };
 
   const slotAt = (x: number, y: number, slots: SlotBox[]): number => {
@@ -627,19 +644,21 @@ export function FloatingNav({
               }}
             />
           ) : null}
-          {tabs.map((tab) =>
-            tab.center ? (
-              <CenterTab key={tab.to} item={tab} pathname={pathname} />
+          {slots.map((slot) =>
+            slot === "more" ? (
+              <MoreTab
+                key="more"
+                open={moreOpen}
+                active={moreActive}
+                hasUnread={unreadMarketlink > 0}
+                onOpenChange={setMoreOpen}
+              />
+            ) : slot.center ? (
+              <CenterTab key={slot.to} item={slot} pathname={pathname} />
             ) : (
-              <Tab key={tab.to} item={tab} pathname={pathname} />
+              <Tab key={slot.to} item={slot} pathname={pathname} />
             ),
           )}
-          <MoreTab
-            open={moreOpen}
-            active={moreActive}
-            hasUnread={unreadMarketlink > 0}
-            onOpenChange={setMoreOpen}
-          />
         </div>
       </nav>
 

@@ -28,7 +28,7 @@ import { kindLabel } from "@/services/transactions.service";
 import type { Product } from "@/types/savo";
 
 export const Route = createFileRoute("/_authenticated/app/overview")({
-  head: () => ({ meta: [{ title: "SAVO — Dashboard" }] }),
+  head: () => ({ meta: [{ title: "SAVO — Home" }] }),
   component: () => (
     <OwnerOnly title="Today">
       <OverviewPage />
@@ -161,7 +161,7 @@ function OverviewPage() {
         many, and it is the only place the palette goes this dark in the app.
       */}
       <header className="mb-5">
-        <p className="eyebrow">Dashboard</p>
+        <p className="eyebrow">Home</p>
         <div className="mt-1.5 flex items-start justify-between gap-3">
           <div className="min-w-0">
             <h1 className="app-title truncate">Today in {activeShop?.name}</h1>
@@ -173,7 +173,7 @@ function OverviewPage() {
               }).format(new Date())}
             </p>
           </div>
-          <Button asChild size="sm" className="h-9 shrink-0">
+          <Button asChild size="sm" className="h-11 shrink-0">
             <Link to="/app/pos" search={{ shop: undefined }}>
               <ScanLine className="size-3.5" aria-hidden /> Sell
             </Link>
@@ -349,7 +349,7 @@ function OverviewPage() {
                     <Button
                       type="button"
                       size="sm"
-                      className="h-8 shrink-0"
+                      className="h-10 shrink-0"
                       onClick={() => setRestockTarget(product)}
                     >
                       <PackagePlus className="size-3.5" /> Restock

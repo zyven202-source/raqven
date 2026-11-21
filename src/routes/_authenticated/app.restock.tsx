@@ -89,7 +89,7 @@ function RestockPage() {
         subtitle="Book in what came from the supplier."
       />
 
-      <div className="sticky top-14 z-20 -mx-4 space-y-2 bg-background/95 px-4 pb-2.5 pt-1 sm:-mx-5 sm:px-5">
+      <div className="sticky top-[var(--app-header-offset)] z-20 -mx-4 space-y-2 bg-background/95 px-4 pb-2.5 pt-1 sm:-mx-5 sm:px-5">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search

@@ -202,7 +202,7 @@ function InventoryPage() {
       />
 
       {/* ------------------------------------------------------------ search */}
-      <div className="sticky top-14 z-20 -mx-4 space-y-2 bg-background/95 px-4 pb-2.5 pt-1 sm:-mx-5 sm:px-5">
+      <div className="sticky top-[var(--app-header-offset)] z-20 -mx-4 space-y-2 bg-background/95 px-4 pb-2.5 pt-1 sm:-mx-5 sm:px-5">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search
@@ -390,7 +390,7 @@ function InventoryPage() {
                         ) : null}
                         <Button
                           size="sm"
-                          className="h-8"
+                          className="h-10"
                           onClick={() => setStockTarget({ product, mode: "in" })}
                         >
                           <PackagePlus className="size-3.5" /> Restock
@@ -398,7 +398,7 @@ function InventoryPage() {
                         <Button
                           size="sm"
                           variant="ghost"
-                          className="h-8"
+                          className="h-10"
                           onClick={() => {
                             setEditing(product);
                             setNewBarcode(null);
@@ -415,7 +415,7 @@ function InventoryPage() {
                         <Button
                           size="icon"
                           variant="ghost"
-                          className="size-9 shrink-0"
+                          className="size-10 shrink-0"
                           aria-label={`More actions for ${product.name}`}
                         >
                           <MoreVertical className="size-4" />

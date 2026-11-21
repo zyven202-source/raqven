@@ -208,7 +208,7 @@ function SettingsPage() {
 
       <nav
         aria-label="Settings sections"
-        className="sticky top-14 z-20 -mx-4 mb-6 flex gap-1.5 overflow-x-auto bg-background/95 px-4 py-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:-mx-5 sm:px-5 [&::-webkit-scrollbar]:hidden"
+        className="sticky top-[var(--app-header-offset)] z-20 -mx-4 mb-6 flex gap-1.5 overflow-x-auto bg-background/95 px-4 py-2 [-ms-overflow-style:none] [scrollbar-width:none] sm:-mx-5 sm:px-5 [&::-webkit-scrollbar]:hidden"
       >
         {SETTINGS_SECTIONS.map((section) => (
           <a
@@ -222,7 +222,11 @@ function SettingsPage() {
       </nav>
 
       {/* ------------------------------------------------------------ shop */}
-      <form onSubmit={saveShop} id="shop" className="card-surface scroll-mt-20 space-y-4 p-4">
+      <form
+        onSubmit={saveShop}
+        id="shop"
+        className="card-surface scroll-mt-[calc(var(--app-header-offset)+1.5rem)] space-y-4 p-4"
+      >
         <Section
           title="Your shop"
           description="The name, type, place and phone that appear on receipts and reports."
@@ -308,7 +312,7 @@ function SettingsPage() {
       </form>
 
       {/* --------------------------------------------------------- refunds */}
-      <section id="refunds" className="mt-8 scroll-mt-20">
+      <section id="refunds" className="mt-8 scroll-mt-[calc(var(--app-header-offset)+1.5rem)]">
         <Section title="Refunds" description="Whether staff may take goods back at the counter." />
         <div className="card-surface px-4">
           <ToggleRow
@@ -325,7 +329,7 @@ function SettingsPage() {
       <form
         onSubmit={saveReceipt}
         id="receipts"
-        className="card-surface mt-8 scroll-mt-20 space-y-4 p-4"
+        className="card-surface mt-8 scroll-mt-[calc(var(--app-header-offset)+1.5rem)] space-y-4 p-4"
       >
         <Section
           title="Receipts"
@@ -396,12 +400,12 @@ function SettingsPage() {
       </form>
 
       {/* --------------------------------------------------------- account */}
-      <section id="activity" className="mt-8 scroll-mt-20">
+      <section id="activity" className="mt-8 scroll-mt-[calc(var(--app-header-offset)+1.5rem)]">
         <Section title="Activity log" description="Who changed what in this shop, and when." />
         <ActivityLog shopId={shopId} />
       </section>
 
-      <section id="data" className="mt-8 scroll-mt-20">
+      <section id="data" className="mt-8 scroll-mt-[calc(var(--app-header-offset)+1.5rem)]">
         <Section
           title="Data & privacy"
           description="Take a copy of your data, correct it, or ask us to act on it."
@@ -415,7 +419,7 @@ function SettingsPage() {
         first, so this has to be the thing they scroll to next — not something
         they meet halfway down a settings page.
       */}
-      <section id="delete-shop" className="mt-8 scroll-mt-20">
+      <section id="delete-shop" className="mt-8 scroll-mt-[calc(var(--app-header-offset)+1.5rem)]">
         <Section
           title="Closing the shop"
           description="Removes this shop and its books, permanently. Your account stays."

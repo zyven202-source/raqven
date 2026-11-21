@@ -196,7 +196,7 @@ function PulsePage() {
       </p>
 
       {/* --------------------------------------------------------- periods */}
-      <div className="sticky top-14 z-20 -mx-4 mb-4 bg-background/95 px-4 pb-2.5 pt-1 sm:-mx-5 sm:px-5">
+      <div className="sticky top-[var(--app-header-offset)] z-20 -mx-4 mb-4 bg-background/95 px-4 pb-2.5 pt-1 sm:-mx-5 sm:px-5">
         <div className="flex flex-wrap gap-1.5">
           {PERIODS.map((period) => (
             <Button
@@ -807,7 +807,7 @@ function ForecastCard({ row }: { row: ForecastRow }) {
         <Link
           to="/app/inventory"
           search={{ shop: undefined, q: row.name }}
-          className="press flex h-8 shrink-0 items-center gap-1 rounded-lg bg-positive px-2.5 text-xs font-semibold text-background active:opacity-80"
+          className="press flex h-10 shrink-0 items-center gap-1 rounded-lg bg-positive px-2.5 text-xs font-semibold text-background active:opacity-80"
         >
           <PackagePlus className="size-3.5" aria-hidden />
           Restock
@@ -989,7 +989,7 @@ function InsightsSection({
                       <Link
                         to={insight.action.to}
                         search={{ shop: undefined }}
-                        className="press flex h-8 items-center gap-1.5 rounded-lg bg-ink px-2.5 text-xs font-semibold text-background active:opacity-80"
+                        className="press flex h-10 items-center gap-1.5 rounded-lg bg-ink px-2.5 text-xs font-semibold text-background active:opacity-80"
                       >
                         {insight.action.label}
                         <ArrowRight className="size-3" aria-hidden />
@@ -998,7 +998,7 @@ function InsightsSection({
                     <button
                       type="button"
                       onClick={() => onDismiss(insight.id)}
-                      className="flex h-8 items-center gap-1 rounded-lg px-2 text-xs text-muted-foreground active:bg-ink/5"
+                      className="flex h-10 items-center gap-1 rounded-lg px-2 text-xs text-muted-foreground active:bg-ink/5"
                     >
                       <X className="size-3" aria-hidden /> Not now
                     </button>

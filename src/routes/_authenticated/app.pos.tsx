@@ -428,7 +428,7 @@ function PosPage() {
       </div>
 
       {/* ------------------------------------------------------------ search */}
-      <div className="sticky top-14 z-20 -mx-4 mb-3 border-b border-border/70 bg-background/92 px-4 pb-2.5 pt-2.5 sm:-mx-5 sm:px-5">
+      <div className="sticky top-[var(--app-header-offset)] z-20 -mx-4 mb-3 border-b border-border/70 bg-background/92 px-4 pb-2.5 pt-2.5 sm:-mx-5 sm:px-5">
         <div className="flex gap-2">
           <div className="relative flex-1">
             <Search

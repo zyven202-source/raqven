@@ -132,7 +132,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
   head: () => ({
     meta: [
       { charSet: "utf-8" },
-      { name: "viewport", content: "width=device-width, initial-scale=1" },
+      // `viewport-fit=cover` is what lets `env(safe-area-inset-*)` report the
+      // notch and gesture bar. Without it iOS letterboxes the page away from
+      // the rounded corners and every inset below reads as 0.
+      { name: "viewport", content: "width=device-width, initial-scale=1, viewport-fit=cover" },
       { title: SEO_TITLE },
       { name: "description", content: SEO_DESCRIPTION },
       { name: "author", content: SITE_NAME },

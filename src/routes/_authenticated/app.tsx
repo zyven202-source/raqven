@@ -93,7 +93,13 @@ function AppShell({
       <a href="#main" className="sr-only-focusable">
         Skip to the main content
       </a>
-      <header className="glass-header sticky top-0 z-30">
+      {/*
+        The header takes the notch inset above its 56px row, so the shop name
+        and sync pill sit below the status bar instead of under it. The row
+        itself keeps `--app-header-height`, which is the number every sticky
+        toolbar below measures from — see `--app-header-offset`.
+      */}
+      <header className="glass-header sticky top-0 z-30 pt-[env(safe-area-inset-top)]">
         <ShopBar
           shop={activeShop}
           shops={shops}

@@ -33,8 +33,12 @@ export function Field({
         {label}
       </label>
       {children}
+      {/* `role="alert"` so a validation message is announced when it appears
+          instead of only turning red next to the field. */}
       {error ? (
-        <p className="text-xs text-negative">{error}</p>
+        <p role="alert" className="text-xs text-negative">
+          {error}
+        </p>
       ) : hint ? (
         <p className="text-xs text-muted-foreground">{hint}</p>
       ) : null}

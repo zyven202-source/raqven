@@ -34,7 +34,7 @@ export function InboxButton({ enabled }: { enabled: boolean }) {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="press relative grid size-9 place-items-center rounded-full text-cream/80 transition-colors hover:bg-[var(--brand-raised)] hover:text-cream"
+        className="press relative grid size-10 place-items-center rounded-full text-cream/80 transition-colors hover:bg-[var(--brand-raised)] hover:text-cream"
         aria-label={unread > 0 ? `Inbox, ${unread} unread` : "Inbox"}
       >
         <Bell className="size-4" aria-hidden />

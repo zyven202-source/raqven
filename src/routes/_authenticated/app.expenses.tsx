@@ -96,7 +96,7 @@ function ExpensesPage() {
             onClick={() => setCategory(option.value)}
             aria-pressed={category === option.value}
             className={cn(
-              "press h-9 shrink-0 rounded-full border px-3.5 text-xs font-medium",
+              "press h-10 shrink-0 rounded-full border px-3.5 text-xs font-medium",
               category === option.value
                 ? "border-ink bg-ink text-background"
                 : "border-border text-muted-foreground",

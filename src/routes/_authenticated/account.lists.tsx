@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Check, Copy, Link2, Plus, RotateCcw, Search, Share2, Trash2, X } from "lucide-react";
+
+import { ConfirmDialog } from "@/components/app/ConfirmDialog";
 import { toast } from "sonner";
 
 import {
@@ -70,6 +72,7 @@ function AccountLists() {
   const [itemName, setItemName] = useState("");
   const [quantity, setQuantity] = useState("1");
   const [search, setSearch] = useState("");
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const debounced = useDebouncedValue(search, 300);
   const searchFeed = useMarketFeed(
     debounced.trim()
@@ -86,6 +89,23 @@ function AccountLists() {
     if (!current) return;
     setRenameValue(current.name);
     setRenaming(true);
+  }
+
+  /**
+   * Deleting a list is not undoable and breaks any link that was shared, so it
+   * goes through the product's confirmation dialog rather than firing on the
+   * press. Removing one item stays instant: an item is a line you can add back.
+   */
+  async function deleteCurrentList() {
+    if (!current) return;
+    try {
+      await remove.mutateAsync(current.id);
+      setDeleteOpen(false);
+      setSelected(null);
+      toast.success("List deleted");
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : "Could not delete.");
+    }
   }
 
   return (
@@ -219,29 +239,26 @@ function AccountLists() {
                   ) : (
                     <>
                       <h2 className="font-display text-xl font-semibold">{current.name}</h2>
-                      <Button size="sm" variant="outline" className="h-8" onClick={startRename}>
+                      <Button size="sm" variant="outline" className="h-10" onClick={startRename}>
                         Rename
                       </Button>
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-8"
-                        onClick={() =>
-                          void remove
-                            .mutateAsync(current.id)
-                            .then(() => {
-                              setSelected(null);
-                              toast.success("List deleted");
-                            })
-                            .catch((error: unknown) =>
-                              toast.error(
-                                error instanceof Error ? error.message : "Could not delete.",
-                              ),
-                            )
-                        }
+                        className="h-10"
+                        onClick={() => setDeleteOpen(true)}
                       >
                         <Trash2 className="size-3.5" /> Delete
                       </Button>
+                      <ConfirmDialog
+                        open={deleteOpen}
+                        onOpenChange={setDeleteOpen}
+                        title={`Delete ${current.name}?`}
+                        description="The list and every item on it are removed for good, and any link you shared stops working. Products themselves are not affected."
+                        confirmLabel="Delete list"
+                        onConfirm={() => void deleteCurrentList()}
+                        pending={remove.isPending}
+                      />
                     </>
                   )}
                 </div>
@@ -266,7 +283,7 @@ function AccountLists() {
                       <Button
                         size="sm"
                         variant="outline"
-                        className="h-8"
+                        className="h-10"
                         onClick={() =>
                           void navigator.clipboard
                             ?.writeText(shareUrl)
@@ -276,7 +293,7 @@ function AccountLists() {
                       >
                         <Copy className="size-3.5" /> Copy
                       </Button>
-                      <Button asChild size="sm" variant="outline" className="h-8">
+                      <Button asChild size="sm" variant="outline" className="h-10">
                         <a href={shareUrl} target="_blank" rel="noopener noreferrer">
                           <Link2 className="size-3.5" /> Open
                         </a>
@@ -284,7 +301,7 @@ function AccountLists() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-8"
+                        className="h-10"
                         disabled={rotate.isPending}
                         onClick={() =>
                           void rotate
@@ -306,7 +323,7 @@ function AccountLists() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-8"
+                        className="h-10"
                         onClick={() =>
                           void share
                             .mutateAsync({ id: current.id, enabled: false })
@@ -491,7 +508,7 @@ function AccountLists() {
                               aria-label={
                                 item.resolved ? "Mark as still needed" : "Mark as gathered"
                               }
-                              className="press grid size-8 place-items-center rounded-md border border-[var(--brand-line)]"
+                              className="press grid size-10 place-items-center rounded-md border border-[var(--brand-line)]"
                               onClick={() =>
                                 void updateItem
                                   .mutateAsync({ id: item.id, patch: { resolved: !item.resolved } })
@@ -509,7 +526,7 @@ function AccountLists() {
                             <button
                               type="button"
                               aria-label="Remove item"
-                              className="press grid size-8 place-items-center rounded-md border border-[var(--brand-line)]"
+                              className="press grid size-10 place-items-center rounded-md border border-[var(--brand-line)]"
                               onClick={() =>
                                 void removeItem
                                   .mutateAsync(item.id)

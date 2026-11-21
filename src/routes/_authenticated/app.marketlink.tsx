@@ -333,7 +333,7 @@ function MarketlinkPage() {
               <div className="mt-2 flex flex-wrap gap-2">
                 <Button
                   size="sm"
-                  className="h-8"
+                  className="h-10"
                   onClick={() => {
                     setOrderFilter("pending");
                     document
@@ -346,7 +346,7 @@ function MarketlinkPage() {
                 <Button
                   size="sm"
                   variant="outline"
-                  className="h-8"
+                  className="h-10"
                   disabled={markRead.isPending}
                   onClick={() => void markRead.mutate()}
                 >
@@ -629,7 +629,7 @@ function MarketlinkPage() {
                     <Button
                       size="sm"
                       variant="outline"
-                      className="h-8"
+                      className="h-10"
                       onClick={() => {
                         setListingTarget(product);
                         setListingOpen(true);
@@ -641,7 +641,7 @@ function MarketlinkPage() {
                       <Button
                         size="sm"
                         variant="ghost"
-                        className="h-8"
+                        className="h-10"
                         disabled={setListingPublished.isPending}
                         onClick={() => {
                           const next = !listing.is_published;
@@ -700,7 +700,7 @@ function MarketlinkPage() {
                 <Button
                   size="sm"
                   variant="ghost"
-                  className="h-8 text-negative"
+                  className="h-10 text-negative"
                   disabled={removeZone.isPending}
                   onClick={() =>
                     void removeZone
@@ -817,7 +817,10 @@ function MarketlinkPage() {
       </section>
 
       {/* ------------------------------------------------------------- orders */}
-      <section id="marketlink-orders" className="mt-6 scroll-mt-20">
+      <section
+        id="marketlink-orders"
+        className="mt-6 scroll-mt-[calc(var(--app-header-offset)+1.5rem)]"
+      >
         <SectionTitle
           icon={<Package className="size-4" aria-hidden />}
           title="Order requests"
@@ -832,7 +835,7 @@ function MarketlinkPage() {
               onClick={() => setOrderFilter(filter)}
               aria-pressed={orderFilter === filter}
               className={cn(
-                "press h-9 shrink-0 rounded-full border px-3.5 text-xs font-medium",
+                "press h-10 shrink-0 rounded-full border px-3.5 text-xs font-medium",
                 orderFilter === filter
                   ? "border-[var(--brand-primary)] bg-[var(--brand-primary)] text-[#04140e]"
                   : "border-[var(--brand-line)] text-muted-foreground",

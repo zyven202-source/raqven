@@ -73,7 +73,7 @@ export function SiteNav() {
   return (
     <header
       className={cn(
-        "on-field sticky top-0 z-50 bg-[var(--savo-night)] transition-colors duration-300",
+        "on-field sticky top-0 z-50 bg-[var(--savo-night)] pt-[env(safe-area-inset-top)] transition-colors duration-300",
         scrolled
           ? "border-b border-[var(--brand-line)] bg-[color-mix(in_oklab,var(--savo-night)_88%,black)] shadow-[0_10px_30px_-18px_rgba(0,0,0,0.8)]"
           : "border-b border-[var(--brand-line)]",

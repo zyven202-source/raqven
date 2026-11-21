@@ -23,7 +23,7 @@ export function MarketShell({
 
   return (
     <div className="flex min-h-dvh flex-col bg-background">
-      <header className="sticky top-0 z-40 border-b border-[var(--brand-line)] bg-[var(--brand-surface)]">
+      <header className="sticky top-0 z-40 border-b border-[var(--brand-line)] bg-[var(--brand-surface)] pt-[env(safe-area-inset-top)]">
         <div className="mx-auto flex h-14 w-full max-w-6xl items-center gap-3 px-4 sm:px-6">
           <Link to="/" aria-label="SAVO home" className="shrink-0">
             <Logo tone="light" />
@@ -54,14 +54,14 @@ export function MarketShell({
                 <InboxButton enabled={Boolean(user)} />
                 <Link
                   to="/account/lists"
-                  className="grid size-9 place-items-center rounded-full text-cream/80 transition-colors hover:bg-[var(--brand-raised)] hover:text-cream"
+                  className="grid size-10 place-items-center rounded-full text-cream/80 transition-colors hover:bg-[var(--brand-raised)] hover:text-cream"
                   aria-label="Shopping lists"
                 >
                   <ListChecks className="size-4" aria-hidden />
                 </Link>
                 <Link
                   to="/account/orders"
-                  className="grid size-9 place-items-center rounded-full text-cream/80 transition-colors hover:bg-[var(--brand-raised)] hover:text-cream"
+                  className="grid size-10 place-items-center rounded-full text-cream/80 transition-colors hover:bg-[var(--brand-raised)] hover:text-cream"
                   aria-label="Your account and orders"
                 >
                   <User className="size-4" aria-hidden />

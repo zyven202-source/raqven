@@ -24,7 +24,7 @@ export function OfflineBanner() {
     <div
       role="status"
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-3 pt-2"
+      className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-3 pt-[calc(env(safe-area-inset-top)+0.5rem)]"
     >
       <div className="pointer-events-auto flex items-center gap-2 rounded-full border border-caution/40 bg-caution-soft px-3.5 py-1.5 text-xs font-medium text-caution shadow-sm">
         <WifiOff className="size-3.5" aria-hidden />
@@ -45,7 +45,7 @@ export function UpdateBanner({
     <div
       role="status"
       aria-live="polite"
-      className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-3 pt-2"
+      className="pointer-events-none fixed inset-x-0 top-0 z-50 flex justify-center px-3 pt-[calc(env(safe-area-inset-top)+0.5rem)]"
     >
       <div className="glass-3 pointer-events-auto flex items-center gap-2 rounded-full px-3.5 py-1.5 text-xs font-medium text-foreground shadow-sm">
         <Download className="size-3.5" aria-hidden />

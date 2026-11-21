@@ -114,7 +114,7 @@ function TransactionsPage() {
             onClick={() => setFilter(option.value)}
             aria-pressed={filter === option.value}
             className={cn(
-              "press h-9 shrink-0 rounded-full border px-3.5 text-xs font-medium",
+              "press h-10 shrink-0 rounded-full border px-3.5 text-xs font-medium",
               filter === option.value
                 ? "border-ink bg-ink text-background"
                 : "border-border text-muted-foreground",

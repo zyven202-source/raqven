@@ -356,7 +356,7 @@ function DebtorSheet({
                   <Button
                     type="button"
                     variant="ghost"
-                    className="h-8 px-0 text-xs"
+                    className="h-10 px-2 text-xs"
                     onClick={() => setAmount(String(owed))}
                   >
                     Settle the full {formatMoney(owed, currency)}
@@ -411,7 +411,7 @@ function DebtorSheet({
               <section className="border-t border-border pt-4">
                 <div className="flex items-center justify-between gap-3">
                   <p className="text-sm font-medium">History</p>
-                  <Button asChild variant="ghost" size="sm" className="h-8 text-xs">
+                  <Button asChild variant="ghost" size="sm" className="h-10 text-xs">
                     <Link to="/app/pos" search={{ shop: undefined }}>
                       <Plus className="size-3.5" /> Add debt
                     </Link>
@@ -675,7 +675,7 @@ function ReminderSheet({
                   onClick={() => openWith(option.value)}
                   aria-pressed={template === option.value}
                   className={
-                    "press h-9 shrink-0 rounded-full border px-3.5 text-xs font-medium " +
+                    "press h-10 shrink-0 rounded-full border px-3.5 text-xs font-medium " +
                     (template === option.value
                       ? "border-ink bg-ink text-background"
                       : "border-border text-muted-foreground")

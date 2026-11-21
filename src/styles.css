@@ -105,6 +105,15 @@
   --glass-bar-height: 3.875rem;
   --glass-bar-clearance: calc(var(--glass-bar-height) + env(safe-area-inset-bottom) + 0.625rem);
 
+  /*
+   * The workspace header. Its row is a fixed 56px and it pads itself by the
+   * notch inset, so anything that sticks directly below it must offset by
+   * both — a bare `top-14` would tuck the filter bars under the header on a
+   * notched phone. `--app-header-height` is measured without the inset.
+   */
+  --app-header-height: 3.5rem;
+  --app-header-offset: calc(var(--app-header-height) + env(safe-area-inset-top));
+
   /* Shadows are for things that float. Flat surfaces get a hairline instead. */
   --shadow-sheet: 0 -1px 0 0 var(--border), 0 -12px 32px -20px oklch(0.2 0.03 173 / 0.35);
   --shadow-pop:
