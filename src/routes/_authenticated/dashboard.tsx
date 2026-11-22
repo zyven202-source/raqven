@@ -4,6 +4,7 @@ import { toast } from "sonner";
 
 import { CreateShopDialog } from "@/components/app/CreateShopDialog";
 import { JoinShopSheet } from "@/components/app/JoinShopSheet";
+import { BecomeSellerDialog } from "@/components/marketlink/BecomeSellerDialog";
 import { ErrorState, LoadingState, PageContainer } from "@/components/app/AppChrome";
 import { StorageImage } from "@/components/app/StorageImage";
 import { StatusBadge } from "@/components/app/primitives";
@@ -126,7 +127,8 @@ function DashboardPage() {
                 <div className="absolute inset-0 flex flex-col justify-end p-4">
                   <p className="font-display text-lg">No shop yet</p>
                   <p className="mt-0.5 text-xs text-[var(--cream)]/70">
-                    Create your shop to start selling, managing stock and tracking your business.
+                    Create a shop, join one with a code, or open a stall on SAVO Market and start
+                    selling today.
                   </p>
                 </div>
               </div>
@@ -141,6 +143,11 @@ function DashboardPage() {
                     <Store className="size-4" /> I have an access code
                   </Button>
                 </JoinShopSheet>
+                <BecomeSellerDialog>
+                  <Button variant="outline" className="h-12 w-full sm:w-auto">
+                    <ShoppingBag className="size-4" /> Sell without a shop
+                  </Button>
+                </BecomeSellerDialog>
               </div>
             </div>
           ) : (
