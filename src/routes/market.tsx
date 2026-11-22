@@ -41,6 +41,75 @@ export const Route = createFileRoute("/market")({
 
 type GeoState = "idle" | "asking" | "on" | "denied" | "unavailable";
 
+const INTRO_KEY = "savo:market-intro-dismissed";
+
+/**
+ * The one-time explanation of what SAVO and SAVO Market each do.
+ *
+ * Deliberately a short band rather than a multi-step tour: a returning visitor
+ * dismisses it once and never sees it again, and a customer who came for a
+ * product can ignore it entirely.
+ */
+function MeetSavoMarket() {
+  const [dismissed, setDismissed] = useState(() => {
+    try {
+      return window.localStorage.getItem(INTRO_KEY) === "1";
+    } catch {
+      return false;
+    }
+  });
+
+  if (dismissed) return null;
+
+  function dismiss() {
+    setDismissed(true);
+    try {
+      window.localStorage.setItem(INTRO_KEY, "1");
+    } catch {
+      /* Private mode: it simply reappears next visit. */
+    }
+  }
+
+  return (
+    <section
+      aria-labelledby="meet-savo-market"
+      className="border-b border-[var(--brand-line)] bg-[var(--brand-surface)]"
+    >
+      <div className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6">
+        <div className="relative rounded-xl border border-[var(--brand-line)] bg-[var(--brand-raised)] p-4 pr-11 sm:p-5 sm:pr-12">
+          <button
+            type="button"
+            onClick={dismiss}
+            aria-label="Dismiss the SAVO Market introduction"
+            className="press absolute right-2 top-2 grid size-8 place-items-center rounded-full text-muted-foreground transition-colors hover:bg-[var(--brand-surface)] hover:text-foreground"
+          >
+            <X className="size-4" aria-hidden />
+          </button>
+
+          <h2 id="meet-savo-market" className="font-display text-base font-semibold sm:text-lg">
+            Meet SAVO Market
+          </h2>
+          <p className="mt-1.5 max-w-3xl text-xs leading-relaxed text-muted-foreground sm:text-sm">
+            SAVO helps businesses manage their sales, stock, expenses and daily operations. SAVO
+            Market connects sellers with customers looking for products.
+          </p>
+          <p className="mt-1.5 max-w-3xl text-xs leading-relaxed text-muted-foreground sm:text-sm">
+            Sellers publish real products with current prices and actual availability. Customers
+            browse without an account, compare what is available, and send orders to the seller who
+            fulfils them.
+          </p>
+
+          <ul className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5 text-[11px] font-medium text-foreground/80 sm:text-xs">
+            <li>· Every listing comes from an authorized seller</li>
+            <li>· Prices and stock are checked when you order</li>
+            <li>· One order per seller, tracked separately</li>
+          </ul>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 /**
  * The shared marketplace.
  *
@@ -161,17 +230,32 @@ function MarketPage() {
 
   return (
     <MarketShell>
-      <section className="border-b border-[var(--brand-line)] bg-[radial-gradient(90%_120%_at_50%_-20%,rgba(16,185,129,0.18),transparent_60%)]">
+      <section className="relative isolate overflow-hidden border-b border-[var(--brand-line)] bg-[radial-gradient(90%_120%_at_50%_-20%,rgba(16,185,129,0.18),transparent_60%)]">
+        {/* A real shop, not a gradient: shelves and merchandise behind a scrim
+            dark enough for emerald and cream text. The gradient underneath is
+            the fallback if the photograph fails to load. */}
+        <img
+          src="/market/hero.jpg"
+          alt=""
+          aria-hidden
+          fetchPriority="high"
+          decoding="async"
+          className="absolute inset-0 -z-10 size-full object-cover"
+        />
+        <div
+          aria-hidden
+          className="absolute inset-0 -z-10 bg-[linear-gradient(100deg,rgba(4,20,14,0.92)_0%,rgba(4,20,14,0.78)_45%,rgba(4,20,14,0.52)_100%)]"
+        />
         <div className="mx-auto w-full max-w-6xl px-4 pb-8 pt-10 sm:px-6 sm:pt-14">
           <p className="text-xs font-semibold uppercase tracking-[0.2em] text-[var(--brand-primary)]">
-            SAVO Marketlink
+            SAVO Market
           </p>
-          <h1 className="mt-3 max-w-2xl font-display text-3xl font-semibold leading-tight sm:text-5xl">
+          <h1 className="mt-3 max-w-2xl font-display text-3xl font-semibold leading-tight text-cream sm:text-5xl">
             Shop every SAVO seller in one place.
           </h1>
-          <p className="mt-3 max-w-xl text-sm leading-relaxed text-muted-foreground sm:text-base">
-            Real shops, real stock. Prices and availability come from each seller&rsquo;s inventory,
-            and every request goes straight to them.
+          <p className="mt-3 max-w-xl text-sm leading-relaxed text-cream/75 sm:text-base">
+            Real sellers, real stock. Prices and availability come from each seller&rsquo;s own
+            inventory, and every request goes straight to them.
           </p>
 
           <div className="mt-6 flex max-w-2xl gap-2">
@@ -185,7 +269,7 @@ function MarketPage() {
                 onChange={(event) => setSearch(event.target.value)}
                 placeholder="Search products, categories or sellers"
                 aria-label="Search the marketplace"
-                className="h-12 rounded-full pl-10"
+                className="h-12 rounded-full border-cream/20 bg-[var(--brand-surface)]/90 pl-10 backdrop-blur"
                 autoComplete="off"
                 enterKeyHint="search"
               />
@@ -203,7 +287,7 @@ function MarketPage() {
             <Button
               type="button"
               variant="outline"
-              className="h-12 w-12 shrink-0 rounded-full p-0"
+              className="h-12 w-12 shrink-0 rounded-full border-cream/20 p-0"
               aria-label="Filters"
               aria-expanded={filtersOpen}
               onClick={() => setFiltersOpen((value) => !value)}
@@ -211,8 +295,11 @@ function MarketPage() {
               <SlidersHorizontal className="size-5" aria-hidden />
             </Button>
           </div>
+          <p className="mt-3 text-[10px] text-cream/45">Shop photograph by Zooey Li on Unsplash.</p>
         </div>
       </section>
+
+      <MeetSavoMarket />
 
       {filtersOpen ? (
         <section className="border-b border-[var(--brand-line)] bg-[var(--brand-surface)]">
