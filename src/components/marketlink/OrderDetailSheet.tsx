@@ -97,6 +97,19 @@ export function OrderDetailSheet({
   const sellerConfirmed = Boolean(
     (order as { seller_confirmed_at?: string | null }).seller_confirmed_at,
   );
+  const customerConfirmed = Boolean(
+    (order as { customer_confirmed_at?: string | null }).customer_confirmed_at,
+  );
+  // The seller can confirm as soon as the order is accepted. The first
+  // confirmation only records agreement; the second one closes the sale.
+  const canConfirm = [
+    "accepted",
+    "preparing",
+    "ready_for_collection",
+    "out_for_delivery",
+    "awaiting_settlement",
+    "disputed",
+  ].includes(order.status);
   const steps = nextSteps(order.status, order.fulfillment);
 
   return (
@@ -273,9 +286,7 @@ export function OrderDetailSheet({
               >
                 <FileText className="size-4" aria-hidden /> Document
               </Button>
-              {!settled &&
-              (order.status === "awaiting_settlement" || order.status === "disputed") &&
-              !sellerConfirmed ? (
+              {!settled && canConfirm && !sellerConfirmed ? (
                 <Button
                   type="button"
                   className="h-10 flex-1"
@@ -286,8 +297,8 @@ export function OrderDetailSheet({
                       .then((state) =>
                         toast.success(
                           state.status === "settled"
-                            ? "Settled by both parties"
-                            : "Your confirmation is recorded. Waiting for the customer.",
+                            ? "Settled by both parties — recorded as a marketplace sale"
+                            : "Your confirmation is recorded. The sale completes when the customer confirms.",
                         ),
                       )
                       .catch((error: unknown) =>
@@ -311,6 +322,17 @@ export function OrderDetailSheet({
                 </p>
               ) : null}
             </div>
+
+            {!settled && (sellerConfirmed || customerConfirmed) ? (
+              <p className="rounded-md bg-[var(--brand-surface)] p-2 text-[11px] leading-relaxed text-muted-foreground">
+                {sellerConfirmed
+                  ? "You confirmed completion."
+                  : "You have not confirmed completion yet."}{" "}
+                {customerConfirmed
+                  ? "The customer confirmed. Your confirmation closes the sale."
+                  : "Waiting for the customer to confirm."}
+              </p>
+            ) : null}
 
             {steps.length > 0 ? (
               <div className="flex flex-col gap-2 pt-1">

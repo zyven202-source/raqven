@@ -30,6 +30,7 @@ import { StorageImage } from "@/components/app/StorageImage";
 import { Field } from "@/components/app/fields";
 import { ListingDialog } from "@/components/marketlink/ListingDialog";
 import { OrderDetailSheet } from "@/components/marketlink/OrderDetailSheet";
+import { SellerFeedback } from "@/components/marketlink/SellerFeedback";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -901,6 +902,8 @@ function MarketlinkPage() {
         )}
       </section>
 
+      <SellerFeedback shopId={shopId} slug={activeShop?.slug ?? ""} />
+
       <ListingDialog
         shopId={shopId}
         product={listingTarget}
@@ -924,7 +927,7 @@ function MarketlinkPage() {
 
       <p className="mt-8 flex items-center justify-center gap-1.5 pb-2 text-center text-[11px] text-muted-foreground">
         <Check className="size-3.5 text-positive" aria-hidden />
-        Marketlink never marks a request as paid and never deducts stock.
+        Marketlink never marks a request as paid. Stock moves only when both sides settle.
       </p>
     </PageContainer>
   );

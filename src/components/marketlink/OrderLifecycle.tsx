@@ -28,7 +28,18 @@ export function OrderLifecycle({ order }: { order: CustomerOrder }) {
 
   const settled = isSettled(order.status);
   const confirmed = Boolean(order.customer_confirmed_at);
-  const canConfirm = order.status === "awaiting_settlement" || order.status === "disputed";
+  const sellerConfirmed = Boolean(order.seller_confirmed_at);
+  // A delivered or collected order can be confirmed by the buyer without
+  // waiting for the seller to press "mark done". Either confirmation moves the
+  // order into settlement; only the second one closes the sale.
+  const canConfirm = [
+    "accepted",
+    "preparing",
+    "ready_for_collection",
+    "out_for_delivery",
+    "awaiting_settlement",
+    "disputed",
+  ].includes(order.status);
 
   return (
     <div className="mt-3 space-y-3 border-t border-[var(--brand-line)] pt-3">
@@ -43,8 +54,8 @@ export function OrderLifecycle({ order }: { order: CustomerOrder }) {
                 .then((state) =>
                   toast.success(
                     state.status === "settled"
-                      ? "Order settled by both parties"
-                      : "Your confirmation is recorded. Waiting for the seller.",
+                      ? "Order settled by both parties — the sale is complete"
+                      : "Your confirmation is recorded. The sale completes when the seller confirms.",
                   ),
                 )
                 .catch((error: unknown) =>
@@ -65,6 +76,12 @@ export function OrderLifecycle({ order }: { order: CustomerOrder }) {
           <p className="inline-flex h-10 items-center gap-1.5 rounded-md bg-positive-soft px-3 text-xs font-medium text-positive">
             <Check className="size-3.5" aria-hidden />
             You confirmed {formatConfirmed(order.customer_confirmed_at)}
+          </p>
+        ) : null}
+
+        {confirmed && !settled ? (
+          <p className="inline-flex h-10 items-center gap-1.5 rounded-md bg-[var(--brand-surface)] px-3 text-xs font-medium text-muted-foreground">
+            {sellerConfirmed ? "The seller confirmed too" : "Waiting for the seller to confirm"}
           </p>
         ) : null}
 

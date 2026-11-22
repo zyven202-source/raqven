@@ -26,6 +26,7 @@ import {
 import { useProducts } from "@/hooks/useProducts";
 import { useSaveStudioPhoto } from "@/hooks/useStudio";
 import { cloneImageData, removePlainBackground } from "@/lib/plain-background";
+import { countTransparent, removeBackgroundWithModel } from "@/lib/model-background";
 import { cn } from "@/lib/utils";
 import { STORAGE_BUCKETS } from "@/types/savo";
 
@@ -34,8 +35,10 @@ import { STORAGE_BUCKETS } from "@/types/savo";
  *
  * Everything here runs in the tab. The photo is read with `createImageBitmap`,
  * edited as `ImageData` on a canvas, and only leaves the device when the user
- * saves it. Background removal is a flood fill (`plain-background.ts`), not a
- * model, and the screen says so twice: at the top and next to the control.
+ * saves it. Background removal uses a real segmentation model (ISNet, through
+ * ONNX Runtime Web) on this device; a colour-matching flood fill is kept as an
+ * explicit fallback for a device where the model cannot start, and the screen
+ * always says which one produced the cut.
  */
 
 const OUTPUT = 1024;
@@ -124,6 +127,8 @@ export function PhotoStudio({ shopId }: { shopId: string }) {
   const [historyDepth, setHistoryDepth] = useState(0);
   const [productId, setProductId] = useState("");
   const [savedPath, setSavedPath] = useState<string | null>(null);
+  const [progress, setProgress] = useState<{ label: string; percent: number | null } | null>(null);
+  const [removalNote, setRemovalNote] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const galleryInput = useRef<HTMLInputElement>(null);
@@ -206,15 +211,53 @@ export function PhotoStudio({ shopId }: { shopId: string }) {
   }
 
   // --------------------------------------------------------------- background
-  function removeBackground() {
+  function snapshot() {
     if (!working) return;
     history.current = [...history.current.slice(-(HISTORY_LIMIT - 1)), cloneImageData(working)];
     setHistoryDepth(history.current.length);
+  }
+
+  /** The real thing: a segmentation model that finds the subject as an object. */
+  async function removeBackground() {
+    if (!working || busy) return;
+    snapshot();
+    setBusy(true);
+    setProgress({ label: "Starting the segmentation model…", percent: null });
+    try {
+      const image = await removeBackgroundWithModel(working, setProgress);
+      const cleared = countTransparent(image);
+      lastRemoved.current = cleared;
+      setWorking(image);
+      setRemovalNote("Removed with the on-device segmentation model.");
+      toast.success("Background removed", {
+        description: `${Math.round((cleared / (image.width * image.height)) * 100)}% of the photo is now transparent. The photo never left this device.`,
+      });
+    } catch (error) {
+      // Never pretend the model ran. Fall back to the colour match and name it.
+      const fallback = removePlainBackground(working, tolerance);
+      lastRemoved.current = fallback.removed;
+      setWorking(fallback.image);
+      setRemovalNote("The model could not start here, so the colour match was used instead.");
+      toast.error("The model could not start on this device", {
+        description: `${error instanceof Error ? error.message : "Unknown error."} The plain-colour fallback ran instead — check the edges.`,
+        duration: 10_000,
+      });
+    } finally {
+      setProgress(null);
+      setBusy(false);
+    }
+  }
+
+  /** The fallback: border-colour flood fill. Kept deliberately, labelled as such. */
+  function removePlainBackgroundFallback() {
+    if (!working || busy) return;
+    snapshot();
     const result = removePlainBackground(working, tolerance);
     lastRemoved.current = result.removed;
     setWorking(result.image);
+    setRemovalNote("Removed with the plain-colour fallback.");
     toast.success("Plain background removed", {
-      description: `${Math.round((result.removed / result.total) * 100)}% of pixels cleared. Check the edges — adjust the match strength if any stayed.`,
+      description: `${Math.round((result.removed / result.total) * 100)}% of pixels cleared. Adjust the match strength if any stayed.`,
     });
   }
 
@@ -233,6 +276,7 @@ export function PhotoStudio({ shopId }: { shopId: string }) {
     setScale(100);
     setOffset({ x: 0, y: 0 });
     lastRemoved.current = 0;
+    setRemovalNote(null);
   }
 
   // ------------------------------------------------------------------ gestures
@@ -331,9 +375,10 @@ export function PhotoStudio({ shopId }: { shopId: string }) {
       <div className="flex items-start gap-2.5 rounded-xl border border-[var(--brand-line)] bg-[var(--brand-surface)] px-3.5 py-3">
         <Info className="mt-0.5 size-4 shrink-0 text-muted-foreground" aria-hidden />
         <p className="text-xs leading-relaxed text-muted-foreground">
-          <span className="font-semibold text-foreground">No AI model is used.</span> Background
-          removal is a colour-matching flood fill that runs in this browser tab. The photo is not
-          uploaded until you press Save, and a save never overwrites the original file.
+          <span className="font-semibold text-foreground">The cut runs on this device.</span>{" "}
+          Background removal uses a segmentation model (ISNet) in this tab — the first use downloads
+          it, then it is cached. The photo is never uploaded for editing, and a save never
+          overwrites the original file.
         </p>
       </div>
 
@@ -477,39 +522,82 @@ export function PhotoStudio({ shopId }: { shopId: string }) {
           <section className="rounded-xl border border-[var(--brand-line)] bg-[var(--brand-raised)] p-3.5">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <h2 className="text-sm font-semibold">Plain background</h2>
+                <h2 className="text-sm font-semibold">Background</h2>
                 <p className="mt-0.5 text-xs leading-relaxed text-muted-foreground">
-                  Removes pixels joined to the photo&rsquo;s edge that match the edge colour. It is
-                  not AI: uneven, patterned or shadowed backgrounds will keep some pixels.
+                  A segmentation model finds the product itself, so patterned cloth, shadows and
+                  busy shelves no longer leave patches behind. It runs in this tab.
                 </p>
               </div>
             </div>
 
-            <label className="mt-3 block">
-              <span className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
-                Match strength
-                <span className="tnum text-foreground">{tolerance}</span>
-              </span>
-              <input
-                type="range"
-                min={4}
-                max={80}
-                step={1}
-                value={tolerance}
-                onChange={(event) => setTolerance(Number(event.target.value))}
-                className="mt-2 h-2 w-full accent-[var(--brand-primary)]"
-              />
-            </label>
-            <p className="mt-1 text-[11px] text-muted-foreground">
-              Higher clears more of a pale, even backdrop. Too high starts eating pale products.
-            </p>
-
-            <Button type="button" className="mt-3 h-11 w-full" onClick={removeBackground}>
-              <Scissors className="size-4" /> Remove plain background
+            <Button
+              type="button"
+              className="mt-3 h-11 w-full"
+              onClick={() => void removeBackground()}
+              disabled={busy}
+            >
+              {busy ? <Loader2 className="size-4 animate-spin" /> : <Scissors className="size-4" />}
+              {busy ? "Removing background…" : "Remove background"}
             </Button>
-            <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
-              Runs on this device. No AI model is used.
-            </p>
+
+            {progress ? (
+              <p
+                className="mt-1.5 text-center text-[11px] text-muted-foreground"
+                aria-live="polite"
+              >
+                {progress.label}
+                {progress.percent !== null ? ` ${progress.percent}%` : ""}
+              </p>
+            ) : (
+              <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
+                The first run downloads the model once, then it is cached. The photo never leaves
+                this device.
+              </p>
+            )}
+
+            {removalNote ? (
+              <p className="mt-1.5 text-center text-[11px] text-muted-foreground">{removalNote}</p>
+            ) : null}
+
+            <details className="mt-3 rounded-lg border border-[var(--brand-line)] px-3 py-2">
+              <summary className="cursor-pointer text-xs font-medium">
+                Colour-match fallback
+              </summary>
+              <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+                For a plain wall or sheet, and for a device where the model cannot start. It only
+                clears pixels joined to the edge that match the edge colour.
+              </p>
+
+              <label className="mt-2 block">
+                <span className="flex items-center justify-between text-[11px] font-semibold uppercase tracking-wider text-muted-foreground">
+                  Match strength
+                  <span className="tnum text-foreground">{tolerance}</span>
+                </span>
+                <input
+                  type="range"
+                  min={4}
+                  max={80}
+                  step={1}
+                  value={tolerance}
+                  onChange={(event) => setTolerance(Number(event.target.value))}
+                  className="mt-2 h-2 w-full accent-[var(--brand-primary)]"
+                />
+              </label>
+              <p className="mt-1 text-[11px] text-muted-foreground">
+                Higher clears more of a pale, even backdrop. Too high starts eating pale products.
+              </p>
+
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="mt-2 h-9 w-full"
+                onClick={removePlainBackgroundFallback}
+                disabled={busy}
+              >
+                <Scissors className="size-3.5" /> Use the colour match
+              </Button>
+            </details>
           </section>
 
           <section className="rounded-xl border border-[var(--brand-line)] bg-[var(--brand-raised)] p-3.5">

@@ -1,10 +1,11 @@
 /**
  * SAVO AI — server boundary.
  *
- * One endpoint, three actions:
- *   chat    authenticated conversation with read-only, shop-scoped tools
- *   studio  advertising copy generation (JSON), no shop data needed
- *   status  platform-admin health and usage report (never returns secrets)
+ * One endpoint, four actions:
+ *   chat       authenticated conversation with read-only, shop-scoped tools
+ *   studio     advertising copy generation (JSON), no shop data needed
+ *   sentiment  labels this shop's own published feedback
+ *   status     platform-admin health and usage report (never returns secrets)
  *
  * Security model:
  *   - The caller's Supabase access token is verified against the auth server.
@@ -522,6 +523,152 @@ async function handleStudio(input: {
 }
 
 // ---------------------------------------------------------------------------
+// sentiment — the shop's own feedback, labelled by the model
+// ---------------------------------------------------------------------------
+
+const SENTIMENT_SYSTEM = `You label customer feedback for one shop.
+
+Reply with JSON only, no prose, in this shape:
+{"items":[{"id":"<the id you were given>","label":"positive|neutral|negative","score":0.0}]}
+
+Rules:
+- Return every id you were given, exactly once, and never invent an id.
+- The written words decide the label. The star rating is a hint only; a 5-star
+  review that complains in the text is not positive.
+- "neutral" is for mixed, factual or empty feedback.
+- score is your confidence between 0 and 1.
+- Never add advice, names, or text that was not in the input.`;
+
+interface SentimentRow {
+  id: string;
+  rating: number;
+  body: string | null;
+  created_at: string;
+}
+
+function parseSentiment(content: string, ids: string[]): Array<{
+  id: string;
+  label: "positive" | "neutral" | "negative";
+  score: number;
+}> {
+  const parsed = extractJson(content) as { items?: unknown } | null;
+  if (!parsed || !Array.isArray(parsed.items)) {
+    throw new HttpError(
+      "provider_unavailable",
+      "The sentiment model returned an unreadable answer. Try again.",
+      502,
+    );
+  }
+
+  const allowed = new Set(ids);
+  const seen = new Set<string>();
+  const items: Array<{ id: string; label: "positive" | "neutral" | "negative"; score: number }> = [];
+
+  for (const entry of parsed.items) {
+    if (!entry || typeof entry !== "object") continue;
+    const id = String((entry as { id?: unknown }).id ?? "");
+    const label = String((entry as { label?: unknown }).label ?? "").toLowerCase();
+    const rawScore = Number((entry as { score?: unknown }).score);
+    if (!allowed.has(id) || seen.has(id)) continue;
+    if (label !== "positive" && label !== "neutral" && label !== "negative") continue;
+    seen.add(id);
+    items.push({
+      id,
+      label,
+      score: Number.isFinite(rawScore) ? Math.min(1, Math.max(0, rawScore)) : 0.5,
+    });
+  }
+
+  // A partial answer is still useful, but only what the model actually labelled.
+  return items;
+}
+
+async function handleSentiment(input: {
+  body: ChatBody;
+  admin: SupabaseClient;
+  user: SupabaseClient;
+  userId: string;
+}): Promise<Response> {
+  const shop = await resolveShop(input.user, input.userId, input.body.shopId);
+  if (!shop.shopId) {
+    throw new HttpError("bad_request", "Choose a shop first.", 400);
+  }
+
+  const { data, error } = await input.admin
+    .from("marketlink_reviews")
+    .select("id, rating, body, created_at")
+    .eq("shop_id", shop.shopId)
+    .eq("moderation", "visible")
+    .order("created_at", { ascending: false })
+    .limit(12);
+
+  if (error) {
+    throw new HttpError("internal", "Could not read this shop's feedback.", 500);
+  }
+
+  const rows = (data ?? []) as SentimentRow[];
+  const config = groqConfig();
+
+  if (rows.length === 0) {
+    return json({ configured: config.configured, model: config.model || null, items: [] });
+  }
+  if (!config.configured) {
+    return json({
+      configured: false,
+      model: null,
+      items: [],
+      reason: "SAVO AI is not configured on this deployment.",
+    });
+  }
+
+  const gate = await consumeQuota(input.admin, input.userId, {
+    requests: 1,
+    inputTokens: 0,
+    outputTokens: 0,
+  });
+  if (!gate.allowed) {
+    return fail(
+      "rate_limited",
+      `You have used SAVO AI ${gate.requests} times today (limit ${gate.request_limit}). It resets tomorrow.`,
+      429,
+    );
+  }
+
+  const payload = rows.map((row) => ({
+    id: row.id,
+    rating: row.rating,
+    text: (row.body ?? "").slice(0, 500),
+  }));
+
+  const completion = await chatCompletion({
+    apiKey: config.apiKey,
+    model: config.model,
+    messages: [
+      { role: "system", content: SENTIMENT_SYSTEM },
+      { role: "user", content: JSON.stringify({ reviews: payload }) },
+    ],
+    maxTokens: 900,
+    temperature: 0,
+    timeoutMs: 30_000,
+  });
+
+  await consumeQuota(input.admin, input.userId, {
+    requests: 0,
+    inputTokens: completion.usage.input,
+    outputTokens: completion.usage.output,
+  });
+
+  return json({
+    configured: true,
+    model: completion.model,
+    items: parseSentiment(
+      completion.content,
+      rows.map((row) => row.id),
+    ),
+  });
+}
+
+// ---------------------------------------------------------------------------
 // status (platform admin only)
 // ---------------------------------------------------------------------------
 
@@ -624,6 +771,15 @@ Deno.serve(async (req: Request) => {
       return await handleStudio({
         body,
         admin: clients.admin,
+        userId: user.id,
+      });
+    }
+
+    if (action === "sentiment") {
+      return await handleSentiment({
+        body,
+        admin: clients.admin,
+        user: clients.user,
         userId: user.id,
       });
     }
