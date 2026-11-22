@@ -1,11 +1,14 @@
 /**
  * Review sentiment.
  *
- * The classification itself runs in the `savo-ai` edge function, which is the
- * only place that holds the provider key. The browser only asks for labels for
- * its own shop's published feedback, and gets nothing back when SAVO AI is not
- * configured — the price of a real label is an honest "not available", never an
- * invented one.
+ * A review's sentiment is decided once by the `savo-ai` edge function — the only
+ * place that holds the provider key — and stored on the review row. The seller's
+ * feedback section reads those stored labels; it only asks the function to fill
+ * in reviews that have no label yet, which is exactly the set of reviews that
+ * arrived since the last time it ran.
+ *
+ * Nothing here is invented locally: when SAVO AI is not configured the stored
+ * labels are still returned and the missing ones stay missing.
  */
 import { supabase } from "@/integrations/supabase/client";
 
@@ -15,6 +18,11 @@ export interface SentimentItem {
   id: string;
   label: SentimentLabel;
   score: number;
+}
+
+export interface StoredSentimentItem extends SentimentItem {
+  model: string | null;
+  computed_at: string | null;
 }
 
 export interface SentimentResult {
@@ -27,6 +35,13 @@ export interface SentimentResult {
 interface FunctionErrorBody {
   error?: { message?: string };
 }
+
+/** Narrow cast for an RPC that the generated client types do not know yet. */
+type RpcResult = PromiseLike<{ data: unknown; error: { message: string } | null }>;
+const rpc = supabase.rpc.bind(supabase) as unknown as (
+  name: string,
+  args?: Record<string, unknown>,
+) => RpcResult;
 
 async function describeFailure(error: unknown): Promise<Error> {
   const context = (error as { context?: unknown }).context;
@@ -45,6 +60,21 @@ async function describeFailure(error: unknown): Promise<Error> {
   return new Error("Sentiment could not be read right now.");
 }
 
+/** Labels already stored on this shop's reviews. No model call, no quota spent. */
+export async function fetchStoredSentiment(shopId: string): Promise<StoredSentimentItem[]> {
+  const { data, error } = await rpc("marketlink_shop_sentiment", { p_shop_id: shopId });
+  if (error) throw new Error(error.message);
+  if (!Array.isArray(data)) return [];
+  return (data as StoredSentimentItem[]).filter(
+    (item) => item && typeof item.id === "string" && typeof item.label === "string",
+  );
+}
+
+/**
+ * Labels any review that does not have one yet, then returns every label the
+ * shop has. Safe to call when nothing is missing: the function answers from the
+ * stored rows without contacting the provider.
+ */
 export async function classifyShopReviews(shopId: string): Promise<SentimentResult> {
   const { data, error } = await supabase.functions.invoke("savo-ai", {
     body: { action: "sentiment", shopId },

@@ -1,7 +1,7 @@
 import { MessageSquareText, Sparkles, Star } from "lucide-react";
 
 import { useShopReputation, useShopReviews } from "@/hooks/useMarketCommerce";
-import { useReviewSentiment } from "@/hooks/useReviewSentiment";
+import { useReviewSentiment, useStoredSentiment } from "@/hooks/useReviewSentiment";
 import { formatDateTime } from "@/lib/format";
 import type { SentimentLabel } from "@/services/review-sentiment.service";
 import { cn } from "@/lib/utils";
@@ -17,17 +17,27 @@ const SENTIMENT_STYLE: Record<SentimentLabel, { label: string; className: string
  *
  * The rating and the written feedback come from the public review RPCs, with no
  * customer identity attached. The sentiment chip is a model label for the text
- * only — it is shown when the `savo-ai` function is configured, and the section
- * says plainly when it is not. A rating is never replaced by a label.
+ * only. It is stored once on the review, so opening this section reads labels
+ * instead of asking the model again; only reviews that arrived without one are
+ * classified. A rating is never replaced by a label.
  */
 export function SellerFeedback({ shopId, slug }: { shopId: string; slug: string }) {
   const reviews = useShopReviews(slug);
   const reputation = useShopReputation(slug);
-  const sentiment = useReviewSentiment(shopId, Boolean(shopId) && (reviews.data?.length ?? 0) > 0);
 
   const list = (reviews.data ?? []).slice(0, 8);
   const average = reputation.data?.average ?? 0;
   const count = reputation.data?.count ?? 0;
+
+  const hasReviews = Boolean(shopId) && list.length > 0;
+  const stored = useStoredSentiment(shopId, hasReviews);
+  const labels = new Map((stored.data ?? []).map((item) => [item.id, item]));
+  const unlabelled = list.filter((review) => !labels.has(review.id));
+  const backfill = useReviewSentiment(shopId, hasReviews && unlabelled.length > 0);
+
+  const merged = new Map<string, { id: string; label: SentimentLabel; score: number }>(labels);
+  for (const item of backfill.data?.items ?? []) merged.set(item.id, item);
+  const labelCount = merged.size;
 
   return (
     <section className="card-surface mt-4 p-4">
@@ -64,7 +74,7 @@ export function SellerFeedback({ shopId, slug }: { shopId: string; slug: string 
         <>
           <ul className="mt-3 divide-y divide-[var(--brand-line)] border-y border-[var(--brand-line)]">
             {list.map((review) => {
-              const chip = sentiment.data?.items.find((item) => item.id === review.id);
+              const chip = merged.get(review.id);
               return (
                 <li key={review.id} className="py-3">
                   <div className="flex flex-wrap items-center gap-2">
@@ -112,20 +122,20 @@ export function SellerFeedback({ shopId, slug }: { shopId: string; slug: string 
             })}
           </ul>
 
-          {sentiment.isError ? (
+          {backfill.isError ? (
             <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-              Sentiment labels are unavailable right now — the ratings and comments above are
+              Sentiment labels could not be completed right now — the ratings and comments above are
               unaffected.
             </p>
-          ) : sentiment.data && !sentiment.data.configured ? (
+          ) : labelCount > 0 ? (
+            <p className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
+              <Sparkles className="size-3.5" aria-hidden /> Labels describe the written feedback
+              only, and are stored once for each review.
+            </p>
+          ) : backfill.data && !backfill.data.configured ? (
             <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
               Sentiment labels appear when SAVO AI is configured on this deployment. The ratings and
               comments above do not depend on it.
-            </p>
-          ) : sentiment.data?.configured && sentiment.data.items.length > 0 ? (
-            <p className="mt-2 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-              <Sparkles className="size-3.5" aria-hidden /> Labels describe the written feedback
-              only.
             </p>
           ) : null}
         </>

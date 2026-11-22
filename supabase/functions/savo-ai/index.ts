@@ -544,6 +544,9 @@ interface SentimentRow {
   rating: number;
   body: string | null;
   created_at: string;
+  sentiment_label: "positive" | "neutral" | "negative" | null;
+  sentiment_score: number | null;
+  sentiment_model: string | null;
 }
 
 function parseSentiment(content: string, ids: string[]): Array<{
@@ -596,7 +599,9 @@ async function handleSentiment(input: {
 
   const { data, error } = await input.admin
     .from("marketlink_reviews")
-    .select("id, rating, body, created_at")
+    .select(
+      "id, rating, body, created_at, sentiment_label, sentiment_score, sentiment_model",
+    )
     .eq("shop_id", shop.shopId)
     .eq("moderation", "visible")
     .order("created_at", { ascending: false })
@@ -609,14 +614,36 @@ async function handleSentiment(input: {
   const rows = (data ?? []) as SentimentRow[];
   const config = groqConfig();
 
+  // Labels already on the row are the answer. They are never recomputed, which
+  // is the whole point of storing them: opening the feedback section again costs
+  // one small read and no model request.
+  const stored = rows
+    .filter((row) => row.sentiment_label !== null)
+    .map((row) => ({
+      id: row.id,
+      label: row.sentiment_label as "positive" | "neutral" | "negative",
+      score: Number(row.sentiment_score ?? 0.5),
+    }));
+  const pending = rows.filter((row) => row.sentiment_label === null);
+
   if (rows.length === 0) {
-    return json({ configured: config.configured, model: config.model || null, items: [] });
+    return json({ configured: config.configured, model: null, items: [], stored: 0 });
+  }
+  if (pending.length === 0) {
+    return json({
+      configured: config.configured,
+      model: rows[0]?.sentiment_model ?? null,
+      items: stored,
+      stored: stored.length,
+      reused: true,
+    });
   }
   if (!config.configured) {
     return json({
       configured: false,
       model: null,
-      items: [],
+      items: stored,
+      stored: stored.length,
       reason: "SAVO AI is not configured on this deployment.",
     });
   }
@@ -634,7 +661,7 @@ async function handleSentiment(input: {
     );
   }
 
-  const payload = rows.map((row) => ({
+  const payload = pending.map((row) => ({
     id: row.id,
     rating: row.rating,
     text: (row.body ?? "").slice(0, 500),
@@ -658,13 +685,36 @@ async function handleSentiment(input: {
     outputTokens: completion.usage.output,
   });
 
+  const fresh = parseSentiment(
+    completion.content,
+    pending.map((row) => row.id),
+  );
+
+  // Store each label on the review it describes. Written with the service role,
+  // because the table deliberately refuses writes from the browser; a failed
+  // write is logged and the label is simply recomputed on the next run, which is
+  // the behaviour this column exists to avoid rather than a correctness problem.
+  for (const item of fresh) {
+    const { error: writeError } = await input.admin
+      .from("marketlink_reviews")
+      .update({
+        sentiment_label: item.label,
+        sentiment_score: item.score,
+        sentiment_model: completion.model,
+        sentiment_at: new Date().toISOString(),
+      })
+      .eq("id", item.id);
+    if (writeError) {
+      console.error("[savo-ai] sentiment label was not stored", writeError.message);
+    }
+  }
+
   return json({
     configured: true,
     model: completion.model,
-    items: parseSentiment(
-      completion.content,
-      rows.map((row) => row.id),
-    ),
+    items: [...stored, ...fresh],
+    stored: stored.length + fresh.length,
+    reused: false,
   });
 }
 
