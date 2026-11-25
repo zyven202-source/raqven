@@ -101,9 +101,21 @@ const CSP_DIRECTIVES = {
   "upgrade-insecure-requests": "",
 };
 
-const CSP_POLICY = Object.entries(CSP_DIRECTIVES)
-  .map(([name, value]) => (value ? `${name} ${value}` : name))
-  .join("; ");
+const serialiseCsp = (directives) =>
+  Object.entries(directives)
+    .map(([name, value]) => (value ? `${name} ${value}` : name))
+    .join("; ");
+
+const CSP_POLICY = serialiseCsp(CSP_DIRECTIVES);
+
+// `upgrade-insecure-requests` is ignored in a report-only policy (and the
+// browser says so in the console on every signed-in screen), so the reporting
+// variant leaves it out rather than emitting a warning nobody can act on.
+const CSP_REPORT_POLICY = serialiseCsp(
+  Object.fromEntries(
+    Object.entries(CSP_DIRECTIVES).filter(([name]) => name !== "upgrade-insecure-requests"),
+  ),
+);
 
 /**
  * Pages whose CSP is enforced rather than reported.
@@ -193,10 +205,11 @@ function withReleaseHeaders(response, url) {
 
   if (contentType.includes("text/html") && response.status === 200) {
     const path = url.pathname.replace(/\/+$/, "") || "/";
-    const header = ENFORCED_CSP_PAGES.has(path)
-      ? "content-security-policy"
-      : "content-security-policy-report-only";
-    headers.set(header, CSP_POLICY);
+    const enforced = ENFORCED_CSP_PAGES.has(path);
+    headers.set(
+      enforced ? "content-security-policy" : "content-security-policy-report-only",
+      enforced ? CSP_POLICY : CSP_REPORT_POLICY,
+    );
   }
 
   return new Response(response.body, {
