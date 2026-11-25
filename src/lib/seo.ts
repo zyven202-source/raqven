@@ -97,9 +97,25 @@ export const HOME_HEADLINE = "Run your business with clarity.";
  */
 export const HOME_EYEBROW = "Retail management software";
 
-/** The square app icon, which is the only large image the product ships. */
-export const OG_IMAGE_URL = `${SITE_URL}/icon-512.png`;
+/**
+ * The landscape social card, 1200 × 630.
+ *
+ * It used to point at the square app icon. A square image in a 1.91:1 unfurl is
+ * cropped to a slice of itself, and `twitter:card` had to be `summary` to avoid
+ * that — so every shared SAVO link was a small thumbnail of half a mark. A
+ * purpose-built landscape card fits the slot exactly and can carry the tagline.
+ * The square icon remains the app icon, the manifest icon and the JSON-LD logo;
+ * this is the social preview only.
+ */
+export const OG_IMAGE_URL = `${SITE_URL}/og-image.png`;
+export const OG_IMAGE_WIDTH = "1200";
+export const OG_IMAGE_HEIGHT = "630";
 export const OG_IMAGE_ALT =
+  "SAVO — retail management software. A mint receipt mark, the word savo and the line 'Every sale. Every stock. Every number.' on a deep green field.";
+
+/** The square app icon, still the logo where a square is correct. */
+export const APP_ICON_URL = `${SITE_URL}/icon-512.png`;
+export const APP_ICON_ALT =
   "The SAVO app icon: a mint receipt and the word savo on a shelf label, on a deep green tile.";
 
 /** Every meta descriptor the home page needs, in the order crawlers read them. */
@@ -120,13 +136,10 @@ export const HOME_META = [
   { property: "og:locale", content: "en" },
   { property: "og:image", content: OG_IMAGE_URL },
   { property: "og:image:type", content: "image/png" },
-  { property: "og:image:width", content: "512" },
-  { property: "og:image:height", content: "512" },
+  { property: "og:image:width", content: OG_IMAGE_WIDTH },
+  { property: "og:image:height", content: OG_IMAGE_HEIGHT },
   { property: "og:image:alt", content: OG_IMAGE_ALT },
-  // `summary`, not `summary_large_image`: the only image the product has is
-  // square, and a square stretched into a 1.91:1 card is cropped to a slice of
-  // the mark. A small correct thumbnail beats a large wrong one.
-  { name: "twitter:card", content: "summary" },
+  { name: "twitter:card", content: "summary_large_image" },
   { name: "twitter:title", content: SEO_TITLE },
   { name: "twitter:description", content: SEO_DESCRIPTION },
   { name: "twitter:image", content: OG_IMAGE_URL },
@@ -191,10 +204,10 @@ export function pageMeta({
       { property: "og:locale", content: "en" },
       { property: "og:image", content: OG_IMAGE_URL },
       { property: "og:image:type", content: "image/png" },
-      { property: "og:image:width", content: "512" },
-      { property: "og:image:height", content: "512" },
+      { property: "og:image:width", content: OG_IMAGE_WIDTH },
+      { property: "og:image:height", content: OG_IMAGE_HEIGHT },
       { property: "og:image:alt", content: OG_IMAGE_ALT },
-      { name: "twitter:card", content: "summary" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: title },
       { name: "twitter:description", content: description },
       { name: "twitter:image", content: OG_IMAGE_URL },
@@ -226,11 +239,11 @@ export function siteJsonLd() {
         url: `${SITE_URL}/`,
         logo: {
           "@type": "ImageObject",
-          url: OG_IMAGE_URL,
-          contentUrl: OG_IMAGE_URL,
+          url: APP_ICON_URL,
+          contentUrl: APP_ICON_URL,
           width: 512,
           height: 512,
-          caption: OG_IMAGE_ALT,
+          caption: APP_ICON_ALT,
         },
       },
       {
@@ -283,7 +296,7 @@ export function webApplicationJsonLd() {
       "@type": "Organization",
       name: SITE_NAME,
       url: `${SITE_URL}/`,
-      logo: { "@type": "ImageObject", url: OG_IMAGE_URL, width: 512, height: 512 },
+      logo: { "@type": "ImageObject", url: APP_ICON_URL, width: 512, height: 512 },
     },
   };
 }

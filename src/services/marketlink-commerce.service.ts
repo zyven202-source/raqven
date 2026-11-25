@@ -179,12 +179,32 @@ export async function submitReview(
   orderId: string,
   rating: number,
   body: string | null,
-): Promise<void> {
-  await callRpc("marketlink_submit_review", {
+): Promise<string | null> {
+  const review = await callRpc<{ id?: string } | null>("marketlink_submit_review", {
     p_order_id: orderId,
     p_rating: rating,
     ...(body ? { p_body: body } : {}),
   });
+  return review?.id ?? null;
+}
+
+/**
+ * Asks SAVO AI to label a review that was just submitted.
+ *
+ * Deliberately fire-and-forget: the review is already saved, and the label is an
+ * extra. If the model, the quota or the network is unavailable, the seller's
+ * feedback section still works and labels the review on its next visit. When it
+ * does succeed, the label is stored on the row, so the seller's first open reads
+ * it instead of waiting for a model response.
+ */
+export async function labelSubmittedReview(reviewId: string): Promise<void> {
+  try {
+    await supabase.functions.invoke("savo-ai", {
+      body: { action: "sentiment", reviewId },
+    });
+  } catch {
+    /* The label is optional; the review is already saved. */
+  }
 }
 
 export async function reportReview(reviewId: string, reason: string | null): Promise<void> {

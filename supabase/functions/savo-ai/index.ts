@@ -47,6 +47,7 @@ interface ChatTurn {
 interface ChatBody {
   action?: unknown;
   shopId?: unknown;
+  reviewId?: unknown;
   messages?: unknown;
   studio?: unknown;
 }
@@ -541,6 +542,8 @@ Rules:
 
 interface SentimentRow {
   id: string;
+  shop_id: string;
+  customer_id: string;
   rating: number;
   body: string | null;
   created_at: string;
@@ -548,6 +551,10 @@ interface SentimentRow {
   sentiment_score: number | null;
   sentiment_model: string | null;
 }
+
+/** The review columns a label needs, in one place so both paths agree. */
+const SENTIMENT_COLUMNS =
+  "id, shop_id, customer_id, rating, body, created_at, sentiment_label, sentiment_score, sentiment_model";
 
 function parseSentiment(content: string, ids: string[]): Array<{
   id: string;
@@ -592,26 +599,54 @@ async function handleSentiment(input: {
   user: SupabaseClient;
   userId: string;
 }): Promise<Response> {
-  const shop = await resolveShop(input.user, input.userId, input.body.shopId);
-  if (!shop.shopId) {
-    throw new HttpError("bad_request", "Choose a shop first.", 400);
+  // Two ways in. `reviewId` is the buyer's client, moments after it submitted
+  // that review: labelling it here means the seller's first visit to the
+  // feedback section finds a stored label instead of waiting on a model. A
+  // `shopId` is the seller reading feedback, which may still include reviews
+  // from before labels existed.
+  const reviewId = typeof input.body.reviewId === "string" ? input.body.reviewId : null;
+  let rows: SentimentRow[];
+
+  if (reviewId) {
+    const { data, error } = await input.admin
+      .from("marketlink_reviews")
+      .select(SENTIMENT_COLUMNS)
+      .eq("id", reviewId)
+      .maybeSingle();
+
+    if (error) {
+      throw new HttpError("internal", "Could not read that review.", 500);
+    }
+    if (!data) {
+      throw new HttpError("bad_request", "That review does not exist.", 404);
+    }
+
+    const row = data as SentimentRow;
+    // Only the buyer who wrote it can ask for this label; the seller reads
+    // labels through `marketlink_shop_sentiment` instead.
+    if (row.customer_id !== input.userId) {
+      throw new HttpError("forbidden", "Only the buyer who wrote a review can label it.", 403);
+    }
+    rows = [row];
+  } else {
+    const shop = await resolveShop(input.user, input.userId, input.body.shopId);
+    if (!shop.shopId) {
+      throw new HttpError("bad_request", "Choose a shop first.", 400);
+    }
+
+    const { data, error } = await input.admin
+      .from("marketlink_reviews")
+      .select(SENTIMENT_COLUMNS)
+      .eq("shop_id", shop.shopId)
+      .eq("moderation", "visible")
+      .order("created_at", { ascending: false })
+      .limit(12);
+
+    if (error) {
+      throw new HttpError("internal", "Could not read this shop's feedback.", 500);
+    }
+    rows = (data ?? []) as SentimentRow[];
   }
-
-  const { data, error } = await input.admin
-    .from("marketlink_reviews")
-    .select(
-      "id, rating, body, created_at, sentiment_label, sentiment_score, sentiment_model",
-    )
-    .eq("shop_id", shop.shopId)
-    .eq("moderation", "visible")
-    .order("created_at", { ascending: false })
-    .limit(12);
-
-  if (error) {
-    throw new HttpError("internal", "Could not read this shop's feedback.", 500);
-  }
-
-  const rows = (data ?? []) as SentimentRow[];
   const config = groqConfig();
 
   // Labels already on the row are the answer. They are never recomputed, which

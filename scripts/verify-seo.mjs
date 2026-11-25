@@ -29,9 +29,12 @@ import { readFileSync, existsSync, statSync } from "node:fs";
 import {
   HOME_EYEBROW,
   HOME_HEADLINE,
+  APP_ICON_URL,
   HOME_META,
   OG_IMAGE_ALT,
+  OG_IMAGE_HEIGHT,
   OG_IMAGE_URL,
+  OG_IMAGE_WIDTH,
   PRIMARY_KEYWORD,
   SEO_DESCRIPTION,
   SEO_TITLE,
@@ -150,9 +153,14 @@ check(
   OG_IMAGE_ALT.length > 10 && OG_IMAGE_ALT !== SEO_TITLE,
 );
 check(
-  "the social card is declared square, which is what the image is",
-  HOME_META.some((d) => d.property === "og:image:width" && d.content === "512") &&
-    HOME_META.some((d) => d.property === "og:image:height" && d.content === "512"),
+  "the social card is declared 1200 × 630, which is what the image is",
+  HOME_META.some((d) => d.property === "og:image:width" && d.content === "1200") &&
+    HOME_META.some((d) => d.property === "og:image:height" && d.content === "630"),
+  `${OG_IMAGE_WIDTH} × ${OG_IMAGE_HEIGHT}`,
+);
+check(
+  "the card is a large image card, not a thumbnail",
+  HOME_META.some((d) => d.name === "twitter:card" && d.content === "summary_large_image"),
 );
 
 log(`\n=== The structured data ===`);
@@ -186,7 +194,7 @@ check(
 check("it does not claim a single country", schema.areaServed === undefined);
 check(
   "it names a publisher",
-  schema.publisher?.name === SITE_NAME && schema.publisher?.logo?.url === OG_IMAGE_URL,
+  schema.publisher?.name === SITE_NAME && schema.publisher?.logo?.url === APP_ICON_URL,
 );
 const serialised = JSON.stringify(schema);
 check("it serialises to valid JSON", JSON.parse(serialised)["@type"] === "WebApplication");
@@ -220,7 +228,8 @@ for (const [file, minimum] of [
 }
 check(
   "the social card is the file the head advertises",
-  OG_IMAGE_URL.endsWith("/icon-512.png") && existsSync("public/icon-512.png"),
+  OG_IMAGE_URL.endsWith("/og-image.png") && existsSync("public/og-image.png"),
+  OG_IMAGE_URL,
 );
 const robots = existsSync("public/robots.txt") ? readFileSync("public/robots.txt", "utf8") : "";
 check(
@@ -350,10 +359,7 @@ check(
   (home.match(/<h1/g) ?? []).length === 1,
   `${(home.match(/<h1/g) ?? []).length} in the route`,
 );
-check(
-  "the h1 reads its text from the shared module",
-  /<h1[^>]*>\s*\{HOME_HEADLINE\}/.test(home),
-);
+check("the h1 reads its text from the shared module", /<h1[^>]*>\s*\{HOME_HEADLINE\}/.test(home));
 check(
   "the hero photograph is a real image with a credit",
   /PHOTOGRAPHY\.hero\.src/.test(home) &&
@@ -488,7 +494,7 @@ check("it is a schema.org graph", site["@context"] === "https://schema.org" && g
 check(
   "it identifies the publisher",
   nodesOfType("Organization").some(
-    (node) => node.name === SITE_NAME && node.logo?.url === OG_IMAGE_URL,
+    (node) => node.name === SITE_NAME && node.logo?.url === APP_ICON_URL,
   ),
 );
 check(

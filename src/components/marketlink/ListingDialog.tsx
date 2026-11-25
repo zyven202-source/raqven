@@ -46,6 +46,7 @@ export function ListingDialog({
 }) {
   const publish = usePublishListing(shopId);
   const fileInput = useRef<HTMLInputElement>(null);
+  const autoCopied = useRef<string | null>(null);
 
   const [price, setPrice] = useState("");
   const [description, setDescription] = useState("");
@@ -76,6 +77,22 @@ export function ListingDialog({
     };
   }, [preview]);
 
+  // A product that already has a real photo in the shop's inventory should not
+  // make the owner upload the same picture again: the listing opens with that
+  // photo already in place, copied into the shop's Marketlink folder. Kept above
+  // the early return so the hook order never changes between renders.
+  useEffect(() => {
+    if (!open || !product) return;
+    if (imagePath || listing?.image_path || !product.image_url) return;
+    const key = `${product.id}:${product.image_url}`;
+    if (autoCopied.current === key) return;
+    autoCopied.current = key;
+    void copyInventoryPhoto({ quiet: true });
+    // copyInventoryPhoto closes over this open sheet's shop and product;
+    // re-running it on every render is exactly what the guard above prevents.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, product, imagePath, listing?.image_path]);
+
   if (!product) return null;
 
   const canPublish = Boolean(file || imagePath);
@@ -96,7 +113,7 @@ export function ListingDialog({
     setImagePath(null);
   }
 
-  async function copyInventoryPhoto() {
+  async function copyInventoryPhoto(options: { quiet?: boolean } = {}) {
     if (!product?.image_url) return;
     setCopying(true);
     try {
@@ -106,7 +123,11 @@ export function ListingDialog({
       setPreview(marketImageUrl(copied));
       toast.success("Using the product photo from your inventory.");
     } catch (error) {
-      toast.error(error instanceof Error ? error.message : "That photo could not be used.");
+      // A silent auto-copy must not shout at someone who never asked for it;
+      // the "Use the inventory photo" button beside it stays available.
+      if (!options.quiet) {
+        toast.error(error instanceof Error ? error.message : "That photo could not be used.");
+      }
     } finally {
       setCopying(false);
     }

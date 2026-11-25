@@ -15,6 +15,7 @@ import {
   fetchReleases,
   fetchShopReputation,
   fetchShopReviews,
+  labelSubmittedReview,
   markAllNotificationsRead,
   markNotificationRead,
   markReleaseRead,
@@ -253,7 +254,7 @@ export function useAdvanceOrder() {
 export function useSubmitReview() {
   const client = useQueryClient();
   return useMutation({
-    mutationFn: ({
+    mutationFn: async ({
       orderId,
       rating,
       body,
@@ -261,7 +262,13 @@ export function useSubmitReview() {
       orderId: string;
       rating: number;
       body: string | null;
-    }) => submitReview(orderId, rating, body),
+    }) => {
+      const review = await submitReview(orderId, rating, body);
+      // The review is saved. Labelling it now means the seller's first visit to
+      // the feedback section finds the label already stored.
+      if (review) void labelSubmittedReview(review);
+      return review;
+    },
     onSuccess: () => {
       void client.invalidateQueries({ queryKey: ["marketlink", "my-orders"] });
       void client.invalidateQueries({ queryKey: ["commerce", "reviews"] });

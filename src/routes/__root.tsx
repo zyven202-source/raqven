@@ -22,7 +22,9 @@ import { useServiceWorker } from "@/hooks/useServiceWorker";
 import { useSession } from "@/hooks/useSession";
 import {
   OG_IMAGE_ALT,
+  OG_IMAGE_HEIGHT,
   OG_IMAGE_URL,
+  OG_IMAGE_WIDTH,
   SEO_DESCRIPTION,
   SEO_TITLE,
   SITE_NAME,
@@ -168,10 +170,10 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { property: "og:locale", content: "en_KE" },
       { property: "og:image", content: OG_IMAGE_URL },
       { property: "og:image:type", content: "image/png" },
-      { property: "og:image:width", content: "512" },
-      { property: "og:image:height", content: "512" },
+      { property: "og:image:width", content: OG_IMAGE_WIDTH },
+      { property: "og:image:height", content: OG_IMAGE_HEIGHT },
       { property: "og:image:alt", content: OG_IMAGE_ALT },
-      { name: "twitter:card", content: "summary" },
+      { name: "twitter:card", content: "summary_large_image" },
       { name: "twitter:title", content: SEO_TITLE },
       { name: "twitter:description", content: SEO_DESCRIPTION },
       { name: "twitter:image", content: OG_IMAGE_URL },
