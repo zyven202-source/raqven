@@ -27,7 +27,7 @@ export function SectionHeading({
   return (
     <div className={className}>
       <p className="text-xs font-semibold uppercase tracking-[0.2em] text-ink-soft">{eyebrow}</p>
-      <h2 className="mt-3 max-w-2xl text-balance-tight font-display text-[1.875rem] font-semibold leading-[1.12] tracking-[-0.01em] text-ink sm:text-[2.25rem]">
+      <h2 className="mt-3 max-w-2xl text-balance-tight font-display text-[1.875rem] font-semibold leading-[1.12] tracking-[-0.01em] text-cream sm:text-[2.25rem]">
         {title}
       </h2>
       {description ? (

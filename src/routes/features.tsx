@@ -162,6 +162,26 @@ const FEATURES = [
   },
 ] as const;
 
+/**
+ * The real screen behind each section.
+ *
+ * Each file is a capture of the deployed application at 412×728 with the shop's
+ * header cropped off, so the panel shows the screen itself. A section whose
+ * screenshot is missing falls back to the record list alone rather than to a
+ * placeholder.
+ */
+const SCREENS: Record<string, string> = {
+  pos: "/showcase/showcase-pos.png",
+  stock: "/showcase/showcase-stock.png",
+  debtors: "/showcase/showcase-debtors.png",
+  expenses: "/showcase/showcase-expenses.png",
+  sales: "/showcase/showcase-sales.png",
+  reports: "/showcase/showcase-reports.png",
+  staff: "/showcase/showcase-staff.png",
+  assistant: "/showcase/showcase-assistant.png",
+  settings: "/showcase/showcase-settings.png",
+};
+
 function FeaturesPage() {
   return (
     <SiteShell>
@@ -216,7 +236,7 @@ function FeaturesPage() {
           </Link>
           <Link
             to="/pricing"
-            className="inline-flex h-11 items-center rounded-full border border-[var(--brand-line)] px-5 text-sm font-medium text-cream hover:bg-[var(--brand-raised)]"
+            className="inline-flex h-11 items-center rounded-full border border-[var(--brand-line)] bg-[var(--brand-raised)] px-5 text-sm font-medium text-cream transition-colors hover:bg-[var(--brand-surface)]"
           >
             It&rsquo;s free
           </Link>
@@ -236,7 +256,7 @@ function FeaturesPage() {
                   <feature.icon className="size-4" aria-hidden />
                   {feature.eyebrow}
                 </p>
-                <h2 className="mt-3 max-w-md font-display text-[1.75rem] font-semibold leading-[1.16] text-ink sm:text-[2rem]">
+                <h2 className="mt-3 max-w-md font-display text-[1.75rem] font-semibold leading-[1.16] text-cream sm:text-[2rem]">
                   {feature.title}
                 </h2>
                 <p className="mt-4 max-w-md text-[0.9375rem] leading-relaxed text-muted-foreground">
@@ -245,24 +265,59 @@ function FeaturesPage() {
                 <p className="mt-5 max-w-md border-l-2 border-ink/12 pl-3 text-[13px] leading-relaxed text-muted-foreground">
                   {feature.note}
                 </p>
+
+                <div className="mt-7 max-w-md border-t border-border pt-5">
+                  <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-[var(--savo-mint)]">
+                    What it records
+                  </p>
+                  <ul className="mt-3 space-y-2.5">
+                    {feature.points.map((point) => (
+                      <li
+                        key={point}
+                        className="flex items-start gap-3 text-sm leading-relaxed text-cream/85"
+                      >
+                        <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-positive" />
+                        {point}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               </div>
 
-              <div className="rounded-3xl border border-border bg-card p-6 sm:p-7">
-                <p className="text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft">
-                  What it records
-                </p>
-                <ul className="mt-4 space-y-3">
-                  {feature.points.map((point) => (
-                    <li
-                      key={point}
-                      className="flex items-start gap-3 text-sm leading-relaxed text-ink"
-                    >
-                      <span className="mt-1.5 size-1.5 shrink-0 rounded-full bg-positive" />
-                      {point}
-                    </li>
-                  ))}
-                </ul>
-              </div>
+              <figure className="overflow-hidden rounded-3xl border border-border bg-card">
+                <div className="flex items-baseline justify-between gap-3 border-b border-border px-5 py-3">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cream/65">
+                    {feature.eyebrow}
+                  </span>
+                  <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-cream/30">
+                    From the running app
+                  </span>
+                </div>
+
+                {SCREENS[feature.id] ? (
+                  <div className="bg-sunken p-4 sm:p-5">
+                    <div className="relative mx-auto aspect-[412/496] w-full max-w-[21rem] overflow-hidden rounded-xl border border-border">
+                      <img
+                        src={SCREENS[feature.id]}
+                        alt={`SAVO ${feature.eyebrow} screen`}
+                        width={412}
+                        height={728}
+                        loading="lazy"
+                        decoding="async"
+                        className="size-full object-cover object-top"
+                      />
+                      {/*
+                        The screen continues past the frame, so the cut is a fade
+                        into the card rather than a word sliced in half.
+                      */}
+                      <div
+                        aria-hidden
+                        className="pointer-events-none absolute inset-x-0 bottom-0 h-14 bg-[linear-gradient(to_top,var(--sunken),transparent)]"
+                      />
+                    </div>
+                  </div>
+                ) : null}
+              </figure>
             </div>
           </section>
         ))}
@@ -278,7 +333,7 @@ function FeaturesPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ink-soft">
                 Next
               </p>
-              <p className="mt-2 font-display text-xl text-ink">What it costs</p>
+              <p className="mt-2 font-display text-xl text-cream">What it costs</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 One account, nothing to upgrade — and no card.
               </p>
@@ -290,7 +345,7 @@ function FeaturesPage() {
               <p className="text-xs font-semibold uppercase tracking-[0.16em] text-ink-soft">
                 Stuck?
               </p>
-              <p className="mt-2 font-display text-xl text-ink">Talk to someone</p>
+              <p className="mt-2 font-display text-xl text-cream">Talk to someone</p>
               <p className="mt-1 text-sm text-muted-foreground">
                 Help with a sale, a stock count or a login.
               </p>

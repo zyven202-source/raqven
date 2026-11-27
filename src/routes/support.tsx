@@ -133,7 +133,7 @@ function SupportPage() {
                   <MessageSquare className="size-4" aria-hidden />
                   Fastest
                 </p>
-                <h2 className="mt-3 font-display text-2xl font-semibold text-ink">
+                <h2 className="mt-3 font-display text-2xl font-semibold text-cream">
                   Ask SAVO AI, inside the app.
                 </h2>
                 <p className="mt-3 text-[0.9375rem] leading-relaxed text-muted-foreground">
@@ -156,7 +156,7 @@ function SupportPage() {
             </p>
           </div>
 
-          <h2 className="mt-14 font-display text-2xl font-semibold text-ink">Common topics</h2>
+          <h2 className="mt-14 font-display text-2xl font-semibold text-cream">Common topics</h2>
           <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {TOPICS.map((topic) => (
               <Link
@@ -166,7 +166,7 @@ function SupportPage() {
                 className="group rounded-2xl border border-border bg-card p-5 transition-colors hover:border-ink/25"
               >
                 <topic.icon className="size-5 text-ink-soft" aria-hidden />
-                <h3 className="mt-3 text-[0.9375rem] font-semibold text-ink">{topic.title}</h3>
+                <h3 className="mt-3 text-[0.9375rem] font-semibold text-cream">{topic.title}</h3>
                 <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">{topic.body}</p>
                 <span className="mt-3 inline-flex items-center gap-1 text-xs font-semibold text-ink-soft">
                   Read
@@ -178,7 +178,7 @@ function SupportPage() {
 
           <div className="mt-14 grid gap-6 lg:grid-cols-[1fr_0.9fr]">
             <div className="rounded-2xl border border-border bg-sunken p-6">
-              <h2 className="font-display text-xl font-semibold text-ink">Talking to a person</h2>
+              <h2 className="font-display text-xl font-semibold text-cream">Talking to a person</h2>
               <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
                 Include the shop name, what you were doing, and what you expected to happen. Please
                 never send your password — nobody here needs it.
@@ -186,14 +186,14 @@ function SupportPage() {
               <div className="mt-5 space-y-3">
                 <a
                   href={`mailto:${BUSINESS_DETAILS.contactEmail}`}
-                  className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-ink hover:border-ink/25"
+                  className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-cream hover:border-ink/25"
                 >
                   <Mail className="size-4 text-ink-soft" aria-hidden />
                   {BUSINESS_DETAILS.contactEmail}
                 </a>
                 <a
                   href={`tel:${CONTACT_PHONE}`}
-                  className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-ink hover:border-ink/25"
+                  className="flex items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-sm font-medium text-cream hover:border-ink/25"
                 >
                   <Phone className="size-4 text-ink-soft" aria-hidden />
                   {CONTACT_PHONE.replace(/^(\d{4})(\d{3})(\d{3})$/, "$1 $2 $3")}
@@ -206,7 +206,7 @@ function SupportPage() {
             </div>
 
             <div className="rounded-2xl border border-border bg-card p-6">
-              <h2 className="font-display text-xl font-semibold text-ink">Before you write</h2>
+              <h2 className="font-display text-xl font-semibold text-cream">Before you write</h2>
               <ul className="mt-4 space-y-2.5 text-sm leading-relaxed text-muted-foreground">
                 {[
                   "Try the same action once more; a second failure is a better clue.",

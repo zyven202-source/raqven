@@ -70,7 +70,7 @@ function AboutPage() {
               second week. Both assume a shop has a back office and a person in it. Most shops have
               a counter, a phone, and a queue.
             </p>
-            <p className="text-ink">
+            <p className="text-cream/90">
               So SAVO starts at the counter and works outward: a sale first, then the stock it
               moved, then the debt it created, then the day it belongs to.
             </p>
@@ -84,7 +84,7 @@ function AboutPage() {
 
           <div className="my-12 h-px bg-border" />
 
-          <h2 className="font-display text-2xl font-semibold text-ink">What we hold to</h2>
+          <h2 className="font-display text-2xl font-semibold text-cream">What we hold to</h2>
           <div className="mt-7 grid gap-5 sm:grid-cols-2">
             {[
               {
@@ -110,7 +110,7 @@ function AboutPage() {
             ].map((item) => (
               <div key={item.title} className="rounded-2xl border border-border bg-card p-6">
                 <item.icon className="size-5 text-ink-soft" aria-hidden />
-                <h3 className="mt-4 text-base font-semibold text-ink">{item.title}</h3>
+                <h3 className="mt-4 text-base font-semibold text-cream">{item.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{item.body}</p>
               </div>
             ))}
@@ -118,7 +118,7 @@ function AboutPage() {
 
           <div className="my-12 h-px bg-border" />
 
-          <h2 className="font-display text-2xl font-semibold text-ink">What SAVO is not</h2>
+          <h2 className="font-display text-2xl font-semibold text-cream">What SAVO is not</h2>
           <ul className="mt-5 space-y-3 text-[0.9375rem] leading-relaxed text-muted-foreground">
             {[
               "Not an accounting package. It keeps the shop's records; your accountant still does the accounts.",
@@ -134,7 +134,7 @@ function AboutPage() {
           </ul>
 
           <div className="mt-12 rounded-2xl border border-border bg-sunken p-6">
-            <h2 className="text-lg font-semibold text-ink">Talk to the people who build it</h2>
+            <h2 className="text-lg font-semibold text-cream">Talk to the people who build it</h2>
             <p className="mt-2 text-sm leading-relaxed text-muted-foreground">
               Questions, a bug, or a workflow that does not fit your shop — write or call. It
               reaches the same small team that writes the code.

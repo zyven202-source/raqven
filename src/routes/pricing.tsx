@@ -91,10 +91,10 @@ function Pricing() {
           <div className="grid gap-8 lg:grid-cols-[1fr_1fr] lg:items-start">
             <div className="rounded-3xl border border-border bg-card p-7 sm:p-9">
               <div className="flex flex-wrap items-baseline justify-between gap-x-6 gap-y-2">
-                <h2 className="font-display text-xl font-semibold text-ink">
+                <h2 className="font-display text-xl font-semibold text-cream">
                   Everything, on one account
                 </h2>
-                <p className="font-display text-3xl font-semibold text-ink">Free</p>
+                <p className="font-display text-3xl font-semibold text-cream">Free</p>
               </div>
               <ul className="mt-6 grid gap-2.5 text-sm text-muted-foreground sm:grid-cols-2">
                 {INCLUDED.map((item) => (
@@ -117,7 +117,7 @@ function Pricing() {
                 </Link>
                 <Link
                   to="/auth/login"
-                  className="inline-flex h-11 items-center justify-center rounded-full border border-border px-5 text-sm font-medium text-ink hover:bg-sunken"
+                  className="inline-flex h-11 items-center justify-center rounded-full border border-border bg-sunken px-5 text-sm font-medium text-cream transition-colors hover:border-ink/30"
                 >
                   I already have an account
                 </Link>
@@ -125,7 +125,7 @@ function Pricing() {
             </div>
 
             <div className="rounded-3xl border border-border bg-sunken p-7 sm:p-9">
-              <h2 className="font-display text-xl font-semibold text-ink">What that covers</h2>
+              <h2 className="font-display text-xl font-semibold text-cream">What that covers</h2>
               <div className="mt-5 space-y-4">
                 {[
                   {
@@ -164,7 +164,7 @@ function Pricing() {
                       <item.icon className="size-4" aria-hidden />
                     </span>
                     <div>
-                      <p className="text-sm font-semibold text-ink">{item.title}</p>
+                      <p className="text-sm font-semibold text-cream">{item.title}</p>
                       <p className="mt-0.5 text-sm leading-relaxed text-muted-foreground">
                         {item.body}
                       </p>
@@ -188,7 +188,7 @@ function Pricing() {
             {FAQ_ITEMS.map((item) => (
               <div key={item.question}>
                 <dt>
-                  <h3 className="text-[0.9375rem] font-semibold text-ink">{item.question}</h3>
+                  <h3 className="text-[0.9375rem] font-semibold text-cream">{item.question}</h3>
                 </dt>
                 <dd className="mt-1.5 max-w-xl text-sm leading-relaxed text-muted-foreground">
                   {item.answer}

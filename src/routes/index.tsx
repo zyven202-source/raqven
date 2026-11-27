@@ -18,9 +18,26 @@ import { HOME_EYEBROW, HOME_HEADLINE, HOME_META, SITE_URL, webApplicationJsonLd 
 
 const SCREEN_SHOTS = [
   "/showcase/showcase-pos.png",
-  "/showcase/showcase-inventory.png",
+  "/showcase/showcase-stock.png",
   "/showcase/showcase-debtors.png",
   "/showcase/showcase-reports.png",
+] as const;
+
+/*
+ * The gallery at the end of the page.
+ *
+ * Every file here is a capture of the deployed application at 412×728, taken
+ * with the shop's header bar cropped off so the screen — not the test shop's
+ * name — is what a visitor sees. They are deliberately unretouched: the same
+ * cards, the same empty states and the same numbers the app shows.
+ */
+const GALLERY = [
+  { src: "/showcase/showcase-pos.png", label: "Point of sale", note: "Till" },
+  { src: "/showcase/showcase-stock.png", label: "Stock", note: "Inventory" },
+  { src: "/showcase/showcase-reports.png", label: "Reports", note: "Period" },
+  { src: "/showcase/showcase-debtors.png", label: "Customer accounts", note: "Credit" },
+  { src: "/showcase/showcase-expenses.png", label: "Expenses", note: "Costs" },
+  { src: "/showcase/showcase-sales.png", label: "Transactions", note: "Sales" },
 ] as const;
 
 export const Route = createFileRoute("/")({
@@ -132,7 +149,7 @@ function Landing() {
               </Link>
               <Link
                 to="/features"
-                className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--brand-line)] bg-[color-mix(in_oklab,var(--savo-night)_40%,transparent)] px-6 text-[0.9375rem] font-medium text-cream transition-colors hover:bg-[var(--brand-raised)]"
+                className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--brand-line)] bg-[var(--brand-raised)] px-6 text-[0.9375rem] font-medium text-cream transition-colors hover:bg-[var(--brand-surface)]"
               >
                 See how it works
               </Link>
@@ -180,50 +197,49 @@ function Landing() {
             description="SAVO follows the working day rather than asking the business to follow the software. Each step below is a screen that already exists."
           />
 
-          <div className="mt-12 space-y-14">
+          <div className="mt-12 grid gap-5 md:grid-cols-2">
             {PAGE_BODY.map((step, index) => (
               <article
                 key={step.title}
-                className={`grid items-center gap-8 lg:grid-cols-2 ${
-                  index % 2 === 1 ? "lg:[&>*:first-child]:order-2" : ""
-                }`}
+                className="flex flex-col overflow-hidden rounded-2xl border border-[var(--brand-line)] bg-card"
               >
-                <div>
-                  <p className="font-mono text-xs uppercase tracking-[0.18em] text-ink-soft">
+                <div className="flex items-center justify-between gap-3 border-b border-[var(--brand-line)] px-5 py-3">
+                  <span className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.16em] text-cream/65">
+                    <step.icon className="size-4 text-[var(--savo-mint)]" aria-hidden />
+                    {step.screen}
+                  </span>
+                  <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-cream/30">
                     {String(index + 1).padStart(2, "0")} · {step.time}
-                  </p>
-                  <h3 className="mt-3 font-display text-2xl font-semibold leading-tight text-ink sm:text-[1.75rem]">
+                  </span>
+                </div>
+
+                <div className="bg-[var(--brand-surface)] px-5 py-5">
+                  <img
+                    src={SCREEN_SHOTS[index] ?? SCREEN_SHOTS[0]}
+                    alt={`SAVO ${step.screen} screen`}
+                    width={412}
+                    height={728}
+                    loading="lazy"
+                    decoding="async"
+                    className="mx-auto block w-full max-w-[16rem] rounded-lg border border-[var(--brand-line)]"
+                  />
+                </div>
+
+                <div className="flex flex-1 flex-col px-5 pt-5 pb-5">
+                  <h3 className="font-display text-xl font-semibold leading-tight text-cream sm:text-2xl">
                     {step.title}
                   </h3>
-                  <p className="mt-3 max-w-md text-[0.9375rem] leading-relaxed text-muted-foreground">
-                    {step.body}
-                  </p>
-                  <ul className="mt-5 space-y-2">
+                  <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{step.body}</p>
+                  <ul className="mt-4 space-y-2">
                     {step.points.map((point) => (
-                      <li key={point} className="flex items-start gap-2.5 text-sm text-ink">
+                      <li key={point} className="flex items-start gap-2.5 text-sm text-cream/85">
                         <Check className="mt-0.5 size-4 shrink-0 text-positive" aria-hidden />
                         {point}
                       </li>
                     ))}
                   </ul>
-                </div>
-
-                <div className="overflow-hidden rounded-3xl border border-[var(--brand-line)] bg-[var(--brand-raised)] p-3 sm:p-4">
-                  <div className="mb-3 flex items-center gap-2 px-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-ink-soft">
-                    <step.icon className="size-4" aria-hidden />
-                    {step.screen}
-                  </div>
-                  <img
-                    src={SCREEN_SHOTS[index] ?? SCREEN_SHOTS[0]}
-                    alt={`SAVO ${step.screen} screen`}
-                    width={412}
-                    height={800}
-                    loading="lazy"
-                    decoding="async"
-                    className="mx-auto w-full max-w-[17rem] rounded-xl border border-[var(--brand-line)] bg-[var(--brand-surface)]"
-                  />
-                  <p className="mt-3 px-1 text-xs leading-relaxed text-muted-foreground">
-                    {step.caption} Screenshot from the running app.
+                  <p className="mt-auto border-t border-[var(--brand-line)] pt-3 text-[11px] leading-relaxed text-cream/40">
+                    {step.caption}
                   </p>
                 </div>
               </article>
@@ -260,7 +276,7 @@ function Landing() {
             ].map((card) => (
               <div key={card.title} className="rounded-2xl border border-border bg-card p-6">
                 <card.icon className="size-5 text-ink-soft" aria-hidden />
-                <h3 className="mt-4 text-base font-semibold text-ink">{card.title}</h3>
+                <h3 className="mt-4 text-base font-semibold text-cream">{card.title}</h3>
                 <p className="mt-2 text-sm leading-relaxed text-muted-foreground">{card.body}</p>
               </div>
             ))}
@@ -285,9 +301,11 @@ function Landing() {
               <ArrowRight className="size-4" />
             </Link>
           </div>
-          <div className="savo-glass-paper rounded-3xl p-7">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-ink-soft">SAVO</p>
-            <p className="mt-3 font-display text-4xl font-semibold text-ink">Free</p>
+          <div className="rounded-3xl border border-[var(--brand-line)] bg-card p-7">
+            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--savo-mint)]">
+              SAVO
+            </p>
+            <p className="mt-3 font-display text-4xl font-semibold text-cream">Free</p>
             <p className="mt-2 text-sm text-muted-foreground">
               No card, no trial, no subscription.
             </p>
@@ -317,66 +335,48 @@ function Landing() {
       {/* ------------------------------------------------- real product screens */}
       <section className="border-t border-[var(--brand-line)] bg-[var(--brand-surface)] py-16 sm:py-24">
         <div className="mx-auto w-full max-w-6xl px-5">
-          <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:gap-14">
-            <div className="max-w-md">
-              <h2 className="font-display text-3xl font-semibold leading-tight sm:text-4xl">
-                The same screens you get on day one.
-              </h2>
-              <p className="mt-4 text-[0.9375rem] leading-relaxed text-muted-foreground">
-                These are captures of the running application, not illustrations. A dashboard that
-                adds up your day, a till that works on a phone, and a stock list that says what to
-                reorder.
-              </p>
-              <ul className="mt-6 space-y-2 text-sm text-foreground/80">
-                <li>Sales, expenses and profit from the records you enter.</li>
-                <li>Stock levels, reorder points and receiving in one place.</li>
-                <li>Customer credit with balances that stay with the shop.</li>
-              </ul>
-            </div>
+          <SectionHeading
+            eyebrow="The real app"
+            title="The same screens you get on day one."
+            description="Captured from the running application on a phone: the till, the stock ledger, reports, customer balances, expenses and transactions. Not illustrations, and no invented figures."
+          />
 
-            <div className="relative flex-1">
-              <img
-                src={PHOTOGRAPHY.showcase.src}
-                alt={PHOTOGRAPHY.showcase.alt}
-                width={PHOTOGRAPHY.showcase.width}
-                height={PHOTOGRAPHY.showcase.height}
-                loading="lazy"
-                decoding="async"
-                className="absolute inset-0 size-full rounded-2xl object-cover opacity-45"
-                style={{ objectPosition: PHOTOGRAPHY.showcase.focal }}
-              />
-              <div className="relative flex items-end justify-center gap-3 px-2 py-6 sm:gap-5">
-                {[
-                  {
-                    src: "/showcase/showcase-dashboard.png",
-                    label: "Dashboard",
-                    rotate: "-rotate-2",
-                  },
-                  { src: "/showcase/showcase-pos.png", label: "Point of sale", rotate: "rotate-1" },
-                  { src: "/showcase/showcase-inventory.png", label: "Stock", rotate: "rotate-3" },
-                ].map((shot) => (
-                  <figure key={shot.label} className={`w-1/3 max-w-[11rem] ${shot.rotate}`}>
-                    <div className="overflow-hidden rounded-xl border border-[var(--brand-line)] bg-[var(--brand-raised)] shadow-[0_18px_40px_-24px_rgba(0,0,0,0.9)]">
-                      <img
-                        src={shot.src}
-                        alt={`SAVO ${shot.label} screen`}
-                        width={412}
-                        height={800}
-                        loading="lazy"
-                        decoding="async"
-                        className="w-full"
-                      />
-                    </div>
-                    <figcaption className="mt-2 text-center text-[11px] text-muted-foreground">
-                      {shot.label}
-                    </figcaption>
-                  </figure>
-                ))}
-              </div>
-            </div>
+          <div className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+            {GALLERY.map((shot, index) => (
+              <figure
+                key={shot.src}
+                /*
+                  Phones get three screens, not six. Six full-height captures
+                  put another four thousand pixels between a reader and the
+                  footer, and the first three already make the point.
+                */
+                className={`overflow-hidden rounded-2xl border border-[var(--brand-line)] bg-card ${
+                  index > 2 ? "hidden sm:block" : ""
+                }`}
+              >
+                <div className="flex items-baseline justify-between gap-3 border-b border-[var(--brand-line)] px-4 py-2.5">
+                  <span className="text-[11px] font-semibold uppercase tracking-[0.16em] text-cream/65">
+                    {shot.label}
+                  </span>
+                  <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-cream/30">
+                    {shot.note}
+                  </span>
+                </div>
+                <img
+                  src={shot.src}
+                  alt={`SAVO ${shot.label} screen`}
+                  width={412}
+                  height={728}
+                  loading="lazy"
+                  decoding="async"
+                  className="block w-full"
+                />
+              </figure>
+            ))}
           </div>
           <p className="mt-6 text-[11px] text-muted-foreground">
-            Screenshots taken from the deployed application. {creditLine(PHOTOGRAPHY.showcase)}
+            Screenshots taken from the deployed application. Photograph in the hero:
+            {` ${creditLine(PHOTOGRAPHY.hero)}`}
           </p>
         </div>
       </section>

@@ -120,11 +120,7 @@ export function ClosingCta({
   secondary?: { to: string; label: string };
 }) {
   return (
-    <section className="savo-field on-field relative overflow-hidden">
-      <div
-        aria-hidden
-        className="savo-halo left-1/2 top-0 size-80 -translate-x-1/2 bg-[var(--savo-mint)]/20"
-      />
+    <section className="on-field relative border-t border-[var(--brand-line)] bg-[var(--brand-surface)]">
       <div className="relative mx-auto w-full max-w-3xl px-5 py-20 text-center">
         <h2 className="text-balance-tight font-display text-3xl font-semibold leading-tight sm:text-4xl">
           {title}
@@ -141,7 +137,7 @@ export function ClosingCta({
           </Link>
           <Link
             to={secondary.to}
-            className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--brand-line)] px-6 text-[0.9375rem] font-medium text-cream transition-colors hover:bg-[var(--brand-raised)]"
+            className="inline-flex h-12 items-center justify-center rounded-full border border-[var(--brand-line)] bg-[var(--brand-raised)] px-6 text-[0.9375rem] font-medium text-cream transition-colors hover:bg-[var(--brand-surface)]"
           >
             {secondary.label}
           </Link>
