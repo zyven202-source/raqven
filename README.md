@@ -829,7 +829,7 @@ app, so install it separately rather than adding it to `package.json`:
 ```bash
 bun add --cwd /tmp/pwtest playwright   # or: npx playwright install chromium
 CHROMIUM_PATH=~/.cache/ms-playwright/chromium-*/chrome-linux64/chrome \
-  bun scripts/verify-ui-acceptance.mjs https://ravqen.freebuff.app
+  bun scripts/verify-ui-acceptance.mjs https://savo.freebuff.page
 ```
 
 Keeping Playwright out of `package.json` matters: the hosting builder runs a

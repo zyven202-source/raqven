@@ -162,7 +162,7 @@ reading code and hoping.
 
 ## 4. BLOCKED
 
-- **Deploy to `https://ravqen.freebuff.app`.** `freebuff-deploy` is not
+- **Deploy to `https://savo.freebuff.page`.** `freebuff-deploy` is not
   available in this environment; deployment is the user's step in the Changes
   panel. All verification above is against the local production build; the
   live site should be re-checked (browser suites accept a URL argument) after
@@ -264,7 +264,7 @@ reading code and hoping.
 
 1. **Deploy** from the Changes panel, then re-run
    `verify-ui-acceptance`/`verify-contrast` against
-   `https://ravqen.freebuff.app` to move the live-site claims from
+   `https://savo.freebuff.page` to move the live-site claims from
    "verified locally" to "verified live".
 2. **Untrack and rotate `.env`:** run `git rm --cached .env && git commit` (or
    let the Changes panel stage the removal), then rotate

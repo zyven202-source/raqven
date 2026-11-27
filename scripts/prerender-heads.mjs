@@ -30,6 +30,14 @@ import { dirname, join } from "node:path";
 const ROOT = process.cwd();
 const read = (file) => readFileSync(join(ROOT, file), "utf8");
 
+/*
+ * The public support address, read from the one place it is written down.
+ * The privacy page's crawlable copy prints it, so an account-deletion request
+ * still has an address to go to when JavaScript has not run.
+ */
+const supportEmail = (read("src/config/legal.ts").match(/supportEmail:\s*"([^"]+)"/) ?? [])[1];
+if (!supportEmail) throw new Error("legal.ts: supportEmail could not be read");
+
 const failures = [];
 function fail(message) {
   failures.push(message);
@@ -180,7 +188,18 @@ const PAGE_BODY = {
   "/legal/privacy": {
     h1: "Privacy policy",
     lead: "What SAVO collects, why it holds it, and what a shop and its customers can ask for. The policy below is the authoritative text.",
-    points: [],
+    /*
+      The crawlable copy carries the account-deletion routes on purpose.
+      Google Play's Data safety form points at `/legal/privacy#delete-my-account`,
+      and a client that does not run JavaScript should still be able to read how
+      to delete an account, who the operator is and where to write. The support
+      address is read from `src/config/legal.ts` below, so it cannot drift.
+    */
+    points: [
+      "To delete an account in the app: sign in, open Settings, then Data & privacy, then Delete my account.",
+      `To delete an account without the app: email ${supportEmail} from the address on the account, with the subject Delete my account.`,
+      "An account that still owns a shop cannot be deleted until the shop is handed over or deleted; the owner's copy of the shop's records is kept as its accounting history.",
+    ],
   },
   "/legal/terms": {
     h1: "Terms of use",

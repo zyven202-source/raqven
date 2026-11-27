@@ -67,15 +67,24 @@ for (const file of files) {
 
 const glassAttrs = classAttrs.filter((a) => /glass-[123]\b/.test(a.classes));
 
-// --- 1. every glass level ships with a blur
-const withoutBlur = glassAttrs.filter(
-  (a) => /(^|\s)glass-[123](\s|$)/.test(a.classes) && !/backdrop-blur/.test(a.classes),
+/*
+ * --- 1. the glass levels are flat
+ *
+ * This check used to require a `backdrop-blur-*` beside every `glass-N`. The
+ * product then flattened its surfaces on purpose: `styles.css` paints each
+ * level as one solid fill and neutralises every blur utility, because a blurred
+ * pane over a busy page made numbers hard to read. Demanding a blur would now
+ * demand dead markup, so the assertion follows the shipped contract instead:
+ * no level drags a blur along, and the stylesheet really does kill blur.
+ */
+const withBlur = glassAttrs.filter(
+  (a) => /(^|\s)glass-[123](\s|$)/.test(a.classes) && /backdrop-blur/.test(a.classes),
 );
 
 check(
-  "every glass level is paired with a backdrop blur",
-  withoutBlur.length === 0,
-  withoutBlur.map((a) => `${a.file}: ${a.classes.slice(0, 70)}`).join("\n      ") || "all paired",
+  "no glass level is paired with a backdrop blur",
+  withBlur.length === 0,
+  withBlur.map((a) => `${a.file}: ${a.classes.slice(0, 70)}`).join("\n      ") || "flat everywhere",
 );
 
 // --- 2. the levels are all defined and all used

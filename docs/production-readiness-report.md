@@ -15,7 +15,7 @@ the live database, not against a checklist.
 > that a qualified Kenyan lawyer must settle — that marking _is_ the deliverable
 > for those items, not a disclaimer bolted onto finished work.
 
-**Reviewed:** 29 September 2026 · **Target:** `ravqen.freebuff.app` ·
+**Reviewed:** 29 September 2026 · **Target:** `savo.freebuff.page` ·
 **Database:** Supabase project `lbowjunrhljkntchrmjr`
 
 ---
@@ -415,7 +415,7 @@ Nothing on this list can be closed from inside the codebase.
 
 ### Verification
 
-All run against the deployed site at `ravqen.freebuff.app` on 29 September 2026,
+All run against the deployed site at `savo.freebuff.page` on 29 September 2026,
 after the final redeploy.
 
 | Suite                                                                      | Result                                                |

@@ -6,7 +6,7 @@ mobile-first work, the desktop adaptation, the CSV export, being found and being
 readable, the production-readiness and privacy pass, owner-initiated shop deletion,
 and the two items that need the owner's own hands.
 
-Status: live on `ravqen.freebuff.app`. The most recent work — the R-tile identity,
+Status: live on `savo.freebuff.page`. The most recent work — the R-tile identity,
 and owner shop deletion — is applied to the database, verified against it, and
 verified through a production build in a browser: `verify-ui-acceptance` 165/165,
 `verify-float-bar` 54/54, `verify-glass-ui` 16/16, `verify-contrast` 45/45, with
@@ -467,7 +467,7 @@ passes while the subject is wrong.
 | `<title>`   | `SAVO — Kenyan Shop POS with Stock, Debtors & M-Pesa`                                                                                               |    53 |
 | description | `Kenyan shop POS and stock book in one: record sales, take M-Pesa, track stock, chase debtors and log expenses from an Android phone at the counter.` |   147 |
 | `<h1>`      | `The Kenyan shop POS that keeps every sale, stock and number.`                                                                                        |    60 |
-| `og:image`  | `https://ravqen.freebuff.app/icon-512.png` — 512×512, with `og:image:alt`                                                                             |       |
+| `og:image`  | `https://savo.freebuff.page/icon-512.png` — 512×512, with `og:image:alt`                                                                             |       |
 
 The core term is **Kenyan shop POS**, and it sits in the title, the description
 and the single `<h1>`. Both lengths are inside what a result shows: past roughly
@@ -496,8 +496,8 @@ The home page emits one `WebApplication`:
   "operatingSystem": "Android, iOS, Web browser",
   "areaServed": { "@type": "Country", "name": "Kenya" },
   "inLanguage": "en-KE",
-  "url": "https://ravqen.freebuff.app/",
-  "image": "https://ravqen.freebuff.app/icon-512.png",
+  "url": "https://savo.freebuff.page/",
+  "image": "https://savo.freebuff.page/icon-512.png",
   "featureList": ["…seven screens that exist…"],
   "publisher": { "@type": "Organization", "name": "SAVO" }
 }
