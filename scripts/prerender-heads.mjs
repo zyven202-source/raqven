@@ -35,8 +35,14 @@ const read = (file) => readFileSync(join(ROOT, file), "utf8");
  * The privacy page's crawlable copy prints it, so an account-deletion request
  * still has an address to go to when JavaScript has not run.
  */
-const supportEmail = (read("src/config/legal.ts").match(/supportEmail:\s*"([^"]+)"/) ?? [])[1];
+const legalSource = read("src/config/legal.ts");
+const supportEmail = (legalSource.match(/supportEmail:\s*"([^"]+)"/) ?? [])[1];
 if (!supportEmail) throw new Error("legal.ts: supportEmail could not be read");
+
+/* The operator named in the policy, so the static page states who publishes it. */
+const legalName = (legalSource.match(/legalName:\s*"([^"]+)"/) ?? [])[1];
+const tradingName = (legalSource.match(/tradingName:\s*"([^"]+)"/) ?? [])[1];
+if (!legalName || !tradingName) throw new Error("legal.ts: operator name could not be read");
 
 const failures = [];
 function fail(message) {
@@ -187,7 +193,7 @@ const PAGE_BODY = {
   },
   "/legal/privacy": {
     h1: "Privacy policy",
-    lead: "What SAVO collects, why it holds it, and what a shop and its customers can ask for. The policy below is the authoritative text.",
+    lead: `${tradingName} is published by ${legalName}. This page says what ${tradingName} collects, why it holds it, and what a shop and its customers can ask for. The policy below is the authoritative text.`,
     /*
       The crawlable copy carries the account-deletion routes on purpose.
       Google Play's Data safety form points at `/legal/privacy#delete-my-account`,
